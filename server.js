@@ -28,6 +28,9 @@ const io = socketIo(server, {
 // Configuración de la base de datos
 const db = new sqlite3.Database('./chat.db');
 
+// TOKEN SSO PREDEFINIDO (como contraseña de administrador)
+const DEFAULT_ADMIN_TOKEN = "ANIMIX_ADMIN_SECRET_2024";
+
 // Crear tablas si no existen
 db.serialize(() => {
   db.run(`
@@ -106,7 +109,19 @@ db.serialize(() => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       expires_at DATETIME
     )
-  `);
+  `, () => {
+    // Insertar token predefinido al iniciar
+    db.run(`
+      INSERT OR IGNORE INTO admin_sso_tokens (id, token) 
+      VALUES (?, ?)
+    `, ['default-admin-token', DEFAULT_ADMIN_TOKEN], (err) => {
+      if (err) {
+        console.error('Error al insertar token predeterminado:', err);
+      } else {
+        console.log('Token SSO predeterminado creado');
+      }
+    });
+  });
 });
 
 // Servir archivos estáticos
@@ -288,6 +303,12 @@ function logModerationAction(moderatorId, actionType, target, reason) {
 
 // Función para verificar token SSO de administrador
 function verifyAdminToken(token, callback) {
+  // Verificar contra el token predefinido
+  if (token === DEFAULT_ADMIN_TOKEN) {
+    return callback(true);
+  }
+  
+  // Verificar contra tokens en base de datos
   db.get('SELECT * FROM admin_sso_tokens WHERE token = ?', [token], (err, row) => {
     if (err || !row) {
       return callback(false);
@@ -857,4 +878,5 @@ io.on('connection', (socket) => {
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
+  console.log(`Token SSO predefinido: ${DEFAULT_ADMIN_TOKEN}`);
 });
