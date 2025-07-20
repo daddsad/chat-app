@@ -915,15 +915,35 @@
             opacity: 1;
         }
 
-        /* Menú contextual para móviles */
+        /* Indicador de que los mensajes son clickeables */
+        .message {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .message:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        .user-item {
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .user-item:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Menú contextual */
         .context-menu {
-            position: absolute;
+            position: fixed;
             background: var(--dark-gray);
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             z-index: 1000;
-            min-width: 180px;
+            min-width: 200px;
             display: none;
+            border: 1px solid rgba(255,255,255,0.1);
         }
 
         .context-menu-item {
@@ -939,6 +959,14 @@
 
         .context-menu-item:hover {
             background: rgba(255,255,255,0.1);
+        }
+
+        .context-menu-item.admin-only {
+            display: none;
+        }
+
+        .context-menu-item.admin-only.show {
+            display: flex;
         }
 
         .context-menu-divider {
@@ -983,6 +1011,219 @@
         @keyframes fadeInOut {
             0%, 100% { opacity: 0; }
             20%, 80% { opacity: 1; }
+        }
+
+        /* Estilos para archivos e imágenes */
+        .file-upload-area {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: var(--dark-gray);
+            border: 2px dashed var(--primary-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 10px;
+            text-align: center;
+            z-index: 100;
+        }
+
+        .file-upload-area.active {
+            display: block;
+        }
+
+        .file-upload-area.dragover {
+            background: rgba(88, 101, 242, 0.1);
+            border-color: var(--success-color);
+        }
+
+        .file-upload-text {
+            color: var(--gray-color);
+            margin-bottom: 15px;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .file-upload-button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            transition: background 0.3s;
+        }
+
+        .file-upload-button:hover {
+            background: var(--secondary-color);
+        }
+
+        .file-preview {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+        }
+
+        .file-icon {
+            font-size: 24px;
+            margin-right: 10px;
+            color: var(--primary-color);
+        }
+
+        .file-info {
+            flex-grow: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .file-size {
+            font-size: 12px;
+            color: var(--gray-color);
+        }
+
+        .file-remove {
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-remove:hover {
+            background: #c0392b;
+        }
+
+        .upload-progress {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .upload-progress-bar {
+            height: 100%;
+            background: var(--success-color);
+            width: 0%;
+            transition: width 0.3s;
+        }
+
+        /* Estilos para mensajes con archivos */
+        .message-file {
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            padding: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.3s;
+        }
+
+        .message-image:hover {
+            transform: scale(1.02);
+        }
+
+        .message-file-link {
+            display: flex;
+            align-items: center;
+            color: var(--primary-color);
+            text-decoration: none;
+            padding: 8px;
+            border-radius: 6px;
+            transition: background 0.3s;
+        }
+
+        .message-file-link:hover {
+            background: rgba(88, 101, 242, 0.1);
+        }
+
+        .file-download-icon {
+            margin-right: 8px;
+            font-size: 16px;
+        }
+
+        /* Modal para vista previa de imágenes */
+        .image-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-modal.active {
+            display: flex;
+        }
+
+        .image-modal-content {
+            max-width: 90%;
+            max-height: 90%;
+            position: relative;
+        }
+
+        .image-modal-img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+
+        .image-modal-close {
+            position: absolute;
+            top: -40px;
+            right: 0;
+            background: var(--danger-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        /* Botón de archivo solo visible en sala multimedia */
+        .file-button {
+            display: none;
+        }
+
+        .file-button.show {
+            display: flex;
         }
     </style>
 </head>
@@ -1204,6 +1445,9 @@
                     <li class="room-item" data-room="music">
                         <i class="fas fa-music room-icon"></i> Música
                     </li>
+                    <li class="room-item" data-room="multimedia">
+                        <i class="fas fa-photo-video room-icon"></i> Multimedia
+                    </li>
                 </ul>
             </div>
             
@@ -1236,9 +1480,26 @@
             </div>
             
             <div class="chat-input-area">
+                <!-- Área de subida de archivos -->
+                <div class="file-upload-area" id="file-upload-area">
+                    <div class="file-upload-text">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--primary-color); margin-bottom: 10px;"></i>
+                        <p>Arrastra archivos aquí o haz clic para seleccionar</p>
+                        <p style="font-size: 12px; margin-top: 5px;">Formatos permitidos: Imágenes (JPG, PNG, GIF), Documentos (PDF, DOC, TXT), Máximo 10MB</p>
+                    </div>
+                    <input type="file" class="file-input" id="file-input" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+                    <button class="file-upload-button" id="select-files-btn">
+                        <i class="fas fa-folder-open"></i> Seleccionar Archivos
+                    </button>
+                    <button class="file-upload-button" id="upload-files-btn" style="display: none;">
+                        <i class="fas fa-upload"></i> Subir Archivos
+                    </button>
+                    <div class="file-preview" id="file-preview"></div>
+                </div>
+                
                 <input type="text" class="message-input" id="message-input" placeholder="Escribe un mensaje...">
                 <div class="action-buttons">
-                    <button class="action-button">
+                    <button class="action-button file-button" id="file-button">
                         <i class="fas fa-paperclip"></i>
                     </button>
                     <button class="action-button">
@@ -1252,7 +1513,7 @@
         </div>
     </div>
 
-    <!-- Menú contextual para móviles -->
+    <!-- Menú contextual -->
     <div class="context-menu" id="context-menu">
         <div class="context-menu-item" id="copy-user-id">
             <i class="fas fa-user-circle"></i> Copiar ID de Usuario
@@ -1264,6 +1525,16 @@
         <div class="context-menu-item" id="report-message">
             <i class="fas fa-flag"></i> Reportar Mensaje
         </div>
+        <div class="context-menu-item admin-only" id="delete-message">
+            <i class="fas fa-trash"></i> Eliminar Mensaje
+        </div>
+        <div class="context-menu-item admin-only" id="ban-user">
+            <i class="fas fa-ban"></i> Banear Usuario
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item admin-only" id="open-admin-panel">
+            <i class="fas fa-cog"></i> Panel de Administración
+        </div>
         <div class="context-menu-divider"></div>
         <div class="context-menu-item" id="close-context-menu">
             <i class="fas fa-times"></i> Cerrar
@@ -1272,6 +1543,28 @@
 
     <!-- Indicador de copia -->
     <div class="copied-indicator" id="copied-indicator">¡Copiado al portapapeles!</div>
+
+    <!-- Modal para vista previa de imágenes -->
+    <div class="image-modal" id="image-modal">
+        <div class="image-modal-content">
+            <button class="image-modal-close" id="image-modal-close">
+                <i class="fas fa-times"></i>
+            </button>
+            <img class="image-modal-img" id="image-modal-img" src="" alt="Vista previa">
+        </div>
+    </div>
+
+    <!-- Instrucciones de uso del menú contextual -->
+    <div class="context-menu-help" style="position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 8px; font-size: 12px; z-index: 999; display: none;">
+        <strong>Menú Contextual:</strong><br>
+        • PC: Clic derecho en mensajes/usuarios<br>
+        • Móvil: Mantener presionado (500ms)<br>
+        • Admins: Opciones adicionales disponibles<br><br>
+        <strong>Archivos:</strong><br>
+        • Solo disponible en sala Multimedia<br>
+        • Clic en 📎 para subir archivos<br>
+        • Drag & drop soportado
+    </div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
@@ -1286,6 +1579,7 @@
         let contextMenuTarget = null;
         let touchStartTime = 0;
         let touchCount = 0;
+        let contextMenuHelpShown = false;
 
         // Elementos DOM
         const loginContainer = document.getElementById('login-container');
@@ -1329,8 +1623,26 @@
         const copyUserIdBtn = document.getElementById('copy-user-id');
         const copyMessageIdBtn = document.getElementById('copy-message-id');
         const reportMessageBtn = document.getElementById('report-message');
+        const deleteMessageBtn = document.getElementById('delete-message');
+        const banUserBtn = document.getElementById('ban-user');
+        const openAdminPanelBtn = document.getElementById('open-admin-panel');
         const closeContextMenuBtn = document.getElementById('close-context-menu');
         const copiedIndicator = document.getElementById('copied-indicator');
+        
+        // Elementos para archivos
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileInput = document.getElementById('file-input');
+        const selectFilesBtn = document.getElementById('select-files-btn');
+        const uploadFilesBtn = document.getElementById('upload-files-btn');
+        const filePreview = document.getElementById('file-preview');
+        const fileButton = document.getElementById('file-button');
+        const imageModal = document.getElementById('image-modal');
+        const imageModalImg = document.getElementById('image-modal-img');
+        const imageModalClose = document.getElementById('image-modal-close');
+        
+        // Variables para archivos
+        let selectedFiles = [];
+        let isFileUploadActive = false;
 
         // Toggle sidebar en dispositivos móviles
         function toggleSidebar() {
@@ -1405,13 +1717,68 @@
             // Posicionar el menú contextual
             contextMenu.style.display = 'block';
             contextMenu.classList.add('show');
-            contextMenu.style.left = `${event.clientX}px`;
-            contextMenu.style.top = `${event.clientY}px`;
             
-            // Ocultar opciones no relevantes
+            // Obtener coordenadas del evento
+            let clientX, clientY;
+            if (event.touches && event.touches.length > 0) {
+                // Evento táctil
+                clientX = event.touches[0].clientX;
+                clientY = event.touches[0].clientY;
+            } else if (event.changedTouches && event.changedTouches.length > 0) {
+                // Evento táctil final
+                clientX = event.changedTouches[0].clientX;
+                clientY = event.changedTouches[0].clientY;
+            } else {
+                // Evento de ratón
+                clientX = event.clientX;
+                clientY = event.clientY;
+            }
+            
+            // Ajustar posición para que no se salga de la pantalla
+            const menuWidth = 200; // Ancho aproximado del menú
+            const menuHeight = 300; // Alto aproximado del menú
+            
+            let left = clientX;
+            let top = clientY;
+            
+            // Ajustar horizontalmente
+            if (left + menuWidth > window.innerWidth) {
+                left = window.innerWidth - menuWidth - 10;
+            }
+            
+            // Ajustar verticalmente
+            if (top + menuHeight > window.innerHeight) {
+                top = window.innerHeight - menuHeight - 10;
+            }
+            
+            contextMenu.style.left = `${left}px`;
+            contextMenu.style.top = `${top}px`;
+            
+            // Mostrar/ocultar opciones según el tipo
             copyMessageIdBtn.style.display = type === 'message' ? 'flex' : 'none';
             copyUserIdBtn.style.display = type === 'user' ? 'flex' : 'none';
             reportMessageBtn.style.display = type === 'message' ? 'flex' : 'none';
+            
+            // Mostrar opciones de administrador si el usuario es admin
+            const adminOptions = document.querySelectorAll('.context-menu-item.admin-only');
+            adminOptions.forEach(option => {
+                if (currentUser?.role === 'admin') {
+                    option.classList.add('show');
+                } else {
+                    option.classList.remove('show');
+                }
+            });
+            
+            // Mostrar opciones específicas según el tipo
+            if (currentUser?.role === 'admin') {
+                deleteMessageBtn.style.display = type === 'message' ? 'flex' : 'none';
+                banUserBtn.style.display = type === 'user' ? 'flex' : 'none';
+                openAdminPanelBtn.style.display = 'flex';
+            } else {
+                deleteMessageBtn.style.display = 'none';
+                banUserBtn.style.display = 'none';
+                openAdminPanelBtn.style.display = 'none';
+            }
         }
 
         // Ocultar menú contextual
@@ -1421,6 +1788,206 @@
                 contextMenu.style.display = 'none';
             }, 200);
         }
+
+        // Mostrar instrucciones del menú contextual
+        function showContextMenuHelp() {
+            if (!contextMenuHelpShown) {
+                const helpElement = document.querySelector('.context-menu-help');
+                if (helpElement) {
+                    helpElement.style.display = 'block';
+                    setTimeout(() => {
+                        helpElement.style.display = 'none';
+                    }, 5000);
+                    contextMenuHelpShown = true;
+                }
+            }
+        }
+
+        // Funciones para manejar archivos
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function getFileIcon(fileType) {
+            if (fileType.startsWith('image/')) {
+                return 'fas fa-image';
+            } else if (fileType.includes('pdf')) {
+                return 'fas fa-file-pdf';
+            } else if (fileType.includes('doc')) {
+                return 'fas fa-file-word';
+            } else if (fileType.includes('txt')) {
+                return 'fas fa-file-alt';
+            } else {
+                return 'fas fa-file';
+            }
+        }
+
+        function validateFile(file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = [
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+                'application/pdf', 'application/msword', 
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/plain'
+            ];
+
+            if (file.size > maxSize) {
+                showNotification(`El archivo ${file.name} es demasiado grande. Máximo 10MB.`, 'error');
+                return false;
+            }
+
+            if (!allowedTypes.includes(file.type)) {
+                showNotification(`El tipo de archivo ${file.name} no está permitido.`, 'error');
+                return false;
+            }
+
+            return true;
+        }
+
+        function toggleFileUpload() {
+            if (currentRoom === 'multimedia') {
+                isFileUploadActive = !isFileUploadActive;
+                fileUploadArea.classList.toggle('active', isFileUploadActive);
+                
+                if (!isFileUploadActive) {
+                    // Limpiar archivos seleccionados
+                    selectedFiles = [];
+                    filePreview.innerHTML = '';
+                    uploadFilesBtn.style.display = 'none';
+                }
+            } else {
+                showNotification('La subida de archivos solo está disponible en la sala Multimedia', 'error');
+            }
+        }
+
+        function handleFileSelect(files) {
+            selectedFiles = [];
+            filePreview.innerHTML = '';
+            
+            Array.from(files).forEach(file => {
+                if (validateFile(file)) {
+                    selectedFiles.push(file);
+                    addFilePreview(file);
+                }
+            });
+            
+            if (selectedFiles.length > 0) {
+                uploadFilesBtn.style.display = 'inline-block';
+            }
+        }
+
+        function addFilePreview(file) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            const icon = getFileIcon(file.type);
+            const size = formatFileSize(file.size);
+            
+            fileItem.innerHTML = `
+                <i class="${icon} file-icon"></i>
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${size}</div>
+                    <div class="upload-progress">
+                        <div class="upload-progress-bar" data-file="${file.name}"></div>
+                    </div>
+                </div>
+                <button class="file-remove" onclick="removeFile('${file.name}')">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            filePreview.appendChild(fileItem);
+        }
+
+        function removeFile(fileName) {
+            selectedFiles = selectedFiles.filter(file => file.name !== fileName);
+            const fileItem = filePreview.querySelector(`[data-file="${fileName}"]`).closest('.file-item');
+            fileItem.remove();
+            
+            if (selectedFiles.length === 0) {
+                uploadFilesBtn.style.display = 'none';
+            }
+        }
+
+        function uploadFiles() {
+            if (selectedFiles.length === 0) return;
+            
+            selectedFiles.forEach(file => {
+                uploadFile(file);
+            });
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('room', currentRoom);
+            formData.append('userId', currentUser.id);
+            formData.append('sender', currentUser.nickname);
+            
+            const xhr = new XMLHttpRequest();
+            const progressBar = filePreview.querySelector(`[data-file="${file.name}"] .upload-progress-bar`);
+            
+            xhr.upload.addEventListener('progress', (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                }
+            });
+            
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        // Enviar mensaje con archivo
+                        const message = {
+                            text: `Archivo compartido: ${file.name}`,
+                            sender: currentUser.nickname,
+                            senderId: currentUser.id,
+                            room: currentRoom,
+                            timestamp: Date.now(),
+                            file: {
+                                name: file.name,
+                                url: response.fileUrl,
+                                type: file.type,
+                                size: file.size
+                            }
+                        };
+                        
+                        socket.emit('message', message);
+                        showNotification(`Archivo ${file.name} subido exitosamente`, 'success');
+                    } else {
+                        showNotification(`Error al subir ${file.name}: ${response.error}`, 'error');
+                    }
+                } else {
+                    showNotification(`Error al subir ${file.name}`, 'error');
+                }
+            });
+            
+            xhr.addEventListener('error', () => {
+                showNotification(`Error de red al subir ${file.name}`, 'error');
+            });
+            
+            xhr.open('POST', '/upload');
+            xhr.send(formData);
+        }
+
+        function showImageModal(imageSrc) {
+            imageModalImg.src = imageSrc;
+            imageModal.classList.add('active');
+        }
+
+        function hideImageModal() {
+            imageModal.classList.remove('active');
+        }
+
+        // Hacer removeFile global para que funcione con onclick
+        window.removeFile = removeFile;
+        window.showImageModal = showImageModal;
 
         // Añadir mensaje al chat con ID único
         function addMessage(message, isCurrentUser = false) {
@@ -1439,6 +2006,29 @@
             
             messageElement.setAttribute('data-message-id', message.id);
             
+            let fileContent = '';
+            if (message.file && !message.banned) {
+                if (message.file.type.startsWith('image/')) {
+                    fileContent = `
+                        <div class="message-file">
+                            <img src="${message.file.url}" alt="${message.file.name}" class="message-image" onclick="showImageModal('${message.file.url}')">
+                            <div style="margin-top: 8px; font-size: 12px; color: var(--gray-color);">
+                                ${message.file.name} (${formatFileSize(message.file.size)})
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    fileContent = `
+                        <div class="message-file">
+                            <a href="${message.file.url}" class="message-file-link" target="_blank" download="${message.file.name}">
+                                <i class="${getFileIcon(message.file.type)} file-download-icon"></i>
+                                ${message.file.name} (${formatFileSize(message.file.size)})
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+
             messageElement.innerHTML = `
                 <div class="message-header">
                     <span class="message-sender">${isCurrentUser ? 'Tú' : message.sender}</span>
@@ -1446,6 +2036,7 @@
                     <span class="message-time">${formatDateTime(new Date(message.timestamp))}</span>
                 </div>
                 <div class="message-text">${message.banned ? '[MENSAJE ELIMINADO POR ADMINISTRADOR]' : message.text}</div>
+                ${fileContent}
                 <div class="message-info">
                     <span class="message-id copyable" data-id="${message.id}">Msg ID: ${message.id}</span>
                     ${currentUser?.role === 'admin' ? `
@@ -1468,9 +2059,10 @@
                 });
             }
             
-            // Agregar eventos para copiar IDs (solo en PC)
+            // Agregar eventos para copiar IDs y menú contextual
             const copyableElements = messageElement.querySelectorAll('.copyable');
             copyableElements.forEach(element => {
+                // Clic normal para copiar (en PC)
                 element.addEventListener('click', (e) => {
                     if (!isMobileDevice()) {
                         const id = element.getAttribute('data-id');
@@ -1478,14 +2070,75 @@
                     }
                 });
                 
-                // Agregar menú contextual con clic derecho para PC
+                // Clic derecho para menú contextual (PC)
                 element.addEventListener('contextmenu', (e) => {
-                    if (!isMobileDevice()) {
+                    e.preventDefault();
+                    const id = element.getAttribute('data-id');
+                    const type = element.classList.contains('user-id') ? 'user' : 'message';
+                    const messageId = messageElement.getAttribute('data-message-id');
+                    const userId = message.senderId;
+                    
+                    showContextMenu(e, { 
+                        id, 
+                        type, 
+                        messageId, 
+                        userId 
+                    }, type);
+                });
+                
+                // Clic largo para menú contextual (móviles)
+                let longPressTimer;
+                element.addEventListener('touchstart', (e) => {
+                    longPressTimer = setTimeout(() => {
                         const id = element.getAttribute('data-id');
                         const type = element.classList.contains('user-id') ? 'user' : 'message';
-                        showContextMenu(e, { id, type }, type);
-                    }
+                        const messageId = messageElement.getAttribute('data-message-id');
+                        const userId = message.senderId;
+                        
+                        showContextMenu(e, { 
+                            id, 
+                            type, 
+                            messageId, 
+                            userId 
+                        }, type);
+                    }, 500);
                 });
+                
+                element.addEventListener('touchend', () => {
+                    clearTimeout(longPressTimer);
+                });
+            });
+            
+            // Agregar evento de clic derecho al mensaje completo
+            messageElement.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                const messageId = messageElement.getAttribute('data-message-id');
+                const userId = message.senderId;
+                
+                showContextMenu(e, { 
+                    messageId, 
+                    userId,
+                    type: 'message'
+                }, 'message');
+            });
+            
+            // Agregar evento de clic largo al mensaje completo (móviles)
+            let messageLongPressTimer;
+            messageElement.addEventListener('touchstart', (e) => {
+                messageLongPressTimer = setTimeout(() => {
+                    const messageId = messageElement.getAttribute('data-message-id');
+                    const userId = message.senderId;
+                    
+                    showContextMenu(e, { 
+                        messageId, 
+                        userId,
+                        type: 'message'
+                    }, 'message');
+                }, 500);
+            });
+            
+            messageElement.addEventListener('touchend', () => {
+                clearTimeout(messageLongPressTimer);
             });
             
             // Agregar evento para menú contextual con tres dedos en móviles
@@ -1573,25 +2226,67 @@
                     });
                 }
                 
-                // Agregar eventos para copiar IDs
+                // Agregar eventos para copiar IDs y menú contextual
                 const userIdElement = userItem.querySelector('.user-id.copyable');
+                
+                // Clic normal para copiar (en PC)
                 userIdElement.addEventListener('click', (e) => {
                     if (!isMobileDevice()) {
                         copyToClipboard(user.id);
                     }
                 });
                 
+                // Clic derecho para menú contextual (PC)
                 userIdElement.addEventListener('contextmenu', (e) => {
-                    if (!isMobileDevice()) {
-                        showContextMenu(e, { id: user.id, type: 'user' }, 'user');
-                    }
+                    e.preventDefault();
+                    showContextMenu(e, { 
+                        id: user.id, 
+                        type: 'user',
+                        userId: user.id
+                    }, 'user');
                 });
                 
-                // Agregar evento para menú contextual con tres dedos en móviles
-                if (isMobileDevice()) {
-                    userItem.addEventListener('touchstart', handleTouchStart);
-                    userItem.addEventListener('touchend', handleTouchEnd);
-                }
+                // Clic largo para menú contextual (móviles)
+                let userLongPressTimer;
+                userIdElement.addEventListener('touchstart', (e) => {
+                    userLongPressTimer = setTimeout(() => {
+                        showContextMenu(e, { 
+                            id: user.id, 
+                            type: 'user',
+                            userId: user.id
+                        }, 'user');
+                    }, 500);
+                });
+                
+                userIdElement.addEventListener('touchend', () => {
+                    clearTimeout(userLongPressTimer);
+                });
+                
+                // Agregar evento de clic derecho al usuario completo
+                userItem.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    showContextMenu(e, { 
+                        id: user.id, 
+                        type: 'user',
+                        userId: user.id
+                    }, 'user');
+                });
+                
+                // Agregar evento de clic largo al usuario completo (móviles)
+                let userItemLongPressTimer;
+                userItem.addEventListener('touchstart', (e) => {
+                    userItemLongPressTimer = setTimeout(() => {
+                        showContextMenu(e, { 
+                            id: user.id, 
+                            type: 'user',
+                            userId: user.id
+                        }, 'user');
+                    }, 500);
+                });
+                
+                userItem.addEventListener('touchend', () => {
+                    clearTimeout(userItemLongPressTimer);
+                });
             });
         }
 
@@ -1817,6 +2512,11 @@
                     loginContainer.classList.add('hidden');
                     chatContainer.classList.remove('hidden');
                     
+                    // Mostrar botón de archivo si está en sala multimedia
+                    if (currentRoom === 'multimedia') {
+                        fileButton.classList.add('show');
+                    }
+                    
                     // Unirse al chat
                     socket.emit('join', {
                         user: currentUser,
@@ -1831,6 +2531,11 @@
                         senderId: 'system',
                         timestamp: Date.now()
                     });
+                    
+                    // Mostrar instrucciones del menú contextual después de un momento
+                    setTimeout(() => {
+                        showContextMenuHelp();
+                    }, 2000);
                 } else {
                     showNotification(response.message || 'Error en el inicio de sesión');
                 }
@@ -1910,7 +2615,19 @@
                 const roomDisplayName = roomName === 'general' ? 'General' : 
                                       roomName === 'develop' ? 'Desarrollo' :
                                       roomName === 'business' ? 'Negocios' :
-                                      roomName === 'gaming' ? 'Gaming' : 'Música';
+                                      roomName === 'gaming' ? 'Gaming' : 
+                                      roomName === 'music' ? 'Música' : 'Multimedia';
+                
+                // Mostrar/ocultar botón de archivo según la sala
+                if (roomName === 'multimedia') {
+                    fileButton.classList.add('show');
+                } else {
+                    fileButton.classList.remove('show');
+                    // Cerrar área de subida si está abierta
+                    if (isFileUploadActive) {
+                        toggleFileUpload();
+                    }
+                }
                 
                 currentRoomElement.textContent = `Sala ${roomDisplayName}`;
                 
@@ -1976,6 +2693,40 @@
         // Botón de menú para móviles
         menuToggle.addEventListener('click', toggleSidebar);
 
+        // Event listeners para archivos
+        fileButton.addEventListener('click', toggleFileUpload);
+        selectFilesBtn.addEventListener('click', () => fileInput.click());
+        uploadFilesBtn.addEventListener('click', uploadFiles);
+        imageModalClose.addEventListener('click', hideImageModal);
+        
+        // Cerrar modal al hacer clic fuera
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                hideImageModal();
+            }
+        });
+        
+        // Manejar selección de archivos
+        fileInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files);
+        });
+        
+        // Drag and drop para archivos
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('dragover');
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            handleFileSelect(e.dataTransfer.files);
+        });
+
         // Banear por IP
         banIpButton.addEventListener('click', () => {
             const ip = banIpInput.value.trim();
@@ -2037,11 +2788,54 @@
             }
         });
 
+        // Eliminar mensaje (solo admins)
+        deleteMessageBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.messageId) {
+                if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
+                    socket.emit('admin:deleteMessage', { messageId: contextMenuTarget.messageId });
+                    showNotification('Mensaje eliminado', 'success');
+                }
+                hideContextMenu();
+            }
+        });
+
+        // Banear usuario (solo admins)
+        banUserBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.userId) {
+                const reason = prompt('Razón del baneo:');
+                if (reason) {
+                    socket.emit('admin:banUser', { userId: contextMenuTarget.userId, reason });
+                    showNotification('Usuario baneado', 'success');
+                }
+                hideContextMenu();
+            }
+        });
+
+        // Abrir panel de administración
+        openAdminPanelBtn.addEventListener('click', () => {
+            toggleAdminPanel();
+            hideContextMenu();
+        });
+
         closeContextMenuBtn.addEventListener('click', hideContextMenu);
 
         // Cerrar menú contextual al hacer clic fuera
         document.addEventListener('click', (e) => {
             if (!contextMenu.contains(e.target) && contextMenu.style.display === 'block') {
+                hideContextMenu();
+            }
+        });
+
+        // Cerrar menú contextual al hacer scroll
+        document.addEventListener('scroll', () => {
+            if (contextMenu.style.display === 'block') {
+                hideContextMenu();
+            }
+        });
+
+        // Cerrar menú contextual al cambiar el tamaño de la ventana
+        window.addEventListener('resize', () => {
+            if (contextMenu.style.display === 'block') {
                 hideContextMenu();
             }
         });
