@@ -1154,6 +1154,24 @@
             transform: scale(1.02);
         }
 
+        /* Estilos para controles de audio y video */
+        .message-file audio,
+        .message-file video {
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .message-file audio::-webkit-media-controls-panel,
+        .message-file video::-webkit-media-controls-panel {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        .message-file audio::-webkit-media-controls-play-button,
+        .message-file video::-webkit-media-controls-play-button {
+            background: var(--primary-color);
+            border-radius: 50%;
+        }
+
         .message-file-link {
             display: flex;
             align-items: center;
@@ -1485,9 +1503,9 @@
                     <div class="file-upload-text">
                         <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--primary-color); margin-bottom: 10px;"></i>
                         <p>Arrastra archivos aquí o haz clic para seleccionar</p>
-                        <p style="font-size: 12px; margin-top: 5px;">Formatos permitidos: Imágenes (JPG, PNG, GIF), Documentos (PDF, DOC, TXT), Máximo 10MB</p>
+                        <p style="font-size: 12px; margin-top: 5px;">Formatos permitidos: Imágenes, Audio, Video, Documentos (PDF, DOC, XLS, TXT), Máximo 10MB</p>
                     </div>
-                    <input type="file" class="file-input" id="file-input" multiple accept="image/*,.pdf,.doc,.docx,.txt">
+                    <input type="file" class="file-input" id="file-input" multiple accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt,.xls,.xlsx">
                     <button class="file-upload-button" id="select-files-btn">
                         <i class="fas fa-folder-open"></i> Seleccionar Archivos
                     </button>
@@ -1815,10 +1833,16 @@
         function getFileIcon(fileType) {
             if (fileType.startsWith('image/')) {
                 return 'fas fa-image';
+            } else if (fileType.startsWith('audio/')) {
+                return 'fas fa-music';
+            } else if (fileType.startsWith('video/')) {
+                return 'fas fa-video';
             } else if (fileType.includes('pdf')) {
                 return 'fas fa-file-pdf';
             } else if (fileType.includes('doc')) {
                 return 'fas fa-file-word';
+            } else if (fileType.includes('xls') || fileType.includes('excel')) {
+                return 'fas fa-file-excel';
             } else if (fileType.includes('txt')) {
                 return 'fas fa-file-alt';
             } else {
@@ -1829,10 +1853,17 @@
         function validateFile(file) {
             const maxSize = 10 * 1024 * 1024; // 10MB
             const allowedTypes = [
-                'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
+                // Imágenes
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+                // Audio
+                'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a',
+                // Documentos
                 'application/pdf', 'application/msword', 
                 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'text/plain'
+                'text/plain', 'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                // Video
+                'video/mp4', 'video/webm', 'video/ogg', 'video/avi'
             ];
 
             if (file.size > maxSize) {
@@ -1926,11 +1957,15 @@
             const formData = new FormData();
             formData.append('file', file);
             formData.append('room', currentRoom);
-            formData.append('userId', currentUser.id);
-            formData.append('sender', currentUser.nickname);
             
             const xhr = new XMLHttpRequest();
             const progressBar = filePreview.querySelector(`[data-file="${file.name}"] .upload-progress-bar`);
+            
+            // Agregar token de autorización
+            const sessionToken = getCookie('sessionToken');
+            if (sessionToken) {
+                xhr.setRequestHeader('Authorization', `Bearer ${sessionToken}`);
+            }
             
             xhr.upload.addEventListener('progress', (e) => {
                 if (e.lengthComputable) {
@@ -1942,29 +1977,40 @@
             xhr.addEventListener('load', () => {
                 if (xhr.status === 200) {
                     const response = JSON.parse(xhr.responseText);
-                    if (response.success) {
-                        // Enviar mensaje con archivo
-                        const message = {
-                            text: `Archivo compartido: ${file.name}`,
-                            sender: currentUser.nickname,
-                            senderId: currentUser.id,
-                            room: currentRoom,
-                            timestamp: Date.now(),
-                            file: {
-                                name: file.name,
-                                url: response.fileUrl,
-                                type: file.type,
-                                size: file.size
-                            }
-                        };
-                        
-                        socket.emit('message', message);
-                        showNotification(`Archivo ${file.name} subido exitosamente`, 'success');
+                    if (response.success && response.files && response.files.length > 0) {
+                        const uploadedFile = response.files.find(f => f.name === file.name);
+                        if (uploadedFile) {
+                            // Enviar mensaje con archivo
+                            const message = {
+                                text: `Archivo compartido: ${file.name}`,
+                                sender: currentUser.nickname,
+                                senderId: currentUser.id,
+                                room: currentRoom,
+                                timestamp: Date.now(),
+                                file: {
+                                    name: uploadedFile.name,
+                                    url: uploadedFile.url,
+                                    type: uploadedFile.type,
+                                    size: uploadedFile.size
+                                }
+                            };
+                            
+                            socket.emit('message', message);
+                            showNotification(`Archivo ${file.name} subido exitosamente`, 'success');
+                        }
                     } else {
-                        showNotification(`Error al subir ${file.name}: ${response.error}`, 'error');
+                        showNotification(`Error al subir ${file.name}: ${response.error || 'Error desconocido'}`, 'error');
                     }
+                } else if (xhr.status === 401) {
+                    showNotification('Sesión expirada. Por favor, inicia sesión nuevamente.', 'error');
+                    logout();
                 } else {
-                    showNotification(`Error al subir ${file.name}`, 'error');
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        showNotification(`Error al subir ${file.name}: ${response.error || 'Error del servidor'}`, 'error');
+                    } catch (e) {
+                        showNotification(`Error al subir ${file.name}`, 'error');
+                    }
                 }
             });
             
@@ -2015,6 +2061,32 @@
                             <div style="margin-top: 8px; font-size: 12px; color: var(--gray-color);">
                                 ${message.file.name} (${formatFileSize(message.file.size)})
                             </div>
+                        </div>
+                    `;
+                } else if (message.file.type.startsWith('audio/')) {
+                    fileContent = `
+                        <div class="message-file">
+                            <audio controls style="width: 100%; margin-bottom: 8px;">
+                                <source src="${message.file.url}" type="${message.file.type}">
+                                Tu navegador no soporta el elemento de audio.
+                            </audio>
+                            <a href="${message.file.url}" class="message-file-link" target="_blank" download="${message.file.name}">
+                                <i class="${getFileIcon(message.file.type)} file-download-icon"></i>
+                                ${message.file.name} (${formatFileSize(message.file.size)})
+                            </a>
+                        </div>
+                    `;
+                } else if (message.file.type.startsWith('video/')) {
+                    fileContent = `
+                        <div class="message-file">
+                            <video controls style="width: 100%; max-height: 300px; margin-bottom: 8px;">
+                                <source src="${message.file.url}" type="${message.file.type}">
+                                Tu navegador no soporta el elemento de video.
+                            </video>
+                            <a href="${message.file.url}" class="message-file-link" target="_blank" download="${message.file.name}">
+                                <i class="${getFileIcon(message.file.type)} file-download-icon"></i>
+                                ${message.file.name} (${formatFileSize(message.file.size)})
+                            </a>
                         </div>
                     `;
                 } else {

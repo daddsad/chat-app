@@ -7,6 +7,10 @@ const path = require('path');
 const history = require('connect-history-api-fallback');
 const crypto = require('crypto');
 const requestIp = require('request-ip');
+const multer = require('multer');
+const fs = require('fs');
+const sharp = require('sharp');
+const { v4: uuidv4 } = require('uuid');
 
 const app = express();
 const server = http.createServer(app);
@@ -30,6 +34,72 @@ const db = new sqlite3.Database('./chat.db');
 
 // TOKEN SSO PREDEFINIDO (como contraseña de administrador)
 const DEFAULT_ADMIN_TOKEN = "ANIMIX_ADMIN_SECRET_2024";
+
+// Configuración de archivos
+const UPLOAD_DIR = './public/uploads';
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a'];
+const ALLOWED_DOCUMENT_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+const ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/webm', 'video/ogg', 'video/avi'];
+
+// Crear directorios de uploads si no existen
+const uploadDirs = [
+  `${UPLOAD_DIR}/images`,
+  `${UPLOAD_DIR}/audios`,
+  `${UPLOAD_DIR}/documents`,
+  `${UPLOAD_DIR}/videos`,
+  `${UPLOAD_DIR}/others`
+];
+
+uploadDirs.forEach(dir => {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+});
+
+// Configuración de multer para subida de archivos
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    let uploadPath = `${UPLOAD_DIR}/others`;
+    
+    if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+      uploadPath = `${UPLOAD_DIR}/images`;
+    } else if (ALLOWED_AUDIO_TYPES.includes(file.mimetype)) {
+      uploadPath = `${UPLOAD_DIR}/audios`;
+    } else if (ALLOWED_DOCUMENT_TYPES.includes(file.mimetype)) {
+      uploadPath = `${UPLOAD_DIR}/documents`;
+    } else if (ALLOWED_VIDEO_TYPES.includes(file.mimetype)) {
+      uploadPath = `${UPLOAD_DIR}/videos`;
+    }
+    
+    cb(null, uploadPath);
+  },
+  filename: function (req, file, cb) {
+    // Generar nombre único para el archivo
+    const uniqueName = `${uuidv4()}-${Date.now()}${path.extname(file.originalname)}`;
+    cb(null, uniqueName);
+  }
+});
+
+const fileFilter = (req, file, cb) => {
+  const allowedTypes = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_AUDIO_TYPES, ...ALLOWED_DOCUMENT_TYPES, ...ALLOWED_VIDEO_TYPES];
+  
+  if (allowedTypes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(new Error('Tipo de archivo no permitido'), false);
+  }
+};
+
+const upload = multer({
+  storage: storage,
+  fileFilter: fileFilter,
+  limits: {
+    fileSize: MAX_FILE_SIZE,
+    files: 5 // Máximo 5 archivos por subida
+  }
+});
 
 // Crear tablas si no existen
 db.serialize(() => {
@@ -101,6 +171,24 @@ db.serialize(() => {
     )
   `);
   
+  db.run(`
+    CREATE TABLE IF NOT EXISTS files (
+      id TEXT PRIMARY KEY,
+      original_name TEXT NOT NULL,
+      filename TEXT NOT NULL,
+      file_path TEXT NOT NULL,
+      file_type TEXT NOT NULL,
+      file_size INTEGER NOT NULL,
+      mime_type TEXT NOT NULL,
+      uploaded_by TEXT NOT NULL,
+      room TEXT NOT NULL,
+      message_id TEXT,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY(uploaded_by) REFERENCES users(id),
+      FOREIGN KEY(message_id) REFERENCES messages(id)
+    )
+  `);
+  
   // Nueva tabla para tokens SSO de administradores
   db.run(`
     CREATE TABLE IF NOT EXISTS admin_sso_tokens (
@@ -138,6 +226,60 @@ function generateId() {
 // Función para generar token de sesión
 function generateToken() {
   return crypto.randomBytes(32).toString('hex');
+}
+
+// Función para obtener el tipo de archivo
+function getFileType(mimeType) {
+  if (ALLOWED_IMAGE_TYPES.includes(mimeType)) return 'image';
+  if (ALLOWED_AUDIO_TYPES.includes(mimeType)) return 'audio';
+  if (ALLOWED_DOCUMENT_TYPES.includes(mimeType)) return 'document';
+  if (ALLOWED_VIDEO_TYPES.includes(mimeType)) return 'video';
+  return 'other';
+}
+
+// Función para guardar información de archivo en la base de datos
+function saveFileInfo(fileInfo, callback) {
+  const fileId = generateId();
+  
+  db.run(`
+    INSERT INTO files (id, original_name, filename, file_path, file_type, file_size, mime_type, uploaded_by, room)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `, [
+    fileId,
+    fileInfo.originalName,
+    fileInfo.filename,
+    fileInfo.filePath,
+    fileInfo.fileType,
+    fileInfo.fileSize,
+    fileInfo.mimeType,
+    fileInfo.uploadedBy,
+    fileInfo.room
+  ], function(err) {
+    if (err) return callback(err);
+    callback(null, fileId);
+  });
+}
+
+// Función para procesar imagen con Sharp (optimización)
+async function processImage(inputPath, outputPath) {
+  try {
+    await sharp(inputPath)
+      .resize(1920, 1080, { 
+        fit: 'inside',
+        withoutEnlargement: true 
+      })
+      .jpeg({ quality: 85 })
+      .toFile(outputPath);
+    
+    // Reemplazar archivo original con el optimizado
+    fs.unlinkSync(inputPath);
+    fs.renameSync(outputPath, inputPath);
+    
+    return true;
+  } catch (error) {
+    console.error('Error procesando imagen:', error);
+    return false;
+  }
 }
 
 // Función para obtener un usuario por nombre de usuario
@@ -874,9 +1016,222 @@ io.on('connection', (socket) => {
   });
 });
 
+// Rutas HTTP para manejo de archivos
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Endpoint para subir archivos
+app.post('/upload', upload.array('file', 5), async (req, res) => {
+  try {
+    // Verificar que el usuario esté autenticado
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, error: 'No autorizado' });
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Validar sesión
+    validateSession(token, (err, user) => {
+      if (err || !user) {
+        return res.status(401).json({ success: false, error: 'Sesión inválida' });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ success: false, error: 'No se seleccionaron archivos' });
+      }
+
+      const uploadedFiles = [];
+      let processedCount = 0;
+
+      req.files.forEach(async (file) => {
+        try {
+          // Procesar imagen si es necesario
+          if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+            const tempPath = file.path + '_temp';
+            await processImage(file.path, tempPath);
+          }
+
+          // Guardar información en la base de datos
+          const fileInfo = {
+            originalName: file.originalname,
+            filename: file.filename,
+            filePath: file.path,
+            fileType: getFileType(file.mimetype),
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            uploadedBy: user.id,
+            room: req.body.room || 'multimedia'
+          };
+
+          saveFileInfo(fileInfo, (err, fileId) => {
+            if (err) {
+              console.error('Error guardando archivo en BD:', err);
+              return;
+            }
+
+            const fileUrl = `/uploads/${getFileType(file.mimetype)}s/${file.filename}`;
+            
+            uploadedFiles.push({
+              id: fileId,
+              name: file.originalname,
+              url: fileUrl,
+              type: file.mimetype,
+              size: file.size
+            });
+
+            processedCount++;
+            
+            // Si todos los archivos han sido procesados, enviar respuesta
+            if (processedCount === req.files.length) {
+              res.json({
+                success: true,
+                files: uploadedFiles,
+                message: `${uploadedFiles.length} archivo(s) subido(s) exitosamente`
+              });
+            }
+          });
+
+        } catch (error) {
+          console.error('Error procesando archivo:', error);
+          processedCount++;
+          
+          if (processedCount === req.files.length) {
+            res.status(500).json({
+              success: false,
+              error: 'Error procesando archivos'
+            });
+          }
+        }
+      });
+
+    });
+
+  } catch (error) {
+    console.error('Error en endpoint de upload:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para obtener información de archivo
+app.get('/file/:fileId', (req, res) => {
+  const { fileId } = req.params;
+  
+  db.get('SELECT * FROM files WHERE id = ?', [fileId], (err, file) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: 'Error en el servidor' });
+    }
+    
+    if (!file) {
+      return res.status(404).json({ success: false, error: 'Archivo no encontrado' });
+    }
+    
+    res.json({
+      success: true,
+      file: {
+        id: file.id,
+        name: file.original_name,
+        url: `/uploads/${file.file_type}s/${file.filename}`,
+        type: file.mime_type,
+        size: file.file_size,
+        uploadedBy: file.uploaded_by,
+        createdAt: file.created_at
+      }
+    });
+  });
+});
+
+// Endpoint para eliminar archivo (solo admins)
+app.delete('/file/:fileId', (req, res) => {
+  const { fileId } = req.params;
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+
+  const token = authHeader.replace('Bearer ', '');
+  
+  validateSession(token, (err, user) => {
+    if (err || !user || user.role !== 'admin') {
+      return res.status(401).json({ success: false, error: 'No autorizado' });
+    }
+
+    db.get('SELECT * FROM files WHERE id = ?', [fileId], (err, file) => {
+      if (err) {
+        return res.status(500).json({ success: false, error: 'Error en el servidor' });
+      }
+      
+      if (!file) {
+        return res.status(404).json({ success: false, error: 'Archivo no encontrado' });
+      }
+
+      // Eliminar archivo físico
+      fs.unlink(file.file_path, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error('Error eliminando archivo físico:', unlinkErr);
+        }
+
+        // Eliminar registro de la base de datos
+        db.run('DELETE FROM files WHERE id = ?', [fileId], (deleteErr) => {
+          if (deleteErr) {
+            return res.status(500).json({ success: false, error: 'Error eliminando archivo' });
+          }
+
+          // Registrar acción de moderación
+          logModerationAction(user.id, 'delete_file', fileId, 'Archivo eliminado por admin');
+
+          res.json({ success: true, message: 'Archivo eliminado exitosamente' });
+        });
+      });
+    });
+  });
+});
+
+// Middleware de manejo de errores para multer
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        error: 'El archivo es demasiado grande. Máximo 10MB.'
+      });
+    }
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        error: 'Demasiados archivos. Máximo 5 archivos por subida.'
+      });
+    }
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo de archivo inesperado.'
+      });
+    }
+  }
+  
+  if (error.message === 'Tipo de archivo no permitido') {
+    return res.status(400).json({
+      success: false,
+      error: 'Tipo de archivo no permitido.'
+    });
+  }
+  
+  console.error('Error en upload:', error);
+  res.status(500).json({
+    success: false,
+    error: 'Error interno del servidor'
+  });
+});
+
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Servidor escuchando en http://localhost:${PORT}`);
   console.log(`Token SSO predefinido: ${DEFAULT_ADMIN_TOKEN}`);
+  console.log(`Directorio de uploads: ${UPLOAD_DIR}`);
 });
