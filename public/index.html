@@ -795,7 +795,19 @@
             cursor: pointer;
             font-size: 12px;
             margin-right: 5px;
+            display: none; /* Ocultar por defecto */
         }
+
+        /* Solo mostrar botones admin en el panel de administración */
+        .admin-panel .admin-action {
+            display: inline-block;
+        }
+
+        /* Nota: Los botones de administración (eliminar, banear) solo están disponibles 
+           a través del menú contextual (clic derecho/largo) para mantener la interfaz limpia */
+        
+        /* Nota: Los IDs de usuario y mensaje están ocultos por defecto para mantener 
+           la interfaz limpia. Se pueden mostrar con el botón 👁️ o en el menú contextual */
 
         .ban-button {
             background: var(--danger-color);
@@ -923,6 +935,18 @@
 
         .message:hover {
             background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Ocultar IDs por defecto */
+        .user-id.copyable,
+        .message-id.copyable {
+            display: none;
+        }
+
+        /* Mostrar IDs solo en el menú contextual o cuando se solicite */
+        .show-ids .user-id.copyable,
+        .show-ids .message-id.copyable {
+            display: inline-block;
         }
 
         .user-item {
@@ -1243,6 +1267,39 @@
         .file-button.show {
             display: flex;
         }
+
+        /* Botones de administración */
+        .admin-action-button {
+            background: var(--danger-color);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .admin-action-button:hover {
+            background: #c0392b;
+            transform: scale(1.05);
+        }
+
+        .admin-action-button.show {
+            display: flex;
+        }
+
+        /* Tooltip para botones de admin */
+        .admin-action-button[title]:hover::after {
+            content: attr(title);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 5px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            white-space: nowrap;
+            z-index: 1000;
+            margin-bottom: 5px;
+        }
     </style>
 </head>
 <body>
@@ -1523,6 +1580,20 @@
                     <button class="action-button">
                         <i class="fas fa-smile"></i>
                     </button>
+                    <!-- Botón para mostrar/ocultar IDs -->
+                    <button class="action-button" id="toggle-ids-btn" title="Mostrar/Ocultar IDs">
+                        <i class="fas fa-eye"></i>
+                    </button>
+                    <!-- Botones de administración -->
+                    <button class="action-button admin-action-button hidden" id="delete-message-btn" title="Eliminar último mensaje">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="action-button admin-action-button hidden" id="ban-user-btn" title="Banear usuario seleccionado">
+                        <i class="fas fa-ban"></i>
+                    </button>
+                    <button class="action-button admin-action-button hidden" id="admin-panel-btn" title="Panel de Administración">
+                        <i class="fas fa-cog"></i>
+                    </button>
                 </div>
                 <button class="send-button" id="send-button">
                     <i class="fas fa-paper-plane"></i>
@@ -1577,7 +1648,14 @@
         <strong>Menú Contextual:</strong><br>
         • PC: Clic derecho en mensajes/usuarios<br>
         • Móvil: Mantener presionado (500ms)<br>
-        • Admins: Opciones adicionales disponibles<br><br>
+        • Admins: Eliminar mensajes, banear usuarios<br><br>
+        <strong>Botones de Admin:</strong><br>
+        • 🗑️ Eliminar último mensaje<br>
+        • 🚫 Banear usuario por ID<br>
+        • ⚙️ Panel de administración<br><br>
+        <strong>Otros Botones:</strong><br>
+        • 👁️ Mostrar/Ocultar IDs<br>
+        • 📎 Subir archivos (Multimedia)<br><br>
         <strong>Archivos:</strong><br>
         • Solo disponible en sala Multimedia<br>
         • Clic en 📎 para subir archivos<br>
@@ -1657,6 +1735,14 @@
         const imageModal = document.getElementById('image-modal');
         const imageModalImg = document.getElementById('image-modal-img');
         const imageModalClose = document.getElementById('image-modal-close');
+        
+        // Botones de administración en la barra de acciones
+        const deleteMessageActionBtn = document.getElementById('delete-message-btn');
+        const banUserActionBtn = document.getElementById('ban-user-btn');
+        const adminPanelActionBtn = document.getElementById('admin-panel-btn');
+        
+        // Botón para mostrar/ocultar IDs
+        const toggleIdsBtn = document.getElementById('toggle-ids-btn');
         
         // Variables para archivos
         let selectedFiles = [];
@@ -1818,6 +1904,36 @@
                     }, 5000);
                     contextMenuHelpShown = true;
                 }
+            }
+        }
+
+        // Mostrar/ocultar botones de administración
+        function toggleAdminButtons() {
+            const adminButtons = document.querySelectorAll('.admin-action-button');
+            adminButtons.forEach(button => {
+                if (currentUser?.role === 'admin') {
+                    button.classList.add('show');
+                } else {
+                    button.classList.remove('show');
+                }
+            });
+        }
+
+        // Mostrar/ocultar IDs
+        function toggleIds() {
+            const chatContainer = document.getElementById('chat-container');
+            const isShowing = chatContainer.classList.contains('show-ids');
+            
+            if (isShowing) {
+                chatContainer.classList.remove('show-ids');
+                toggleIdsBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                toggleIdsBtn.title = 'Mostrar IDs';
+                showNotification('IDs ocultos', 'success');
+            } else {
+                chatContainer.classList.add('show-ids');
+                toggleIdsBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                toggleIdsBtn.title = 'Ocultar IDs';
+                showNotification('IDs visibles', 'success');
             }
         }
 
@@ -2031,6 +2147,36 @@
             imageModal.classList.remove('active');
         }
 
+        // Funciones para botones de administración
+        function deleteLastMessage() {
+            const messages = document.querySelectorAll('.message');
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                const messageId = lastMessage.getAttribute('data-message-id');
+                if (messageId && confirm('¿Estás seguro de que quieres eliminar el último mensaje?')) {
+                    socket.emit('admin:deleteMessage', { messageId });
+                    showNotification('Último mensaje eliminado', 'success');
+                }
+            } else {
+                showNotification('No hay mensajes para eliminar', 'error');
+            }
+        }
+
+        function banSelectedUser() {
+            const selectedUserId = prompt('Ingresa el ID del usuario a banear:');
+            if (selectedUserId) {
+                const reason = prompt('Razón del baneo:');
+                if (reason) {
+                    socket.emit('admin:banUser', { userId: selectedUserId, reason });
+                    showNotification('Usuario baneado', 'success');
+                }
+            }
+        }
+
+        function openAdminPanelFromButton() {
+            toggleAdminPanel();
+        }
+
         // Hacer removeFile global para que funcione con onclick
         window.removeFile = removeFile;
         window.showImageModal = showImageModal;
@@ -2111,25 +2257,11 @@
                 ${fileContent}
                 <div class="message-info">
                     <span class="message-id copyable" data-id="${message.id}">Msg ID: ${message.id}</span>
-                    ${currentUser?.role === 'admin' ? `
-                    <button class="admin-action delete-button" data-message-id="${message.id}">
-                        <i class="fas fa-trash"></i> Eliminar
-                    </button>
-                    ` : ''}
                 </div>
             `;
             
             chatMessages.appendChild(messageElement);
             chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            // Agregar evento para eliminar mensaje (solo admins)
-            if (currentUser?.role === 'admin') {
-                const deleteBtn = messageElement.querySelector('.delete-button');
-                deleteBtn.addEventListener('click', (e) => {
-                    const messageId = e.target.closest('.delete-button').dataset.messageId;
-                    socket.emit('admin:deleteMessage', { messageId });
-                });
-            }
             
             // Agregar eventos para copiar IDs y menú contextual
             const copyableElements = messageElement.querySelectorAll('.copyable');
@@ -2277,26 +2409,9 @@
                         <div class="user-id copyable" data-id="${user.id}">ID: ${user.id}</div>
                     </div>
                     ${user.role === 'admin' ? '<div class="admin-indicator">A</div>' : ''}
-                    ${currentUser?.role === 'admin' ? `
-                    <button class="admin-action ban-button" data-user-id="${user.id}">
-                        <i class="fas fa-ban"></i> Banear
-                    </button>
-                    ` : ''}
                 `;
                 
                 onlineUsersList.appendChild(userItem);
-                
-                // Agregar evento para banear usuario (solo admins)
-                if (currentUser?.role === 'admin') {
-                    const banBtn = userItem.querySelector('.ban-button');
-                    banBtn.addEventListener('click', (e) => {
-                        const userId = e.target.closest('.ban-button').dataset.userId;
-                        const reason = prompt('Razón del baneo:');
-                        if (reason) {
-                            socket.emit('admin:banUser', { userId, reason });
-                        }
-                    });
-                }
                 
                 // Agregar eventos para copiar IDs y menú contextual
                 const userIdElement = userItem.querySelector('.user-id.copyable');
@@ -2589,6 +2704,9 @@
                         fileButton.classList.add('show');
                     }
                     
+                    // Mostrar botones de administración si es admin
+                    toggleAdminButtons();
+                    
                     // Unirse al chat
                     socket.emit('join', {
                         user: currentUser,
@@ -2654,6 +2772,9 @@
                     // Cambiar a pantalla de chat
                     registerContainer.classList.add('hidden');
                     chatContainer.classList.remove('hidden');
+                    
+                    // Mostrar botones de administración si es admin
+                    toggleAdminButtons();
                     
                     // Unirse al chat
                     socket.emit('join', {
@@ -2770,6 +2891,14 @@
         selectFilesBtn.addEventListener('click', () => fileInput.click());
         uploadFilesBtn.addEventListener('click', uploadFiles);
         imageModalClose.addEventListener('click', hideImageModal);
+        
+        // Event listeners para botones de administración
+        deleteMessageActionBtn.addEventListener('click', deleteLastMessage);
+        banUserActionBtn.addEventListener('click', banSelectedUser);
+        adminPanelActionBtn.addEventListener('click', openAdminPanelFromButton);
+        
+        // Event listener para mostrar/ocultar IDs
+        toggleIdsBtn.addEventListener('click', toggleIds);
         
         // Cerrar modal al hacer clic fuera
         imageModal.addEventListener('click', (e) => {
@@ -3026,6 +3155,9 @@
                         loginContainer.classList.add('hidden');
                         registerContainer.classList.add('hidden');
                         chatContainer.classList.remove('hidden');
+                        
+                        // Mostrar botones de administración si es admin
+                        toggleAdminButtons();
                         
                         // Unirse al chat
                         socket.emit('join', {
