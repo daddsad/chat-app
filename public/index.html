@@ -806,8 +806,9 @@
         /* Nota: Los botones de administración (eliminar, banear) solo están disponibles 
            a través del menú contextual (clic derecho/largo) para mantener la interfaz limpia */
         
-        /* Nota: Los IDs de usuario y mensaje están ocultos por defecto para mantener 
-           la interfaz limpia. Se pueden mostrar con el botón 👁️ o en el menú contextual */
+        /* Nota: Los IDs de usuario y mensaje están completamente ocultos por defecto.
+           Solo son accesibles a través del menú contextual (clic derecho) para mantener 
+           la interfaz limpia y profesional */
 
         .ban-button {
             background: var(--danger-color);
@@ -937,16 +938,244 @@
             background-color: rgba(255, 255, 255, 0.05);
         }
 
-        /* Ocultar IDs por defecto */
+        /* Ocultar TODOS los IDs por defecto */
+        .user-id,
         .user-id.copyable,
         .message-id.copyable {
-            display: none;
+            display: none !important;
         }
 
-        /* Mostrar IDs solo en el menú contextual o cuando se solicite */
+        /* Mostrar IDs solo cuando se solicite explícitamente */
+        .show-ids .user-id,
         .show-ids .user-id.copyable,
         .show-ids .message-id.copyable {
-            display: inline-block;
+            display: inline-block !important;
+        }
+        
+        /* ===== ESTILOS ESPECÍFICOS POR DISPOSITIVO ===== */
+        
+        /* Estilos para móviles */
+        .mobile .chat-container {
+            padding: 10px;
+            margin: 0;
+        }
+        
+        .mobile .message {
+            margin-bottom: 12px;
+            padding: 12px;
+            font-size: 14px;
+        }
+        
+        .mobile .message-input {
+            padding: 12px;
+            font-size: 16px; /* Evitar zoom en iOS */
+        }
+        
+        .mobile .btn {
+            padding: 12px 16px;
+            font-size: 16px;
+            min-height: 44px; /* Tamaño mínimo para toque */
+        }
+        
+        .mobile .admin-action-button {
+            padding: 12px 16px;
+            font-size: 14px;
+            margin: 4px;
+        }
+        
+        .mobile .notification {
+            font-size: 14px;
+            padding: 12px 16px;
+            max-width: 90%;
+            left: 5%;
+            right: 5%;
+        }
+        
+        .mobile .context-menu {
+            font-size: 14px;
+            padding: 8px 0;
+        }
+        
+        .mobile .context-menu button {
+            padding: 12px 16px;
+            font-size: 14px;
+        }
+        
+        /* Estilos para tablets */
+        .tablet .chat-container {
+            padding: 15px;
+        }
+        
+        .tablet .message {
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 13px;
+        }
+        
+        .tablet .message-input {
+            padding: 10px;
+            font-size: 14px;
+        }
+        
+        .tablet .btn {
+            padding: 10px 14px;
+            font-size: 14px;
+        }
+        
+        .tablet .admin-action-button {
+            padding: 10px 14px;
+            font-size: 13px;
+            margin: 3px;
+        }
+        
+        .tablet .notification {
+            font-size: 13px;
+            padding: 10px 14px;
+            max-width: 80%;
+            left: 10%;
+            right: 10%;
+        }
+        
+        .tablet .context-menu {
+            font-size: 13px;
+            padding: 6px 0;
+        }
+        
+        .tablet .context-menu button {
+            padding: 10px 14px;
+            font-size: 13px;
+        }
+        
+        /* Estilos para desktop */
+        .desktop .chat-container {
+            padding: 20px;
+        }
+        
+        .desktop .message {
+            margin-bottom: 8px;
+            padding: 8px;
+            font-size: 12px;
+        }
+        
+        .desktop .message-input {
+            padding: 8px;
+            font-size: 12px;
+        }
+        
+        .desktop .btn {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .desktop .admin-action-button {
+            padding: 8px 12px;
+            font-size: 12px;
+            margin: 2px;
+        }
+        
+        .desktop .notification {
+            font-size: 12px;
+            padding: 8px 12px;
+            max-width: 400px;
+            left: auto;
+            right: 20px;
+        }
+        
+        .desktop .context-menu {
+            font-size: 12px;
+            padding: 4px 0;
+        }
+        
+        .desktop .context-menu button {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        /* Sidebar responsive */
+        .mobile .sidebar {
+            position: fixed;
+            left: -100%;
+            top: 0;
+            height: 100vh;
+            width: 280px;
+            z-index: 1000;
+            transition: left 0.3s ease;
+            background: var(--dark-color);
+        }
+        
+        .mobile .sidebar.open {
+            left: 0;
+        }
+        
+        .tablet .sidebar {
+            width: 250px;
+        }
+        
+        .desktop .sidebar {
+            width: 300px;
+        }
+        
+        /* Botón de toggle para sidebar en móviles */
+        .sidebar-toggle-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1001;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            display: none;
+        }
+        
+        .mobile .sidebar-toggle-btn {
+            display: block;
+        }
+        
+        /* Overlay para cerrar sidebar en móviles */
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+            display: none;
+        }
+        
+        .mobile .sidebar.open + .sidebar-overlay {
+            display: block;
+        }
+        
+        /* Mostrar/ocultar elementos según dispositivo */
+        .desktop-only {
+            display: inline;
+        }
+        
+        .mobile-only {
+            display: none;
+        }
+        
+        .mobile .desktop-only {
+            display: none;
+        }
+        
+        .mobile .mobile-only {
+            display: inline;
+        }
+        
+        .tablet .desktop-only {
+            display: none;
+        }
+        
+        .tablet .mobile-only {
+            display: inline;
         }
 
         .user-item {
@@ -1496,7 +1725,7 @@
                 <div class="user-details">
                     <h3 id="current-user">Usuario</h3>
                     <p><span class="status-dot"></span> En línea</p>
-                    <p class="user-id" id="current-user-id">ID: #0000</p>
+                    <p class="user-id hidden" id="current-user-id">ID: #0000</p>
                     <button class="logout-button" id="logout-button">Cerrar Sesión</button>
                 </div>
                 <div class="admin-badge hidden" id="admin-badge">ADMIN</div>
@@ -1643,23 +1872,27 @@
         </div>
     </div>
 
-    <!-- Instrucciones de uso del menú contextual -->
+    <!-- Instrucciones de uso adaptadas por dispositivo -->
     <div class="context-menu-help" style="position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 8px; font-size: 12px; z-index: 999; display: none;">
         <strong>Menú Contextual:</strong><br>
-        • PC: Clic derecho en mensajes/usuarios<br>
-        • Móvil: Mantener presionado (500ms)<br>
-        • Admins: Eliminar mensajes, banear usuarios<br><br>
+        <span class="desktop-only">• PC: Clic derecho en mensajes/usuarios</span>
+        <span class="mobile-only">• Móvil/Tablet: Mantener presionado (500ms)</span>
+        • Admins: Eliminar mensajes, banear usuarios<br>
+        • Copiar IDs de usuario y mensaje<br><br>
         <strong>Botones de Admin:</strong><br>
         • 🗑️ Eliminar último mensaje<br>
         • 🚫 Banear usuario por ID<br>
         • ⚙️ Panel de administración<br><br>
         <strong>Otros Botones:</strong><br>
         • 👁️ Mostrar/Ocultar IDs<br>
-        • 📎 Subir archivos (Multimedia)<br><br>
+        • 📎 Subir archivos (Multimedia)<br>
+        <span class="mobile-only">• ☰ Toggle sidebar (móviles)</span><br><br>
         <strong>Archivos:</strong><br>
         • Solo disponible en sala Multimedia<br>
         • Clic en 📎 para subir archivos<br>
-        • Drag & drop soportado
+        • Drag & drop soportado<br><br>
+        <strong>Dispositivo:</strong><br>
+        <span id="device-info">Detectando...</span>
     </div>
 
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
@@ -1673,9 +1906,407 @@
         let onlineUsers = [];
         let isAdminPanelOpen = false;
         let contextMenuTarget = null;
-        let touchStartTime = 0;
-        let touchCount = 0;
         let contextMenuHelpShown = false;
+        
+        // Detección de dispositivos
+        let isMobile = false;
+        let isTablet = false;
+        let isDesktop = false;
+        let deviceType = 'desktop';
+        
+        // Función para detectar tipo de dispositivo
+        function detectDevice() {
+            const userAgent = navigator.userAgent;
+            const screenWidth = window.innerWidth;
+            const screenHeight = window.innerHeight;
+            
+            // Detectar móvil
+            const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+            const isMobileUserAgent = mobileRegex.test(userAgent);
+            
+            // Detectar tablet específicamente
+            const isTabletUserAgent = /iPad|Android(?=.*\bMobile\b)(?=.*\bSafari\b)/i.test(userAgent);
+            
+            // Detectar por tamaño de pantalla
+            const isSmallScreen = screenWidth <= 768;
+            const isMediumScreen = screenWidth > 768 && screenWidth <= 1024;
+            const isLargeScreen = screenWidth > 1024;
+            
+            // Determinar tipo de dispositivo
+            if (isMobileUserAgent && (isSmallScreen || isMediumScreen)) {
+                if (isTabletUserAgent || isMediumScreen) {
+                    isTablet = true;
+                    isMobile = false;
+                    isDesktop = false;
+                    deviceType = 'tablet';
+                } else {
+                    isMobile = true;
+                    isTablet = false;
+                    isDesktop = false;
+                    deviceType = 'mobile';
+                }
+            } else {
+                isDesktop = true;
+                isMobile = false;
+                isTablet = false;
+                deviceType = 'desktop';
+            }
+            
+            // Aplicar clases CSS según dispositivo
+            document.body.classList.remove('mobile', 'tablet', 'desktop');
+            document.body.classList.add(deviceType);
+            
+            console.log(`Dispositivo detectado: ${deviceType} (${screenWidth}x${screenHeight})`);
+            return deviceType;
+        }
+        
+        // Función para adaptar interfaz según dispositivo
+        function adaptInterface() {
+            const device = detectDevice();
+            
+            // Adaptar menú contextual
+            if (isMobile || isTablet) {
+                // En móviles/tablets: clic largo para menú contextual
+                setupMobileContextMenu();
+            } else {
+                // En desktop: clic derecho para menú contextual
+                setupDesktopContextMenu();
+            }
+            
+            // Adaptar botones de admin
+            adaptAdminButtons();
+            
+            // Adaptar interfaz de archivos
+            adaptFileInterface();
+            
+            // Adaptar notificaciones
+            adaptNotifications();
+            
+            // Adaptar sidebar
+            adaptSidebar();
+            
+            // Actualizar información del dispositivo en las instrucciones
+            updateDeviceInfo();
+        }
+        
+        // Actualizar información del dispositivo en las instrucciones
+        function updateDeviceInfo() {
+            const deviceInfo = document.getElementById('device-info');
+            if (deviceInfo) {
+                const screenInfo = `${window.innerWidth}x${window.innerHeight}`;
+                deviceInfo.textContent = `${deviceType} (${screenInfo})`;
+            }
+        }
+        
+        // Configurar menú contextual para móviles/tablets
+        function setupMobileContextMenu() {
+            console.log('Configurando menú contextual para móviles/tablets');
+            
+            // Remover eventos de clic derecho
+            document.removeEventListener('contextmenu', handleContextMenu);
+            
+            // Agregar eventos de clic largo
+            document.addEventListener('touchstart', handleTouchStart, { passive: false });
+            document.addEventListener('touchend', handleTouchEnd, { passive: false });
+            document.addEventListener('touchmove', handleTouchMove, { passive: false });
+        }
+        
+        // Configurar menú contextual para desktop
+        function setupDesktopContextMenu() {
+            console.log('Configurando menú contextual para desktop');
+            
+            // Remover eventos táctiles
+            document.removeEventListener('touchstart', handleTouchStart);
+            document.removeEventListener('touchend', handleTouchEnd);
+            document.removeEventListener('touchmove', handleTouchMove);
+            
+            // Agregar eventos de clic derecho
+            document.addEventListener('contextmenu', handleContextMenu);
+        }
+        
+        // Variables para clic largo
+        let longPressTimer = null;
+        let longPressTarget = null;
+        let touchStartTime = 0;
+        let touchStartX = 0;
+        let touchStartY = 0;
+        
+        // Manejar inicio de toque
+        function handleTouchStart(e) {
+            touchStartTime = Date.now();
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+            longPressTarget = e.target;
+            
+            longPressTimer = setTimeout(() => {
+                handleLongPress(e);
+            }, 500);
+        }
+        
+        // Manejar fin de toque
+        function handleTouchEnd(e) {
+            if (longPressTimer) {
+                clearTimeout(longPressTimer);
+                longPressTimer = null;
+            }
+            longPressTarget = null;
+        }
+        
+        // Manejar movimiento de toque
+        function handleTouchMove(e) {
+            if (longPressTimer) {
+                const currentX = e.touches[0].clientX;
+                const currentY = e.touches[0].clientY;
+                const distance = Math.sqrt(
+                    Math.pow(currentX - touchStartX, 2) + 
+                    Math.pow(currentY - touchStartY, 2)
+                );
+                
+                if (distance > 10) {
+                    clearTimeout(longPressTimer);
+                    longPressTimer = null;
+                    longPressTarget = null;
+                }
+            }
+        }
+        
+        // Manejar clic largo
+        function handleLongPress(e) {
+            e.preventDefault();
+            
+            const messageElement = e.target.closest('.message');
+            const userElement = e.target.closest('.user-item');
+            
+            if (messageElement) {
+                const messageId = messageElement.getAttribute('data-message-id');
+                const userId = messageElement.getAttribute('data-user-id');
+                
+                showContextMenu(e, { 
+                    messageId, 
+                    userId,
+                    type: 'message'
+                }, 'message');
+            } else if (userElement) {
+                const userId = userElement.getAttribute('data-user-id');
+                
+                showContextMenu(e, { 
+                    id: userId, 
+                    type: 'user',
+                    userId: userId
+                }, 'user');
+            }
+        }
+        
+        // Manejar clic derecho (desktop)
+        function handleContextMenu(e) {
+            e.preventDefault();
+            
+            const messageElement = e.target.closest('.message');
+            const userElement = e.target.closest('.user-item');
+            
+            if (messageElement) {
+                const messageId = messageElement.getAttribute('data-message-id');
+                const userId = messageElement.getAttribute('data-user-id');
+                
+                showContextMenu(e, { 
+                    messageId, 
+                    userId,
+                    type: 'message'
+                }, 'message');
+            } else if (userElement) {
+                const userId = userElement.getAttribute('data-user-id');
+                
+                showContextMenu(e, { 
+                    id: userId, 
+                    type: 'user',
+                    userId: userId
+                }, 'user');
+            }
+        }
+        
+        // Adaptar botones de admin según dispositivo
+        function adaptAdminButtons() {
+            const adminButtons = document.querySelectorAll('.admin-action-button');
+            
+            adminButtons.forEach(button => {
+                if (isMobile) {
+                    // En móviles: botones más grandes y espaciados
+                    button.style.padding = '12px 16px';
+                    button.style.fontSize = '14px';
+                    button.style.margin = '4px';
+                } else if (isTablet) {
+                    // En tablets: tamaño medio
+                    button.style.padding = '10px 14px';
+                    button.style.fontSize = '13px';
+                    button.style.margin = '3px';
+                } else {
+                    // En desktop: tamaño normal
+                    button.style.padding = '8px 12px';
+                    button.style.fontSize = '12px';
+                    button.style.margin = '2px';
+                }
+            });
+        }
+        
+        // Adaptar interfaz de archivos según dispositivo
+        function adaptFileInterface() {
+            const fileButton = document.getElementById('file-button');
+            const fileInput = document.getElementById('file-input');
+            const filePreview = document.getElementById('file-preview');
+            
+            if (isMobile || isTablet) {
+                // En móviles/tablets: interfaz más grande y táctil
+                if (fileButton) {
+                    fileButton.style.padding = '12px 16px';
+                    fileButton.style.fontSize = '16px';
+                    fileButton.style.minHeight = '44px'; // Tamaño mínimo para toque
+                }
+                
+                if (fileInput) {
+                    fileInput.style.fontSize = '16px'; // Evitar zoom en iOS
+                }
+                
+                if (filePreview) {
+                    filePreview.style.maxWidth = '100%';
+                    filePreview.style.maxHeight = '200px';
+                }
+            } else {
+                // En desktop: tamaño normal
+                if (fileButton) {
+                    fileButton.style.padding = '8px 12px';
+                    fileButton.style.fontSize = '14px';
+                    fileButton.style.minHeight = 'auto';
+                }
+                
+                if (fileInput) {
+                    fileInput.style.fontSize = '14px';
+                }
+                
+                if (filePreview) {
+                    filePreview.style.maxWidth = '300px';
+                    filePreview.style.maxHeight = '150px';
+                }
+            }
+        }
+        
+        // Adaptar notificaciones según dispositivo
+        function adaptNotifications() {
+            const notification = document.querySelector('.notification');
+            
+            if (notification) {
+                if (isMobile) {
+                    // En móviles: notificación más grande y centrada
+                    notification.style.fontSize = '14px';
+                    notification.style.padding = '12px 16px';
+                    notification.style.maxWidth = '90%';
+                    notification.style.left = '5%';
+                    notification.style.right = '5%';
+                } else if (isTablet) {
+                    // En tablets: tamaño medio
+                    notification.style.fontSize = '13px';
+                    notification.style.padding = '10px 14px';
+                    notification.style.maxWidth = '80%';
+                    notification.style.left = '10%';
+                    notification.style.right = '10%';
+                } else {
+                    // En desktop: tamaño normal
+                    notification.style.fontSize = '12px';
+                    notification.style.padding = '8px 12px';
+                    notification.style.maxWidth = '400px';
+                    notification.style.left = 'auto';
+                    notification.style.right = '20px';
+                }
+            }
+        }
+        
+        // Adaptar sidebar según dispositivo
+        function adaptSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const chatContainer = document.querySelector('.chat-container');
+            
+            if (isMobile) {
+                // En móviles: sidebar oculto por defecto, toggle con botón
+                if (sidebar) {
+                    sidebar.style.position = 'fixed';
+                    sidebar.style.left = '-100%';
+                    sidebar.style.top = '0';
+                    sidebar.style.height = '100vh';
+                    sidebar.style.width = '280px';
+                    sidebar.style.zIndex = '1000';
+                    sidebar.style.transition = 'left 0.3s ease';
+                }
+                
+                // Agregar botón de toggle para sidebar
+                addSidebarToggleButton();
+            } else if (isTablet) {
+                // En tablets: sidebar más pequeño
+                if (sidebar) {
+                    sidebar.style.width = '250px';
+                    sidebar.style.position = 'relative';
+                    sidebar.style.left = '0';
+                }
+            } else {
+                // En desktop: sidebar normal
+                if (sidebar) {
+                    sidebar.style.width = '300px';
+                    sidebar.style.position = 'relative';
+                    sidebar.style.left = '0';
+                }
+            }
+        }
+        
+        // Agregar botón de toggle para sidebar en móviles
+        function addSidebarToggleButton() {
+            const existingButton = document.getElementById('sidebar-toggle');
+            if (existingButton) return;
+            
+            const toggleButton = document.createElement('button');
+            toggleButton.id = 'sidebar-toggle';
+            toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
+            toggleButton.className = 'sidebar-toggle-btn';
+            toggleButton.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                z-index: 1001;
+                background: var(--primary-color);
+                color: white;
+                border: none;
+                border-radius: 50%;
+                width: 50px;
+                height: 50px;
+                font-size: 18px;
+                cursor: pointer;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+                display: none;
+            `;
+            
+            toggleButton.addEventListener('click', toggleSidebar);
+            document.body.appendChild(toggleButton);
+            
+            // Mostrar botón solo en móviles
+            if (isMobile) {
+                toggleButton.style.display = 'block';
+            }
+        }
+        
+        // Toggle sidebar en móviles
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const toggleButton = document.getElementById('sidebar-toggle');
+            
+            if (sidebar) {
+                const isOpen = sidebar.style.left === '0px';
+                
+                if (isOpen) {
+                    sidebar.style.left = '-100%';
+                    toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
+                } else {
+                    sidebar.style.left = '0px';
+                    toggleButton.innerHTML = '<i class="fas fa-times"></i>';
+                }
+            }
+        }
 
         // Elementos DOM
         const loginContainer = document.getElementById('login-container');
@@ -2250,68 +2881,23 @@
             messageElement.innerHTML = `
                 <div class="message-header">
                     <span class="message-sender">${isCurrentUser ? 'Tú' : message.sender}</span>
-                    <span class="user-id copyable" data-id="${message.senderId}">ID: ${message.senderId}</span>
                     <span class="message-time">${formatDateTime(new Date(message.timestamp))}</span>
                 </div>
                 <div class="message-text">${message.banned ? '[MENSAJE ELIMINADO POR ADMINISTRADOR]' : message.text}</div>
                 ${fileContent}
                 <div class="message-info">
-                    <span class="message-id copyable" data-id="${message.id}">Msg ID: ${message.id}</span>
+                    <!-- IDs ocultos por defecto, accesibles solo por menú contextual -->
                 </div>
             `;
             
             chatMessages.appendChild(messageElement);
             chatMessages.scrollTop = chatMessages.scrollHeight;
             
-            // Agregar eventos para copiar IDs y menú contextual
-            const copyableElements = messageElement.querySelectorAll('.copyable');
-            copyableElements.forEach(element => {
-                // Clic normal para copiar (en PC)
-                element.addEventListener('click', (e) => {
-                    if (!isMobileDevice()) {
-                        const id = element.getAttribute('data-id');
-                        copyToClipboard(id);
-                    }
-                });
-                
-                // Clic derecho para menú contextual (PC)
-                element.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    const id = element.getAttribute('data-id');
-                    const type = element.classList.contains('user-id') ? 'user' : 'message';
-                    const messageId = messageElement.getAttribute('data-message-id');
-                    const userId = message.senderId;
-                    
-                    showContextMenu(e, { 
-                        id, 
-                        type, 
-                        messageId, 
-                        userId 
-                    }, type);
-                });
-                
-                // Clic largo para menú contextual (móviles)
-                let longPressTimer;
-                element.addEventListener('touchstart', (e) => {
-                    longPressTimer = setTimeout(() => {
-                        const id = element.getAttribute('data-id');
-                        const type = element.classList.contains('user-id') ? 'user' : 'message';
-                        const messageId = messageElement.getAttribute('data-message-id');
-                        const userId = message.senderId;
-                        
-                        showContextMenu(e, { 
-                            id, 
-                            type, 
-                            messageId, 
-                            userId 
-                        }, type);
-                    }, 500);
-                });
-                
-                element.addEventListener('touchend', () => {
-                    clearTimeout(longPressTimer);
-                });
-            });
+            // Agregar atributos necesarios para menú contextual
+            messageElement.setAttribute('data-message-id', message.id);
+            messageElement.setAttribute('data-user-id', message.senderId);
+            
+            // Los eventos de menú contextual se manejan globalmente según el dispositivo
             
             // Agregar evento de clic derecho al mensaje completo
             messageElement.addEventListener('contextmenu', (e) => {
@@ -2326,24 +2912,7 @@
                 }, 'message');
             });
             
-            // Agregar evento de clic largo al mensaje completo (móviles)
-            let messageLongPressTimer;
-            messageElement.addEventListener('touchstart', (e) => {
-                messageLongPressTimer = setTimeout(() => {
-                    const messageId = messageElement.getAttribute('data-message-id');
-                    const userId = message.senderId;
-                    
-                    showContextMenu(e, { 
-                        messageId, 
-                        userId,
-                        type: 'message'
-                    }, 'message');
-                }, 500);
-            });
-            
-            messageElement.addEventListener('touchend', () => {
-                clearTimeout(messageLongPressTimer);
-            });
+
             
             // Agregar evento para menú contextual con tres dedos en móviles
             if (isMobileDevice()) {
@@ -2352,43 +2921,7 @@
             }
         }
 
-        // Detectar si es dispositivo móvil
-        function isMobileDevice() {
-            return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        }
 
-        // Manejar inicio de toque
-        function handleTouchStart(e) {
-            if (e.touches.length === 3) {
-                touchStartTime = Date.now();
-                touchCount = 3;
-            }
-        }
-
-        // Manejar fin de toque
-        function handleTouchEnd(e) {
-            if (touchCount === 3 && (Date.now() - touchStartTime) < 500) {
-                const messageId = e.target.closest('.message').dataset.messageId;
-                const userId = e.target.closest('.message').querySelector('.user-id').dataset.id;
-                
-                // Mostrar menú contextual
-                contextMenuTarget = { 
-                    userId, 
-                    messageId,
-                    type: 'message'
-                };
-                
-                // Posicionar el menú contextual
-                contextMenu.style.display = 'block';
-                contextMenu.classList.add('show');
-                contextMenu.style.left = `${e.changedTouches[0].clientX}px`;
-                contextMenu.style.top = `${e.changedTouches[0].clientY}px`;
-                
-                // Resetear contadores
-                touchCount = 0;
-                touchStartTime = 0;
-            }
-        }
 
         // Actualizar lista de usuarios en línea con IDs únicos
         function updateOnlineUsers(users) {
@@ -2406,74 +2939,18 @@
                     <div class="user-avatar-sm">${user.nickname.charAt(0)}</div>
                     <div>
                         <div>${user.nickname}</div>
-                        <div class="user-id copyable" data-id="${user.id}">ID: ${user.id}</div>
+                        <!-- ID oculto por defecto, accesible solo por menú contextual -->
                     </div>
                     ${user.role === 'admin' ? '<div class="admin-indicator">A</div>' : ''}
                 `;
                 
                 onlineUsersList.appendChild(userItem);
                 
-                // Agregar eventos para copiar IDs y menú contextual
-                const userIdElement = userItem.querySelector('.user-id.copyable');
+                // Agregar atributos necesarios para menú contextual
+                userItem.setAttribute('data-user-id', user.id);
+                userItem.classList.add('user-item');
                 
-                // Clic normal para copiar (en PC)
-                userIdElement.addEventListener('click', (e) => {
-                    if (!isMobileDevice()) {
-                        copyToClipboard(user.id);
-                    }
-                });
-                
-                // Clic derecho para menú contextual (PC)
-                userIdElement.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    showContextMenu(e, { 
-                        id: user.id, 
-                        type: 'user',
-                        userId: user.id
-                    }, 'user');
-                });
-                
-                // Clic largo para menú contextual (móviles)
-                let userLongPressTimer;
-                userIdElement.addEventListener('touchstart', (e) => {
-                    userLongPressTimer = setTimeout(() => {
-                        showContextMenu(e, { 
-                            id: user.id, 
-                            type: 'user',
-                            userId: user.id
-                        }, 'user');
-                    }, 500);
-                });
-                
-                userIdElement.addEventListener('touchend', () => {
-                    clearTimeout(userLongPressTimer);
-                });
-                
-                // Agregar evento de clic derecho al usuario completo
-                userItem.addEventListener('contextmenu', (e) => {
-                    e.preventDefault();
-                    showContextMenu(e, { 
-                        id: user.id, 
-                        type: 'user',
-                        userId: user.id
-                    }, 'user');
-                });
-                
-                // Agregar evento de clic largo al usuario completo (móviles)
-                let userItemLongPressTimer;
-                userItem.addEventListener('touchstart', (e) => {
-                    userItemLongPressTimer = setTimeout(() => {
-                        showContextMenu(e, { 
-                            id: user.id, 
-                            type: 'user',
-                            userId: user.id
-                        }, 'user');
-                    }, 500);
-                });
-                
-                userItem.addEventListener('touchend', () => {
-                    clearTimeout(userItemLongPressTimer);
-                });
+                // Los eventos de menú contextual se manejan globalmente según el dispositivo
             });
         }
 
@@ -3195,6 +3672,62 @@
                 logout();
             }
         });
+        
+        // ===== INICIALIZACIÓN DE DETECCIÓN DE DISPOSITIVOS =====
+        
+        // Detectar y adaptar interfaz según dispositivo al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+            // Detectar dispositivo
+            detectDevice();
+            
+            // Adaptar interfaz
+            adaptInterface();
+            
+            // Mostrar información del dispositivo en consola
+            console.log(`Dispositivo detectado: ${deviceType}`);
+            console.log(`Resolución: ${window.innerWidth}x${window.innerHeight}`);
+            console.log(`User Agent: ${navigator.userAgent}`);
+        });
+        
+        // Adaptar interfaz cuando cambie el tamaño de la ventana
+        window.addEventListener('resize', () => {
+            const oldDeviceType = deviceType;
+            const newDeviceType = detectDevice();
+            
+            // Solo re-adaptar si cambió el tipo de dispositivo
+            if (oldDeviceType !== newDeviceType) {
+                console.log(`Dispositivo cambiado de ${oldDeviceType} a ${newDeviceType}`);
+                adaptInterface();
+            }
+        });
+        
+        // Adaptar interfaz cuando cambie la orientación (móviles)
+        window.addEventListener('orientationchange', () => {
+            setTimeout(() => {
+                console.log('Orientación cambiada, re-adaptando interfaz...');
+                detectDevice();
+                adaptInterface();
+            }, 100);
+        });
+        
+        // Función para mostrar información del dispositivo (debug)
+        function showDeviceInfo() {
+            const info = `
+                Dispositivo: ${deviceType}
+                Resolución: ${window.innerWidth}x${window.innerHeight}
+                User Agent: ${navigator.userAgent}
+                Móvil: ${isMobile}
+                Tablet: ${isTablet}
+                Desktop: ${isDesktop}
+            `;
+            console.log(info);
+            showNotification(`Dispositivo: ${deviceType}`, 'info');
+        }
+        
+        // Exponer función para debug (solo en desarrollo)
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            window.showDeviceInfo = showDeviceInfo;
+        }
     </script>
 </body>
 </html>
