@@ -12,32 +12,471 @@ const fs = require('fs');
 const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
 
-const app = express();
-const server = http.createServer(app);
+// ===== MEJORAS AVANZADAS Y ULTRA AVANZADAS =====
 
-// Middleware para obtener IP
-app.use(requestIp.mw());
+// Configuración de entorno
+require('dotenv').config();
+
+// Middleware de seguridad y rendimiento
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const compression = require('compression');
+const morgan = require('morgan');
+const cors = require('cors');
+
+// Cache y optimización
+const NodeCache = require('node-cache');
+const LRU = require('lru-cache');
+
+// Monitoreo y logging
+const winston = require('winston');
+const cluster = require('cluster');
+const os = require('os');
+
+// Seguridad avanzada
+const jwt = require('jsonwebtoken');
+const bcryptjs = require('bcryptjs');
+const validator = require('validator');
+
+// WebSocket mejorado
+const Redis = require('ioredis');
+const socketRedis = require('socket.io-redis');
+
+// Base de datos mejorada
+const sqlite3Backup = require('sqlite3-backup');
+const sqlite3Wasm = require('sqlite3-wasm');
+
+// Utilidades avanzadas
+const moment = require('moment');
+const lodash = require('lodash');
+const axios = require('axios');
+const cron = require('node-cron');
+
+// ===== CONFIGURACIÓN AVANZADA DE LOGGING =====
+const logger = winston.createLogger({
+  level: process.env.LOG_LEVEL || 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.errors({ stack: true }),
+    winston.format.json()
+  ),
+  defaultMeta: { service: 'chat-app' },
+  transports: [
+    new winston.transports.File({ filename: 'logs/error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'logs/combined.log' }),
+    new winston.transports.Console({
+      format: winston.format.combine(
+        winston.format.colorize(),
+        winston.format.simple()
+      )
+    })
+  ]
+});
+
+// Crear directorio de logs si no existe
+if (!fs.existsSync('logs')) {
+  fs.mkdirSync('logs');
+}
+
+// ===== CONFIGURACIÓN DE CACHE AVANZADO =====
+const messageCache = new LRU({
+  max: 1000, // Máximo 1000 mensajes en cache
+  maxAge: 1000 * 60 * 5, // 5 minutos
+  updateAgeOnGet: true
+});
+
+const userCache = new NodeCache({
+  stdTTL: 300, // 5 minutos
+  checkperiod: 60 // Revisar cada minuto
+});
+
+const sessionCache = new NodeCache({
+  stdTTL: 3600, // 1 hora
+  checkperiod: 300 // Revisar cada 5 minutos
+});
+
+// ===== CONFIGURACIÓN DE REDIS (OPCIONAL) =====
+let redisClient = null;
+let ioRedis = null;
+
+// En Render, Redis es opcional y puede no estar disponible
+if (process.env.REDIS_URL && process.env.NODE_ENV === 'production') {
+  try {
+    redisClient = new Redis(process.env.REDIS_URL);
+    ioRedis = socketRedis(redisClient);
+    logger.info('Redis conectado exitosamente');
+  } catch (error) {
+    logger.warn('Redis no disponible, usando cache local');
+  }
+} else {
+  logger.info('Redis no configurado, usando cache local');
+}
+
+// ===== CONFIGURACIÓN DE CLUSTER =====
+const numCPUs = os.cpus().length;
+const isMaster = cluster.isMaster;
+
+// En Render, no usar clustering por defecto para evitar problemas
+const useClustering = process.env.CLUSTER_ENABLED === 'true' && process.env.NODE_ENV === 'production';
+
+if (isMaster && useClustering) {
+  logger.info(`Master ${process.pid} is running`);
+  
+  // Fork workers
+  for (let i = 0; i < numCPUs; i++) {
+    cluster.fork();
+  }
+  
+  cluster.on('exit', (worker, code, signal) => {
+    logger.warn(`Worker ${worker.process.pid} died`);
+    cluster.fork(); // Reemplazar worker muerto
+  });
+  
+  // Monitoreo de workers
+  cluster.on('online', (worker) => {
+    logger.info(`Worker ${worker.process.pid} is online`);
+  });
+} else {
+  // Código del worker (o servidor único en Render)
+  const app = express();
+  const server = http.createServer(app);
+  
+  // Middleware para obtener IP
+  app.use(requestIp.mw());
+  
+  // ===== MIDDLEWARE DE SEGURIDAD AVANZADO =====
+  app.use(helmet({
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com"],
+        scriptSrc: ["'self'", "https://cdnjs.cloudflare.com"],
+        imgSrc: ["'self'", "data:", "https:"],
+        connectSrc: ["'self'", "wss:", "ws:"]
+      }
+    },
+    hsts: {
+      maxAge: 31536000,
+      includeSubDomains: true,
+      preload: true
+    }
+  }));
+  
+  // Rate limiting avanzado
+  const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 100, // Máximo 100 requests por IP
+    message: {
+      error: 'Demasiadas solicitudes desde esta IP',
+      retryAfter: '15 minutos'
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => {
+      // No limitar para admins
+      return req.headers.authorization && req.headers.authorization.includes('admin');
+    }
+  });
+  
+  app.use(limiter);
+  
+  // Rate limiting específico para login
+  const loginLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // Máximo 5 intentos de login
+    message: {
+      error: 'Demasiados intentos de login',
+      retryAfter: '15 minutos'
+    }
+  });
+  
+  // Rate limiting para uploads
+  const uploadLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000, // 1 hora
+    max: 10, // Máximo 10 uploads por hora
+    message: {
+      error: 'Demasiados archivos subidos',
+      retryAfter: '1 hora'
+    }
+  });
+  
+  // Compresión
+  app.use(compression());
+  
+  // CORS mejorado
+  app.use(cors({
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : '*',
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  }));
+  
+  // Logging de requests
+  app.use(morgan('combined', {
+    stream: {
+      write: (message) => logger.info(message.trim())
+    }
+  }));
+}
 
 // Middleware para solucionar problema de rutas
 app.use(history());
 
-// Configuración de CORS para Socket.IO
+// ===== CONFIGURACIÓN AVANZADA DE SOCKET.IO =====
 const io = socketIo(server, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"]
+    origin: process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : "*",
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  allowEIO3: true,
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  upgradeTimeout: 10000,
+  maxHttpBufferSize: 1e8, // 100MB
+  allowRequest: (req, callback) => {
+    // Validación de origen para WebSocket
+    const origin = req.headers.origin;
+    if (!origin || process.env.ALLOWED_ORIGINS === '*') {
+      return callback(null, true);
+    }
+    
+    const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['*'];
+    if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+      return callback(null, true);
+    }
+    
+    return callback(null, false);
   }
 });
 
-// Configuración de la base de datos
-const db = new sqlite3.Database('./chat.db');
+// Adapter de Redis si está disponible
+if (ioRedis) {
+  io.adapter(ioRedis);
+  logger.info('Socket.IO Redis adapter configurado');
+}
 
-// TOKEN SSO PREDEFINIDO (como contraseña de administrador)
-const DEFAULT_ADMIN_TOKEN = "ANIMIX_ADMIN_SECRET_2024";
+// Middleware de autenticación para Socket.IO
+io.use((socket, next) => {
+  const token = socket.handshake.auth.token || socket.handshake.headers.authorization;
+  
+  if (!token) {
+    return next(new Error('Token de autenticación requerido'));
+  }
+  
+  validateSession(token, (err, user) => {
+    if (err || !user) {
+      return next(new Error('Token inválido'));
+    }
+    
+    socket.user = user;
+    socket.userId = user.id;
+    next();
+  });
+});
+
+// Configuración de la base de datos
+const DB_PATH = process.env.DB_PATH || './chat.db';
+const db = new sqlite3.Database(DB_PATH);
+
+// ===== CONFIGURACIÓN AVANZADA DE SEGURIDAD =====
+const DEFAULT_ADMIN_TOKEN = process.env.ADMIN_TOKEN || "ANIMIX_ADMIN_SECRET_2024";
+const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
+const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
+
+// Configuración de seguridad
+const SECURITY_CONFIG = {
+  passwordMinLength: 8,
+  passwordMaxLength: 128,
+  usernameMinLength: 3,
+  usernameMaxLength: 20,
+  nicknameMinLength: 2,
+  nicknameMaxLength: 30,
+  maxLoginAttempts: 5,
+  lockoutDuration: 15 * 60 * 1000, // 15 minutos
+  sessionTimeout: 24 * 60 * 60 * 1000, // 24 horas
+  maxConcurrentSessions: 3,
+  fileScanEnabled: process.env.FILE_SCAN_ENABLED === 'true',
+  antivirusApiKey: process.env.ANTIVIRUS_API_KEY,
+  recaptchaEnabled: process.env.RECAPTCHA_ENABLED === 'true',
+  recaptchaSecret: process.env.RECAPTCHA_SECRET
+};
+
+// ===== FUNCIONES AVANZADAS DE SEGURIDAD =====
+
+// Validación avanzada de contraseñas
+function validatePassword(password) {
+  const errors = [];
+  
+  if (password.length < SECURITY_CONFIG.passwordMinLength) {
+    errors.push(`La contraseña debe tener al menos ${SECURITY_CONFIG.passwordMinLength} caracteres`);
+  }
+  
+  if (password.length > SECURITY_CONFIG.passwordMaxLength) {
+    errors.push(`La contraseña no puede exceder ${SECURITY_CONFIG.passwordMaxLength} caracteres`);
+  }
+  
+  if (!/(?=.*[a-z])/.test(password)) {
+    errors.push('La contraseña debe contener al menos una letra minúscula');
+  }
+  
+  if (!/(?=.*[A-Z])/.test(password)) {
+    errors.push('La contraseña debe contener al menos una letra mayúscula');
+  }
+  
+  if (!/(?=.*\d)/.test(password)) {
+    errors.push('La contraseña debe contener al menos un número');
+  }
+  
+  if (!/(?=.*[@$!%*?&])/.test(password)) {
+    errors.push('La contraseña debe contener al menos un carácter especial (@$!%*?&)');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+// Validación avanzada de nombres de usuario
+function validateUsername(username) {
+  const errors = [];
+  
+  if (username.length < SECURITY_CONFIG.usernameMinLength) {
+    errors.push(`El nombre de usuario debe tener al menos ${SECURITY_CONFIG.usernameMinLength} caracteres`);
+  }
+  
+  if (username.length > SECURITY_CONFIG.usernameMaxLength) {
+    errors.push(`El nombre de usuario no puede exceder ${SECURITY_CONFIG.usernameMaxLength} caracteres`);
+  }
+  
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    errors.push('El nombre de usuario solo puede contener letras, números y guiones bajos');
+  }
+  
+  if (!validator.isAlphanumeric(username.replace(/_/g, ''))) {
+    errors.push('El nombre de usuario debe contener al menos una letra o número');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+// Validación de nickname
+function validateNickname(nickname) {
+  const errors = [];
+  
+  if (nickname.length < SECURITY_CONFIG.nicknameMinLength) {
+    errors.push(`El nickname debe tener al menos ${SECURITY_CONFIG.nicknameMinLength} caracteres`);
+  }
+  
+  if (nickname.length > SECURITY_CONFIG.nicknameMaxLength) {
+    errors.push(`El nickname no puede exceder ${SECURITY_CONFIG.nicknameMaxLength} caracteres`);
+  }
+  
+  if (!validator.isLength(nickname, { min: SECURITY_CONFIG.nicknameMinLength, max: SECURITY_CONFIG.nicknameMaxLength })) {
+    errors.push('El nickname tiene un formato inválido');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
+// Escaneo de archivos con antivirus (si está configurado)
+async function scanFile(filePath) {
+  if (!SECURITY_CONFIG.fileScanEnabled || !SECURITY_CONFIG.antivirusApiKey) {
+    return { isClean: true };
+  }
+  
+  try {
+    const formData = new FormData();
+    formData.append('file', fs.createReadStream(filePath));
+    
+    const response = await axios.post('https://api.virustotal.com/v3/files', formData, {
+      headers: {
+        'x-apikey': SECURITY_CONFIG.antivirusApiKey,
+        ...formData.getHeaders()
+      }
+    });
+    
+    const result = response.data;
+    return {
+      isClean: result.data.attributes.last_analysis_stats.malicious === 0,
+      scanId: result.data.id,
+      stats: result.data.attributes.last_analysis_stats
+    };
+  } catch (error) {
+    logger.error('Error escaneando archivo:', error);
+    return { isClean: true, error: 'Error en escaneo' };
+  }
+}
+
+// Verificación de reCAPTCHA
+async function verifyRecaptcha(token, ip) {
+  if (!SECURITY_CONFIG.recaptchaEnabled) {
+    return { success: true };
+  }
+  
+  try {
+    const response = await axios.post('https://www.google.com/recaptcha/api/siteverify', null, {
+      params: {
+        secret: SECURITY_CONFIG.recaptchaSecret,
+        response: token,
+        remoteip: ip
+      }
+    });
+    
+    return {
+      success: response.data.success,
+      score: response.data.score,
+      action: response.data.action
+    };
+  } catch (error) {
+    logger.error('Error verificando reCAPTCHA:', error);
+    return { success: false, error: 'Error en verificación' };
+  }
+}
+
+// Control de intentos de login
+const loginAttempts = new Map();
+
+function checkLoginAttempts(ip) {
+  const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+  const now = Date.now();
+  
+  if (now - attempts.lastAttempt > SECURITY_CONFIG.lockoutDuration) {
+    attempts.count = 0;
+  }
+  
+  return attempts;
+}
+
+function recordLoginAttempt(ip, success) {
+  const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+  
+  if (success) {
+    attempts.count = 0;
+  } else {
+    attempts.count++;
+  }
+  
+  attempts.lastAttempt = Date.now();
+  loginAttempts.set(ip, attempts);
+  
+  // Limpiar intentos antiguos
+  setTimeout(() => {
+    loginAttempts.delete(ip);
+  }, SECURITY_CONFIG.lockoutDuration);
+}
 
 // Configuración de archivos
-const UPLOAD_DIR = './public/uploads';
-const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const UPLOAD_DIR = process.env.UPLOAD_DIR || './public/uploads';
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024; // 10MB por defecto
 const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
 const ALLOWED_AUDIO_TYPES = ['audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a'];
 const ALLOWED_DOCUMENT_TYPES = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'text/plain', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
@@ -100,6 +539,70 @@ const upload = multer({
     files: 5 // Máximo 5 archivos por subida
   }
 });
+
+// ===== CONFIGURACIÓN AVANZADA DE BASE DE DATOS =====
+
+// Backup automático de la base de datos
+function backupDatabase() {
+  // En Render, el sistema de archivos es efímero, no hacer backups automáticos
+  if (process.env.RENDER) {
+    logger.info('Backup automático deshabilitado en Render (sistema de archivos efímero)');
+    return;
+  }
+  
+  const backupPath = `./backups/chat_backup_${moment().format('YYYY-MM-DD_HH-mm-ss')}.db`;
+  
+  if (!fs.existsSync('./backups')) {
+    fs.mkdirSync('./backups', { recursive: true });
+  }
+  
+  const backup = new sqlite3.Database(backupPath);
+  const source = new sqlite3.Database(DB_PATH);
+  
+  source.backup(backup, (err) => {
+    if (err) {
+      logger.error('Error en backup de base de datos:', err);
+    } else {
+      logger.info(`Backup creado: ${backupPath}`);
+      
+      // Limpiar backups antiguos (mantener solo los últimos 7 días)
+      cleanupOldBackups();
+    }
+    
+    backup.close();
+    source.close();
+  });
+}
+
+// Limpiar backups antiguos
+function cleanupOldBackups() {
+  const backupDir = './backups';
+  if (!fs.existsSync(backupDir)) return;
+  
+  const files = fs.readdirSync(backupDir);
+  const now = moment();
+  
+  files.forEach(file => {
+    const filePath = path.join(backupDir, file);
+    const stats = fs.statSync(filePath);
+    const fileAge = moment().diff(moment(stats.mtime), 'days');
+    
+    if (fileAge > 7) {
+      fs.unlinkSync(filePath);
+      logger.info(`Backup antiguo eliminado: ${file}`);
+    }
+  });
+}
+
+// Optimización de base de datos
+function optimizeDatabase() {
+  db.serialize(() => {
+    db.run('VACUUM');
+    db.run('ANALYZE');
+    db.run('REINDEX');
+    logger.info('Base de datos optimizada');
+  });
+}
 
 // Crear tablas si no existen
 db.serialize(() => {
@@ -197,18 +700,74 @@ db.serialize(() => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       expires_at DATETIME
     )
-  `, () => {
-    // Insertar token predefinido al iniciar
-    db.run(`
-      INSERT OR IGNORE INTO admin_sso_tokens (id, token) 
-      VALUES (?, ?)
-    `, ['default-admin-token', DEFAULT_ADMIN_TOKEN], (err) => {
-      if (err) {
-        console.error('Error al insertar token predeterminado:', err);
-      } else {
-        console.log('Token SSO predeterminado creado');
-      }
-    });
+  `);
+  
+  // Tabla para estadísticas y métricas
+  db.run(`
+    CREATE TABLE IF NOT EXISTS server_stats (
+      id TEXT PRIMARY KEY,
+      metric_name TEXT NOT NULL,
+      metric_value REAL NOT NULL,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  
+  // Tabla para logs de auditoría
+  db.run(`
+    CREATE TABLE IF NOT EXISTS audit_log (
+      id TEXT PRIMARY KEY,
+      user_id TEXT,
+      action TEXT NOT NULL,
+      details TEXT,
+      ip_address TEXT,
+      user_agent TEXT,
+      timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  
+  // Tabla para configuración del sistema
+  db.run(`
+    CREATE TABLE IF NOT EXISTS system_config (
+      key TEXT PRIMARY KEY,
+      value TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  
+  // Tabla para rate limiting
+  db.run(`
+    CREATE TABLE IF NOT EXISTS rate_limits (
+      id TEXT PRIMARY KEY,
+      ip_address TEXT NOT NULL,
+      endpoint TEXT NOT NULL,
+      count INTEGER DEFAULT 1,
+      first_request DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_request DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  
+  // Índices para optimización
+  db.run('CREATE INDEX IF NOT EXISTS idx_messages_room_timestamp ON messages(room, timestamp)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_sessions_user ON sessions(user_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_files_uploaded_by ON files(uploaded_by)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp)');
+  db.run('CREATE INDEX IF NOT EXISTS idx_rate_limits_ip_endpoint ON rate_limits(ip_address, endpoint)');
+  
+  console.log('Base de datos inicializada con tablas avanzadas');
+  
+  // Insertar token predefinido al iniciar
+  db.run(`
+    INSERT OR IGNORE INTO admin_sso_tokens (id, token) 
+    VALUES (?, ?)
+  `, ['default-admin-token', DEFAULT_ADMIN_TOKEN], (err) => {
+    if (err) {
+      console.error('Error al insertar token predeterminado:', err);
+    } else {
+      console.log('Token SSO predeterminado creado');
+    }
   });
 });
 
@@ -1228,10 +1787,256 @@ app.use((error, req, res, next) => {
   });
 });
 
+// ===== FUNCIONES AVANZADAS DE CACHE Y OPTIMIZACIÓN =====
+
+// Cache inteligente para mensajes
+function getCachedMessages(room, limit = 100) {
+  const cacheKey = `messages:${room}:${limit}`;
+  let messages = messageCache.get(cacheKey);
+  
+  if (!messages) {
+    return null;
+  }
+  
+  return messages;
+}
+
+function setCachedMessages(room, limit, messages) {
+  const cacheKey = `messages:${room}:${limit}`;
+  messageCache.set(cacheKey, messages);
+}
+
+// Cache para usuarios
+function getCachedUser(userId) {
+  return userCache.get(userId);
+}
+
+function setCachedUser(userId, userData) {
+  userCache.set(userId, userData);
+}
+
+// Cache para sesiones
+function getCachedSession(token) {
+  return sessionCache.get(token);
+}
+
+function setCachedSession(token, sessionData) {
+  sessionCache.set(token, sessionData);
+}
+
+// ===== FUNCIONES DE MONITOREO Y MÉTRICAS =====
+
+// Registrar métricas del servidor
+function recordMetric(metricName, value) {
+  const metricId = generateId();
+  db.run(`
+    INSERT INTO server_stats (id, metric_name, metric_value)
+    VALUES (?, ?, ?)
+  `, [metricId, metricName, value], (err) => {
+    if (err) {
+      logger.error('Error registrando métrica:', err);
+    }
+  });
+}
+
+// Obtener estadísticas del servidor
+function getServerStats(callback) {
+  const stats = {
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    cpu: process.cpuUsage(),
+    connections: io.engine.clientsCount,
+    onlineUsers: onlineUsers.length,
+    cacheStats: {
+      messages: messageCache.size,
+      users: userCache.size,
+      sessions: sessionCache.size
+    }
+  };
+  
+  callback(null, stats);
+}
+
+// ===== FUNCIONES DE AUDITORÍA =====
+
+// Registrar acción de auditoría
+function logAuditAction(userId, action, details, req) {
+  const auditId = generateId();
+  const ip = req ? req.ip : 'unknown';
+  const userAgent = req ? req.headers['user-agent'] : 'unknown';
+  
+  db.run(`
+    INSERT INTO audit_log (id, user_id, action, details, ip_address, user_agent)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `, [auditId, userId, action, JSON.stringify(details), ip, userAgent], (err) => {
+    if (err) {
+      logger.error('Error registrando auditoría:', err);
+    }
+  });
+}
+
+// ===== TAREAS PROGRAMADAS =====
+
+// En Render, las tareas programadas pueden no funcionar como esperado
+// Solo ejecutar si no estamos en un entorno serverless
+if (process.env.NODE_ENV === 'production' && !process.env.RENDER) {
+  // Backup automático diario
+  cron.schedule('0 2 * * *', () => {
+    logger.info('Iniciando backup automático de base de datos...');
+    backupDatabase();
+  });
+
+  // Optimización semanal de base de datos
+  cron.schedule('0 3 * * 0', () => {
+    logger.info('Iniciando optimización de base de datos...');
+    optimizeDatabase();
+  });
+}
+
+// Limpieza de cache cada hora (siempre activa)
+cron.schedule('0 * * * *', () => {
+  messageCache.prune();
+  userCache.flushAll();
+  sessionCache.flushAll();
+  logger.info('Cache limpiado');
+});
+
+// Registro de métricas cada 5 minutos (siempre activo)
+cron.schedule('*/5 * * * *', () => {
+  getServerStats((err, stats) => {
+    if (!err) {
+      recordMetric('memory_usage', stats.memory.heapUsed);
+      recordMetric('online_users', stats.onlineUsers);
+      recordMetric('active_connections', stats.connections);
+    }
+  });
+});
+
+// ===== MANEJO DE ERRORES AVANZADO =====
+
+// Capturar errores no manejados
+process.on('uncaughtException', (error) => {
+  logger.error('Error no manejado:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Promesa rechazada no manejada:', reason);
+});
+
+// Manejo de señales de terminación
+process.on('SIGTERM', () => {
+  logger.info('Recibida señal SIGTERM, cerrando servidor...');
+  server.close(() => {
+    logger.info('Servidor cerrado');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('Recibida señal SIGINT, cerrando servidor...');
+  server.close(() => {
+    logger.info('Servidor cerrado');
+    process.exit(0);
+  });
+});
+
+// ===== ENDPOINTS AVANZADOS =====
+
+// Endpoint de salud del servidor
+app.get('/health', (req, res) => {
+  getServerStats((err, stats) => {
+    if (err) {
+      return res.status(500).json({ status: 'error', error: err.message });
+    }
+    
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: stats.uptime,
+      memory: stats.memory,
+      connections: stats.connections,
+      onlineUsers: stats.onlineUsers
+    });
+  });
+});
+
+// Endpoint de métricas (solo para admins)
+app.get('/metrics', (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+  
+  const token = authHeader.replace('Bearer ', '');
+  
+  validateSession(token, (err, user) => {
+    if (err || !user || user.role !== 'admin') {
+      return res.status(401).json({ error: 'No autorizado' });
+    }
+    
+    getServerStats((err, stats) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      
+      res.json({
+        server: stats,
+        cache: stats.cacheStats,
+        timestamp: new Date().toISOString()
+      });
+    });
+  });
+});
+
+// Endpoint para logs de auditoría (solo para admins)
+app.get('/audit-logs', (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ error: 'No autorizado' });
+  }
+  
+  const token = authHeader.replace('Bearer ', '');
+  
+  validateSession(token, (err, user) => {
+    if (err || !user || user.role !== 'admin') {
+      return res.status(401).json({ error: 'No autorizado' });
+    }
+    
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+    
+    db.all(`
+      SELECT * FROM audit_log 
+      ORDER BY timestamp DESC 
+      LIMIT ? OFFSET ?
+    `, [limit, offset], (err, logs) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      
+      res.json({
+        logs: logs.map(log => ({
+          ...log,
+          details: JSON.parse(log.details || '{}')
+        })),
+        total: logs.length
+      });
+    });
+  });
+});
+
 // Iniciar servidor
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
-  console.log(`Servidor escuchando en http://localhost:${PORT}`);
-  console.log(`Token SSO predefinido: ${DEFAULT_ADMIN_TOKEN}`);
-  console.log(`Directorio de uploads: ${UPLOAD_DIR}`);
+  logger.info(`Servidor escuchando en http://localhost:${PORT}`);
+  logger.info(`Token SSO predefinido: ${DEFAULT_ADMIN_TOKEN}`);
+  logger.info(`Directorio de uploads: ${UPLOAD_DIR}`);
+  logger.info(`Modo: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Workers: ${isMaster ? numCPUs : 1}`);
+  
+  // Registrar métricas iniciales
+  recordMetric('server_start', Date.now());
 });

@@ -1,0 +1,56 @@
+services:
+  - type: web
+    name: chat-app
+    env: node
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: ADMIN_TOKEN
+        generateValue: true
+      - key: JWT_SECRET
+        generateValue: true
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: LOG_LEVEL
+        value: info
+      - key: ALLOWED_ORIGINS
+        value: "*"
+      - key: RATE_LIMIT_MAX_REQUESTS
+        value: 100
+      - key: LOGIN_RATE_LIMIT_MAX
+        value: 5
+      - key: UPLOAD_RATE_LIMIT_MAX
+        value: 10
+      - key: MAX_FILE_SIZE
+        value: 10485760
+      - key: MAX_FILES_PER_UPLOAD
+        value: 5
+      - key: CACHE_TTL_MESSAGES
+        value: 300000
+      - key: CACHE_TTL_USERS
+        value: 300000
+      - key: CACHE_TTL_SESSIONS
+        value: 3600000
+      - key: METRICS_ENABLED
+        value: true
+      - key: AUDIT_LOG_ENABLED
+        value: true
+      - key: COMPRESSION_ENABLED
+        value: true
+      - key: CLUSTER_ENABLED
+        value: false
+      - key: WS_PING_TIMEOUT
+        value: 60000
+      - key: WS_PING_INTERVAL
+        value: 25000
+      - key: WS_UPGRADE_TIMEOUT
+        value: 10000
+      - key: WS_MAX_HTTP_BUFFER_SIZE
+        value: 104857600
+    healthCheckPath: /health
+    autoDeploy: true 
