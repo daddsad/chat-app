@@ -81,7 +81,7 @@ if (!fs.existsSync('logs')) {
 // ===== CONFIGURACIÓN DE CACHE AVANZADO =====
 const messageCache = new LRU({
   max: 1000, // Máximo 1000 mensajes en cache
-  maxAge: 1000 * 60 * 5, // 5 minutos
+  ttl: 1000 * 60 * 5, // 5 minutos
   updateAgeOnGet: true
 });
 
