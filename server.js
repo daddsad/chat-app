@@ -11,6 +11,7 @@ const multer = require('multer');
 const fs = require('fs');
 const sharp = require('sharp');
 const { v4: uuidv4 } = require('uuid');
+const sanitizeHtml = require('sanitize-html');
 
 // ===== MEJORAS AVANZADAS Y ULTRA AVANZADAS =====
 
@@ -199,6 +200,14 @@ if (isMaster && useClustering) {
       retryAfter: '1 hora'
     }
   });
+
+  // Middleware anti-spam para mensajes
+  const messageLimiter = rateLimit({
+    windowMs: 10 * 1000, // 10 segundos
+    max: 5, // Máximo 5 mensajes cada 10 segundos
+    message: { error: 'Estás enviando mensajes demasiado rápido.' }
+  });
+  app.use('/mensaje', messageLimiter);
   
   // Compresión
   app.use(compression());
@@ -2039,4 +2048,36 @@ server.listen(PORT, () => {
   
   // Registrar métricas iniciales
   recordMetric('server_start', Date.now());
+});
+
+function cleanMessage(text) {
+  return sanitizeHtml(text, {
+    allowedTags: ['b', 'i', 'em', 'strong', 'a'],
+    allowedAttributes: {
+      'a': ['href', 'target', 'rel']
+    },
+    allowedSchemes: ['http', 'https'],
+    transformTags: {
+      'a': (tagName, attribs) => {
+        return {
+          tagName: 'a',
+          attribs: {
+            href: attribs.href,
+            target: '_blank',
+            rel: 'noopener noreferrer'
+          }
+        };
+      }
+    }
+  });
+}
+
+// Sanitización de mensajes en endpoint de mensajes
+app.post('/mensaje', (req, res) => {
+  let { texto } = req.body;
+  texto = cleanMessage(texto);
+  if (texto.length < 1 || texto.length > 500) {
+    return res.status(400).json({ error: 'Mensaje inválido.' });
+  }
+  // ...guardar mensaje...
 });

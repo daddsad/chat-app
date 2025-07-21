@@ -1529,6 +1529,37 @@
             z-index: 1000;
             margin-bottom: 5px;
         }
+        /* Fallback responsivo si JS falla */
+        @media (max-width: 600px) {
+          .container, .form-container, .chat-container {
+            max-width: 100vw !important;
+            padding: 8px !important;
+          }
+          .chat-messages {
+            max-height: 50vh !important;
+          }
+        }
+        /* Mejorar contraste de textos secundarios */
+        .form-header p, .file-upload-text {
+          color: #d1d5db;
+        }
+        /* Asegurar área de mensajes visible */
+        .chat-messages {
+          max-height: 60vh;
+          min-height: 200px;
+        }
+        /* Accesibilidad: foco visible */
+        button:focus, input:focus, .message-input:focus {
+          outline: 2px solid var(--primary-color);
+          outline-offset: 2px;
+        }
+        /* Reduce motion para usuarios que lo prefieran */
+        @media (prefers-reduced-motion: reduce) {
+          * {
+            transition: none !important;
+            animation: none !important;
+          }
+        }
     </style>
 </head>
 <body>
@@ -3728,6 +3759,66 @@
         if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
             window.showDeviceInfo = showDeviceInfo;
         }
+
+        // === ADAPTACIÓN DE LÍMITES SEGÚN CONEXIÓN ===
+        function adaptDataLimits() {
+            let connectionType = 'unknown';
+            if ('connection' in navigator) {
+                connectionType = navigator.connection.effectiveType;
+            }
+
+            // Defaults
+            let maxFileSize = 10 * 1024 * 1024; // 10MB
+            let maxMessages = 100;
+            let previewMedia = true;
+
+            if (connectionType === '2g' || connectionType === '3g' || connectionType === 'slow-2g' || connectionType === '4g') {
+                maxFileSize = 2 * 1024 * 1024; // 2MB
+                maxMessages = 20;
+                previewMedia = false;
+            }
+
+            window.MAX_FILE_SIZE = maxFileSize;
+            window.MAX_MESSAGES = maxMessages;
+            window.PREVIEW_MEDIA = previewMedia;
+
+            // Limitar input de archivos
+            const fileInput = document.getElementById('file-input');
+            if (fileInput) {
+                fileInput.setAttribute('data-max-size', maxFileSize);
+            }
+        }
+        document.addEventListener('DOMContentLoaded', adaptDataLimits);
+
+        // === SANITIZACIÓN DE MENSAJES ===
+        function escapeHTML(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#39;'
+                })[m];
+            });
+        }
+        // Usar escapeHTML al renderizar mensajes:
+        // Ejemplo: messageElement.innerHTML = escapeHTML(message.text);
+
+        // === LÍMITE DE MENSAJES Y ARCHIVOS ===
+        // Al cargar mensajes del backend, usa window.MAX_MESSAGES
+        // Al validar archivos, usa window.MAX_FILE_SIZE
+        // Ejemplo en validateFile:
+        function validateFile(file) {
+            const maxSize = window.MAX_FILE_SIZE || (10 * 1024 * 1024);
+            // ... existing code ...
+            if (file.size > maxSize) {
+                showNotification(`El archivo ${file.name} es demasiado grande. Máximo ${(maxSize/1024/1024).toFixed(1)}MB.`, 'error');
+                return false;
+            }
+            // ... existing code ...
+        }
+        // ... existing code ...
     </script>
 </body>
 </html>
