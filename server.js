@@ -781,7 +781,21 @@ db.serialize(() => {
 });
 
 // Servir archivos estáticos
-app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public'), {
+  dotfiles: 'deny', // Bloquear archivos ocultos como .env, .git, etc.
+  index: false // No servir index.html automáticamente fuera de rutas explícitas
+}));
+
+// Middleware para bloquear acceso directo a archivos sensibles
+app.use((req, res, next) => {
+  const forbidden = [
+    '/.env', '/chat.db', '/package.json', '/package-lock.json', '/render.yaml', '/README.md', '/ADVANCED_FEATURES.md', '/sds.md', '/server.js', '/render-setup.md', '/.git', '/.qodo', '/backups', '/logs'
+  ];
+  if (forbidden.some(f => req.path.startsWith(f))) {
+    return res.status(403).send('Acceso denegado');
+  }
+  next();
+});
 
 // Usuarios en línea
 let onlineUsers = [];
