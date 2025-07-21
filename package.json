@@ -22,6 +22,7 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
+    "sqlite3-wasm": "git+https://github.com/sqlite/sqlite-wasm.git",
     "express": "^4.18.2",
     "socket.io": "^4.7.2",
     "bcrypt": "^5.1.1",
