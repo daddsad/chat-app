@@ -44,7 +44,6 @@ const Redis = require('ioredis');
 const socketRedis = require('socket.io-redis');
 
 // Base de datos mejorada
-const sqlite3Backup = require('sqlite3-backup');
 const sqlite3Wasm = require('sqlite3-wasm');
 
 // Utilidades avanzadas
@@ -551,36 +550,27 @@ const upload = multer({
 
 // ===== CONFIGURACIÓN AVANZADA DE BASE DE DATOS =====
 
-// Backup automático de la base de datos
+// Backup automático de la base de datos usando fs.copyFileSync
 function backupDatabase() {
   // En Render, el sistema de archivos es efímero, no hacer backups automáticos
   if (process.env.RENDER) {
     logger.info('Backup automático deshabilitado en Render (sistema de archivos efímero)');
     return;
   }
-  
-  const backupPath = `./backups/chat_backup_${moment().format('YYYY-MM-DD_HH-mm-ss')}.db`;
-  
-  if (!fs.existsSync('./backups')) {
-    fs.mkdirSync('./backups', { recursive: true });
+  const dbPath = path.join(__dirname, 'chat.db');
+  const backupDir = path.join(__dirname, 'backups');
+  if (!fs.existsSync(backupDir)) {
+    fs.mkdirSync(backupDir, { recursive: true });
   }
-  
-  const backup = new sqlite3.Database(backupPath);
-  const source = new sqlite3.Database(DB_PATH);
-  
-  source.backup(backup, (err) => {
-    if (err) {
-      logger.error('Error en backup de base de datos:', err);
-    } else {
-      logger.info(`Backup creado: ${backupPath}`);
-      
-      // Limpiar backups antiguos (mantener solo los últimos 7 días)
-      cleanupOldBackups();
-    }
-    
-    backup.close();
-    source.close();
-  });
+  const backupPath = path.join(backupDir, `chat_backup_${moment().format('YYYY-MM-DD_HH-mm-ss')}.db`);
+  try {
+    fs.copyFileSync(dbPath, backupPath);
+    logger.info(`Backup creado: ${backupPath}`);
+    // Limpiar backups antiguos (mantener solo los últimos 7 días)
+    cleanupOldBackups();
+  } catch (err) {
+    logger.error('Error en backup de base de datos:', err);
+  }
 }
 
 // Limpiar backups antiguos
