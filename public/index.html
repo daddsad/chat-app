@@ -3819,6 +3819,184 @@
             // ... existing code ...
         }
         // ... existing code ...
+
+        // === WebRTC + Socket.IO señalización ===
+        let localStream = null;
+        let peerConnections = {};
+        let inCall = false;
+        const roomName = 'general'; // Puedes adaptar esto a la sala actual
+        const voiceVideoCall = document.getElementById('voice-video-call');
+        const localVideo = document.getElementById('local-video');
+        const remoteVideos = document.getElementById('remote-videos');
+        const callStatus = document.getElementById('call-status');
+        const toggleMicBtn = document.getElementById('toggle-mic');
+        const toggleCamBtn = document.getElementById('toggle-cam');
+        const shareScreenBtn = document.getElementById('share-screen');
+        const leaveCallBtn = document.getElementById('leave-call');
+
+        // Mostrar la UI de llamada al entrar a la sala
+        function joinVoiceVideoCall() {
+          voiceVideoCall.style.display = 'block';
+          callStatus.textContent = 'Uniéndote a la llamada...';
+          startLocalStream();
+          socket.emit('join-call', { room: roomName });
+          inCall = true;
+        }
+        // Salir de la llamada
+        function leaveVoiceVideoCall() {
+          voiceVideoCall.style.display = 'none';
+          callStatus.textContent = '';
+          stopLocalStream();
+          Object.values(peerConnections).forEach(pc => pc.close());
+          peerConnections = {};
+          remoteVideos.innerHTML = '';
+          socket.emit('leave-call', { room: roomName });
+          inCall = false;
+        }
+        // Iniciar cámara/micro
+        async function startLocalStream() {
+          try {
+            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+            localVideo.srcObject = localStream;
+            callStatus.textContent = 'En llamada';
+            // Notificar a otros
+            socket.emit('ready-for-call', { room: roomName });
+          } catch (err) {
+            callStatus.textContent = 'No se pudo acceder a cámara/micrófono';
+          }
+        }
+        // Detener cámara/micro
+        function stopLocalStream() {
+          if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+            localStream = null;
+            localVideo.srcObject = null;
+          }
+        }
+        // Prender/apagar micro
+        toggleMicBtn.onclick = () => {
+          if (localStream) {
+            localStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
+            toggleMicBtn.textContent = localStream.getAudioTracks()[0].enabled ? '🎤' : '🔇';
+          }
+        };
+        // Prender/apagar cámara
+        toggleCamBtn.onclick = () => {
+          if (localStream) {
+            localStream.getVideoTracks().forEach(track => track.enabled = !track.enabled);
+            toggleCamBtn.textContent = localStream.getVideoTracks()[0].enabled ? '📷' : '🚫';
+          }
+        };
+        // Compartir pantalla
+        shareScreenBtn.onclick = async () => {
+          if (!localStream) return;
+          try {
+            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+            const videoTrack = screenStream.getVideoTracks()[0];
+            // Reemplazar video en localStream y en conexiones
+            localStream.removeTrack(localStream.getVideoTracks()[0]);
+            localStream.addTrack(videoTrack);
+            localVideo.srcObject = localStream;
+            Object.values(peerConnections).forEach(pc => {
+              const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+              if (sender) sender.replaceTrack(videoTrack);
+            });
+            videoTrack.onended = () => {
+              // Volver a la cámara cuando termine compartir pantalla
+              navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(camStream => {
+                const camTrack = camStream.getVideoTracks()[0];
+                localStream.removeTrack(videoTrack);
+                localStream.addTrack(camTrack);
+                localVideo.srcObject = localStream;
+                Object.values(peerConnections).forEach(pc => {
+                  const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
+                  if (sender) sender.replaceTrack(camTrack);
+                });
+              });
+            };
+          } catch (err) {
+            callStatus.textContent = 'No se pudo compartir pantalla';
+          }
+        };
+        // Salir de la llamada
+        leaveCallBtn.onclick = leaveVoiceVideoCall;
+
+        // --- Señalización básica con Socket.IO ---
+        socket.on('call-user', async ({ from }) => {
+          if (!localStream) return;
+          const pc = createPeerConnection(from);
+          peerConnections[from] = pc;
+          localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+          const offer = await pc.createOffer();
+          await pc.setLocalDescription(offer);
+          socket.emit('call-offer', { to: from, offer });
+        });
+        socket.on('call-offer', async ({ from, offer }) => {
+          if (!localStream) return;
+          const pc = createPeerConnection(from);
+          peerConnections[from] = pc;
+          await pc.setRemoteDescription(new RTCSessionDescription(offer));
+          localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+          socket.emit('call-answer', { to: from, answer });
+        });
+        socket.on('call-answer', async ({ from, answer }) => {
+          const pc = peerConnections[from];
+          if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
+        });
+        socket.on('call-ice-candidate', ({ from, candidate }) => {
+          const pc = peerConnections[from];
+          if (pc && candidate) pc.addIceCandidate(new RTCIceCandidate(candidate));
+        });
+        // --- PeerConnection helpers ---
+        function createPeerConnection(peerId) {
+          const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
+          pc.onicecandidate = (event) => {
+            if (event.candidate) {
+              socket.emit('call-ice-candidate', { to: peerId, candidate: event.candidate });
+            }
+          };
+          pc.ontrack = (event) => {
+            let remoteVideo = document.getElementById('remote-video-' + peerId);
+            if (!remoteVideo) {
+              remoteVideo = document.createElement('video');
+              remoteVideo.id = 'remote-video-' + peerId;
+              remoteVideo.autoplay = true;
+              remoteVideo.playsInline = true;
+              remoteVideo.style.width = '80px';
+              remoteVideo.style.height = '60px';
+              remoteVideo.style.background = '#000';
+              remoteVideo.style.borderRadius = '8px';
+              remoteVideos.appendChild(remoteVideo);
+            }
+            remoteVideo.srcObject = event.streams[0];
+          };
+          pc.onconnectionstatechange = () => {
+            if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+              const remoteVideo = document.getElementById('remote-video-' + peerId);
+              if (remoteVideo) remoteVideo.remove();
+            }
+          };
+          return pc;
+        }
+        // --- Unirse automáticamente al canal de voz/video al entrar a la sala ---
+        document.addEventListener('DOMContentLoaded', () => {
+          joinVoiceVideoCall();
+        });
     </script>
+
+    <!-- Canal de Voz/Video -->
+    <div id="voice-video-call" style="display:none; position:fixed; bottom:20px; right:20px; background:#23272A; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.2); padding:16px; z-index:2000; min-width:320px;">
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+        <button id="toggle-mic" title="Prender/Apagar micrófono">🎤</button>
+        <button id="toggle-cam" title="Prender/Apagar cámara">📷</button>
+        <button id="share-screen" title="Compartir pantalla">🖥️</button>
+        <button id="leave-call" title="Salir de la llamada">❌</button>
+      </div>
+      <video id="local-video" autoplay muted playsinline style="width:80px; height:60px; background:#000; border-radius:8px;"></video>
+      <div id="remote-videos" style="display:flex; gap:8px; margin-top:10px;"></div>
+      <div id="call-status" style="color:#d1d5db; font-size:13px; margin-top:8px;"></div>
+    </div>
 </body>
 </html>

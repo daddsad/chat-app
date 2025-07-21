@@ -1588,6 +1588,580 @@ io.on('connection', (socket) => {
   });
 });
 
+// --- Señalización WebRTC para canal de voz/video ---
+const callRooms = {};
+io.on('connection', (socket) => {
+  // Obtener IP del cliente
+  const clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
+  
+  // Verificar si la IP está baneada
+  db.get('SELECT * FROM banned_ips WHERE ip = ?', [clientIp], (err, bannedIp) => {
+    if (err) return console.error('Error al verificar IP baneada:', err);
+    
+    if (bannedIp) {
+      socket.emit('user:banned', { 
+        reason: `Tu IP ha sido baneada: ${bannedIp.reason}` 
+      });
+      socket.disconnect();
+      return;
+    }
+  });
+  
+  // Función auxiliar para manejar callbacks
+  const safeCallback = (callback, response) => {
+    if (typeof callback === 'function') {
+      callback(response);
+    }
+  };
+
+  // Manejar registro de usuario
+  socket.on('register', (data, callback) => {
+    const { nickname, username, password } = data;
+    
+    // Validar datos
+    if (!nickname || !username || !password) {
+      return safeCallback(callback, { success: false, message: 'Todos los campos son obligatorios' });
+    }
+    
+    // Verificar si el usuario ya existe
+    getUserByUsername(username, (err, user) => {
+      if (err) {
+        return safeCallback(callback, { success: false, message: 'Error en el servidor' });
+      }
+      
+      if (user) {
+        return safeCallback(callback, { success: false, message: 'El usuario ya existe' });
+      }
+      
+      // Crear nuevo usuario
+      createUser(nickname, username, password, (err, user) => {
+        if (err) {
+          return safeCallback(callback, { success: false, message: 'Error al crear el usuario' });
+        }
+        
+        // Crear sesión
+        createSession(user.id, (err, token) => {
+          if (err) {
+            return safeCallback(callback, { success: false, message: 'Error al crear la sesión' });
+          }
+          
+          safeCallback(callback, { 
+            success: true, 
+            user,
+            token
+          });
+        });
+      });
+    });
+  });
+  
+  // Manejar inicio de sesión
+  socket.on('login', (data, callback) => {
+    const { username, password, adminToken } = data;
+    
+    // Validar datos
+    if (!username || !password) {
+      return safeCallback(callback, { success: false, message: 'Usuario y contraseña son obligatorios' });
+    }
+    
+    // Buscar usuario
+    getUserByUsername(username, (err, user) => {
+      if (err || !user) {
+        return safeCallback(callback, { success: false, message: 'Credenciales inválidas' });
+      }
+      
+      if (user.banned) {
+        return safeCallback(callback, { success: false, message: 'Tu cuenta ha sido baneada' });
+      }
+      
+      // Verificar contraseña
+      bcrypt.compare(password, user.password, (err, result) => {
+        if (err || !result) {
+          return safeCallback(callback, { success: false, message: 'Credenciales inválidas' });
+        }
+        
+        // Verificar token SSO de administrador si se proporciona
+        if (adminToken) {
+          verifyAdminToken(adminToken, (isValid) => {
+            if (!isValid) {
+              return safeCallback(callback, { 
+                success: false, 
+                message: 'Token de administrador inválido' 
+              });
+            }
+            
+            // Convertir usuario en admin
+            db.run('UPDATE users SET role = "admin" WHERE id = ?', [user.id], (err) => {
+              if (err) {
+                console.error('Error al actualizar rol:', err);
+                return safeCallback(callback, { 
+                  success: false, 
+                  message: 'Error al asignar rol de administrador' 
+                });
+              }
+              
+              // Actualizar objeto usuario
+              user.role = 'admin';
+              completeLogin(user);
+            });
+          });
+        } else {
+          completeLogin(user);
+        }
+      });
+    });
+    
+    function completeLogin(user) {
+      // Crear sesión
+      createSession(user.id, (err, token) => {
+        if (err) {
+          return safeCallback(callback, { success: false, message: 'Error al crear la sesión' });
+        }
+
+        const userData = {
+          id: user.id,
+          nickname: user.nickname,
+          username: user.username,
+          role: user.role
+        };
+
+        safeCallback(callback, { 
+          success: true, 
+          user: userData,
+          token
+        });
+      });
+    }
+  });
+  
+  // Validar sesión
+  socket.on('validateSession', (token, callback) => {
+    validateSession(token, (result) => {
+      safeCallback(callback, result);
+    });
+  });
+  
+  // Unirse a una sala
+  socket.on('join', (data) => {
+    const { user, room } = data;
+    
+    // Guardar referencia del usuario
+    socket.user = user;
+    socket.room = room;
+    
+    // Agregar usuario a la lista de usuarios en línea
+    onlineUsers = onlineUsers.filter(u => u.id !== user.id);
+    onlineUsers.push({ ...user, socketId: socket.id, room });
+    
+    // Unir al usuario a la sala
+    socket.join(room);
+    
+    // Actualizar lista de usuarios en línea
+    io.emit('updateUsers', onlineUsers);
+    
+    // Notificar a la sala
+    io.to(room).emit('systemMessage', {
+      id: `system-${Date.now()}`,
+      text: `${user.nickname} se ha unido al chat`,
+      sender: 'Sistema',
+      senderId: 'system',
+      timestamp: Date.now(),
+      room
+    });
+    
+    // Enviar mensajes históricos
+    getRoomMessages(room, 100, (err, messages) => {
+      if (!err) {
+        socket.emit('initialData', {
+          room,
+          messages: messages
+        });
+      }
+    });
+  });
+  
+  // Cambiar de sala
+  socket.on('changeRoom', (data) => {
+    const { user, newRoom } = data;
+    
+    // Verificar que el usuario está autenticado
+    if (!socket.user || socket.user.id !== user.id) {
+      socket.emit('authError', 'No autorizado');
+      return;
+    }
+    
+    // Salir de la sala anterior
+    socket.leave(socket.room);
+    
+    // Actualizar usuario en línea
+    onlineUsers = onlineUsers.map(u => 
+      u.id === user.id ? { ...u, room: newRoom } : u
+    );
+    
+    // Unirse a la nueva sala
+    socket.join(newRoom);
+    socket.room = newRoom;
+    
+    // Actualizar lista de usuarios en línea
+    io.emit('updateUsers', onlineUsers);
+    
+    // Notificar cambio de sala
+    io.to(newRoom).emit('systemMessage', {
+      id: `system-${Date.now()}`,
+      text: `${user.nickname} se ha unido al chat`,
+      sender: 'Sistema',
+      senderId: 'system',
+      timestamp: Date.now(),
+      room: newRoom
+    });
+    
+    // Enviar mensajes históricos de la nueva sala
+    getRoomMessages(newRoom, 100, (err, messages) => {
+      if (!err) {
+        socket.emit('initialData', {
+          room: newRoom,
+          messages: messages
+        });
+      }
+    });
+  });
+  
+  // Manejar mensajes
+  socket.on('message', (message) => {
+    // Verificar que el usuario está autenticado
+    if (!socket.user) {
+      socket.emit('authError', 'Debes iniciar sesión para enviar mensajes');
+      return;
+    }
+    
+    // Validar mensaje
+    if (!message.text || !message.room) {
+      return;
+    }
+    
+    // Asignar remitente
+    message.senderId = socket.user.id;
+    message.sender = socket.user.nickname;
+    
+    // Guardar mensaje en la base de datos
+    saveMessage(message, (err, savedMessage) => {
+      if (err) {
+        console.error('Error al guardar mensaje:', err);
+        return;
+      }
+      
+      // Enviar mensaje a todos en la sala
+      io.to(message.room).emit('message', savedMessage);
+    });
+  });
+  
+  // Cerrar sesión
+  socket.on('logout', (data, callback) => {
+    const { userId } = data;
+    
+    // Función para manejar respuesta segura
+    const respond = (response) => {
+      safeCallback(callback, response);
+    };
+
+    if (!socket.user || socket.user.id !== userId) {
+      return respond({ 
+        success: false, 
+        message: 'No autorizado' 
+      });
+    }
+
+    // Eliminar de usuarios en línea
+    onlineUsers = onlineUsers.filter(u => u.id !== userId);
+    
+    // Actualizar lista de usuarios
+    io.emit('updateUsers', onlineUsers);
+    
+    // Notificar desconexión
+    if (socket.room) {
+      io.to(socket.room).emit('systemMessage', {
+        id: `system-${Date.now()}`,
+        text: `${socket.user.nickname} ha abandonado el chat`,
+        sender: 'Sistema',
+        senderId: 'system',
+        timestamp: Date.now(),
+        room: socket.room
+      });
+    }
+    
+    respond({ success: true });
+  });
+  
+  // ===== ADMIN FUNCTIONS =====
+  
+  // Obtener datos para el panel de administración
+  socket.on('admin:getData', (callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    getAdminData((err, data) => {
+      if (err) {
+        console.error('Error al obtener datos de administración:', err);
+        return safeCallback(callback, { error: 'Error en el servidor' });
+      }
+      
+      safeCallback(callback, data);
+    });
+  });
+  
+  // Banear usuario
+  socket.on('admin:banUser', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { userId, reason } = data;
+    
+    db.run(
+      'UPDATE users SET banned = 1 WHERE id = ?',
+      [userId],
+      function(err) {
+        if (err) {
+          console.error('Error al banear usuario:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'ban_user', userId, reason);
+        
+        // Notificar al usuario si está conectado
+        const userSocket = onlineUsers.find(u => u.id === userId);
+        if (userSocket) {
+          io.to(userSocket.socketId).emit('user:banned', { reason });
+        }
+        
+        // Actualizar lista de usuarios en línea
+        onlineUsers = onlineUsers.filter(u => u.id !== userId);
+        io.emit('updateUsers', onlineUsers);
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Desbanear usuario
+  socket.on('admin:unbanUser', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { userId } = data;
+    
+    db.run(
+      'UPDATE users SET banned = 0 WHERE id = ?',
+      [userId],
+      function(err) {
+        if (err) {
+          console.error('Error al desbanear usuario:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'unban_user', userId, '');
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Banear IP
+  socket.on('admin:banIp', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { ip, reason } = data;
+    const banId = generateId();
+    
+    db.run(
+      'INSERT INTO banned_ips (id, ip, reason) VALUES (?, ?, ?)',
+      [banId, ip, reason],
+      function(err) {
+        if (err) {
+          console.error('Error al banear IP:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'ban_ip', ip, reason);
+        
+        // Desconectar usuarios con esa IP
+        io.sockets.sockets.forEach(sock => {
+          const sockIp = sock.handshake.headers['x-forwarded-for'] || sock.handshake.address;
+          if (sockIp === ip) {
+            sock.emit('user:banned', { reason: `Tu IP ha sido baneada: ${reason}` });
+            sock.disconnect();
+          }
+        });
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Desbanear IP
+  socket.on('admin:unbanIp', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { ip } = data;
+    
+    db.run(
+      'DELETE FROM banned_ips WHERE ip = ?',
+      [ip],
+      function(err) {
+        if (err) {
+          console.error('Error al desbanear IP:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'unban_ip', ip, '');
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Eliminar mensaje
+  socket.on('admin:deleteMessage', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { messageId } = data;
+    
+    db.run(
+      'UPDATE messages SET banned = 1 WHERE id = ?',
+      [messageId],
+      function(err) {
+        if (err) {
+          console.error('Error al eliminar mensaje:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'delete_message', messageId, '');
+        
+        // Notificar a todos que el mensaje fue eliminado
+        io.emit('message:deleted', { messageId });
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Descartar reporte
+  socket.on('admin:dismissReport', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { messageId } = data;
+    
+    db.run(
+      'DELETE FROM reported_messages WHERE message_id = ?',
+      [messageId],
+      function(err) {
+        if (err) {
+          console.error('Error al descartar reporte:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'dismiss_report', messageId, '');
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Generar token SSO de administrador
+  socket.on('admin:generateToken', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    createAdminToken((token) => {
+      if (!token) {
+        return safeCallback(callback, { error: 'Error al generar token' });
+      }
+      
+      safeCallback(callback, { success: true, token });
+    });
+  });
+  
+  // Desconexión
+  socket.on('disconnect', () => {
+    if (socket.user) {
+      // Eliminar de usuarios en línea
+      onlineUsers = onlineUsers.filter(u => u.socketId !== socket.id);
+      
+      // Notificar desconexión
+      if (socket.room) {
+        io.to(socket.room).emit('systemMessage', {
+          id: `system-${Date.now()}`,
+          text: `${socket.user.nickname} ha abandonado el chat`,
+          sender: 'Sistema',
+          senderId: 'system',
+          timestamp: Date.now(),
+          room: socket.room
+        });
+      }
+      
+      // Actualizar lista de usuarios
+      io.emit('updateUsers', onlineUsers);
+    }
+    console.log('Usuario desconectado:', socket.id);
+  });
+
+  // Unirse a canal de llamada
+  socket.on('join-call', ({ room }) => {
+    socket.join('call-' + room);
+    if (!callRooms[room]) callRooms[room] = [];
+    callRooms[room].push(socket.id);
+    // Notificar a otros usuarios en la llamada
+    socket.to('call-' + room).emit('call-user', { from: socket.id });
+  });
+  // Salir de la llamada
+  socket.on('leave-call', ({ room }) => {
+    socket.leave('call-' + room);
+    if (callRooms[room]) {
+      callRooms[room] = callRooms[room].filter(id => id !== socket.id);
+      if (callRooms[room].length === 0) delete callRooms[room];
+    }
+  });
+  // Listo para llamada (negociación)
+  socket.on('ready-for-call', ({ room }) => {
+    socket.to('call-' + room).emit('call-user', { from: socket.id });
+  });
+  // Oferta WebRTC
+  socket.on('call-offer', ({ to, offer }) => {
+    io.to(to).emit('call-offer', { from: socket.id, offer });
+  });
+  // Respuesta WebRTC
+  socket.on('call-answer', ({ to, answer }) => {
+    io.to(to).emit('call-answer', { from: socket.id, answer });
+  });
+  // ICE candidates
+  socket.on('call-ice-candidate', ({ to, candidate }) => {
+    io.to(to).emit('call-ice-candidate', { from: socket.id, candidate });
+  });
+});
+
 // Rutas HTTP para manejo de archivos
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
