@@ -289,7 +289,7 @@ const DB_PATH = process.env.DB_PATH || './chat.db';
 const db = new sqlite3.Database(DB_PATH);
 
 // ===== CONFIGURACIÓN AVANZADA DE SEGURIDAD =====
-const DEFAULT_ADMIN_TOKEN = process.env.ADMIN_TOKEN || "ANIMIX_ADMIN_SECRET_2024";
+const DEFAULT_ADMIN_TOKEN = process.env.ADMIN_TOKEN || "ANIMIX_ADMIsN_SECRET_2024";
 const JWT_SECRET = process.env.JWT_SECRET || crypto.randomBytes(64).toString('hex');
 const SESSION_SECRET = process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex');
 
