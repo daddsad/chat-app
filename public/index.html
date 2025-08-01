@@ -1268,7 +1268,6 @@
 
         /* Estilos para archivos e imágenes */
         .file-upload-area {
-            display: none;
             position: absolute;
             bottom: 100%;
             left: 0;
@@ -1280,10 +1279,16 @@
             margin-bottom: 10px;
             text-align: center;
             z-index: 100;
+            display: none;
+            transform: translateY(10px);
+            opacity: 0;
+            transition: all 0.3s ease;
         }
 
         .file-upload-area.active {
             display: block;
+            transform: translateY(0);
+            opacity: 1;
         }
 
         .file-upload-area.dragover {
@@ -1643,6 +1648,69 @@
         .mic-indicator.active {
             background: var(--success-color);
         }
+        
+        /* Mejora del área de subida multimedia */
+        .file-upload-area {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            max-width: 500px;
+            padding: 25px;
+            background: rgba(54, 57, 63, 0.95);
+            border: 2px dashed var(--primary-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            text-align: center;
+            z-index: 100;
+            display: none;
+            opacity: 0;
+            transition: all 0.4s ease;
+        }
+        
+        .file-upload-area.active {
+            display: block;
+            opacity: 1;
+            transform: translateX(-50%) translateY(-10px);
+        }
+        
+        .file-upload-area.dragover {
+            background: rgba(88, 101, 242, 0.15);
+            border-color: var(--success-color);
+        }
+        
+        .file-upload-text {
+            color: var(--gray-color);
+            margin-bottom: 20px;
+            font-size: 16px;
+        }
+        
+        .file-upload-text i {
+            font-size: 32px;
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            display: block;
+        }
+        
+        .file-upload-text p {
+            margin: 5px 0;
+        }
+        
+        .file-upload-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        
+        .file-preview {
+            max-height: 250px;
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(0,0,0,0.1);
+            border-radius: 8px;
+        }
     </style>
 </head>
 <body>
@@ -1905,17 +1973,19 @@
                 <!-- Área de subida de archivos -->
                 <div class="file-upload-area" id="file-upload-area">
                     <div class="file-upload-text">
-                        <i class="fas fa-cloud-upload-alt" style="font-size: 24px; color: var(--primary-color); margin-bottom: 10px;"></i>
+                        <i class="fas fa-cloud-upload-alt"></i>
                         <p>Arrastra archivos aquí o haz clic para seleccionar</p>
-                        <p style="font-size: 12px; margin-top: 5px;">Formatos permitidos: Imágenes, Audio, Video, Documentos (PDF, DOC, XLS, TXT), Máximo 10MB</p>
+                        <p>Formatos permitidos: Imágenes, Audio, Video, Documentos</p>
+                        <p>Tamaño máximo: 10MB</p>
                     </div>
-                    <input type="file" class="file-input" id="file-input" multiple accept="image/*,audio/*,video/*,.pdf,.doc,.docx,.txt,.xls,.xlsx">
-                    <button class="file-upload-button" id="select-files-btn">
-                        <i class="fas fa-folder-open"></i> Seleccionar Archivos
-                    </button>
-                    <button class="file-upload-button" id="upload-files-btn" style="display: none;">
-                        <i class="fas fa-upload"></i> Subir Archivos
-                    </button>
+                    <div class="file-upload-buttons">
+                        <button class="file-upload-button" id="select-files-btn">
+                            <i class="fas fa-folder-open"></i> Seleccionar Archivos
+                        </button>
+                        <button class="file-upload-button" id="upload-files-btn" style="display: none;">
+                            <i class="fas fa-upload"></i> Subir Archivos
+                        </button>
+                    </div>
                     <div class="file-preview" id="file-preview"></div>
                 </div>
                 
@@ -1988,29 +2058,6 @@
             </button>
             <img class="image-modal-img" id="image-modal-img" src="" alt="Vista previa">
         </div>
-    </div>
-
-    <!-- Instrucciones de uso adaptadas por dispositivo -->
-    <div class="context-menu-help" style="position: fixed; bottom: 20px; right: 20px; background: rgba(0,0,0,0.8); color: white; padding: 10px; border-radius: 8px; font-size: 12px; z-index: 999; display: none;">
-        <strong>Menú Contextual:</strong><br>
-        <span class="desktop-only">• PC: Clic derecho en mensajes/usuarios</span>
-        <span class="mobile-only">• Móvil/Tablet: Mantener presionado (500ms)</span>
-        • Admins: Eliminar mensajes, banear usuarios<br>
-        • Copiar IDs de usuario y mensaje<br><br>
-        <strong>Botones de Admin:</strong><br>
-        • 🗑️ Eliminar último mensaje<br>
-        • 🚫 Banear usuario por ID<br>
-        • ⚙️ Panel de administración<br><br>
-        <strong>Otros Botones:</strong><br>
-        • 👁️ Mostrar/Ocultar IDs<br>
-        • 📎 Subir archivos (Multimedia)<br>
-        <span class="mobile-only">• ☰ Toggle sidebar (móviles)</span><br><br>
-        <strong>Archivos:</strong><br>
-        • Solo disponible en sala Multimedia<br>
-        • Clic en 📎 para subir archivos<br>
-        • Drag & drop soportado<br><br>
-        <strong>Dispositivo:</strong><br>
-        <span id="device-info">Detectando...</span>
     </div>
 
     <!-- Canal de Voz -->
@@ -2853,8 +2900,33 @@
                 if (roomName === 'voice') {
                     voiceCallContainer.style.display = 'block';
                     showNotification('Te has unido al canal de voz', 'success');
+                    
+                    // Enviar mensaje al chat sobre la entrada al canal de voz
+                    const voiceMessage = {
+                        id: 'system-' + Date.now(),
+                        text: `${currentUser.nickname} ha entrado al canal de voz`,
+                        sender: 'Sistema',
+                        senderId: 'system',
+                        timestamp: Date.now(),
+                        room: 'voice'
+                    };
+                    socket.emit('message', voiceMessage);
                 } else {
                     voiceCallContainer.style.display = 'none';
+                    
+                    // Si estaba en canal de voz, enviar mensaje de salida
+                    if (inVoiceCall) {
+                        const leaveMessage = {
+                            id: 'system-' + Date.now(),
+                            text: `${currentUser.nickname} ha salido del canal de voz`,
+                            sender: 'Sistema',
+                            senderId: 'system',
+                            timestamp: Date.now(),
+                            room: 'voice'
+                        };
+                        socket.emit('message', leaveMessage);
+                        inVoiceCall = false;
+                    }
                 }
                 
                 currentRoomElement.textContent = `Sala ${roomDisplayName}`;
@@ -2974,6 +3046,20 @@
         leaveVoiceCallBtn.addEventListener('click', () => {
             voiceCallContainer.style.display = 'none';
             showNotification('Has salido del canal de voz', 'success');
+            
+            // Enviar mensaje al chat sobre la salida del canal de voz
+            const leaveMessage = {
+                id: 'system-' + Date.now(),
+                text: `${currentUser.nickname} ha salido del canal de voz`,
+                sender: 'Sistema',
+                senderId: 'system',
+                timestamp: Date.now(),
+                room: 'voice'
+            };
+            socket.emit('message', leaveMessage);
+            
+            inVoiceCall = false;
+            
             // Cambiar a la sala general
             document.querySelectorAll('.room-item').forEach(i => i.classList.remove('active'));
             document.querySelector('.room-item[data-room="general"]').classList.add('active');
