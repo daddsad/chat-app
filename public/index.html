@@ -1517,17 +1517,18 @@
         .admin-action-button[title]:hover::after {
             content: attr(title);
             position: absolute;
-            bottom: 100%;
+            top: -25px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.8);
+            background: var(--dark-color);
             color: white;
-            padding: 5px 8px;
+            padding: 4px 8px;
             border-radius: 4px;
             font-size: 12px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
             white-space: nowrap;
-            z-index: 1000;
-            margin-bottom: 5px;
         }
         /* Fallback responsivo si JS falla */
         @media (max-width: 600px) {
@@ -1559,6 +1560,88 @@
             transition: none !important;
             animation: none !important;
           }
+        }
+        
+        /* Canal de Voz/Video */
+        .voice-call-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--dark-color);
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            padding: 16px;
+            z-index: 2000;
+            min-width: 320px;
+            display: none;
+        }
+        
+        .voice-controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .voice-control-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .voice-control-btn.active {
+            background: var(--danger-color);
+        }
+        
+        .voice-control-btn:hover {
+            transform: scale(1.1);
+        }
+        
+        .participants-list {
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .participant-item {
+            padding: 8px 12px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 6px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .participant-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--success-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .mic-indicator {
+            margin-left: auto;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--danger-color);
+        }
+        
+        .mic-indicator.active {
+            background: var(--success-color);
         }
     </style>
 </head>
@@ -1783,6 +1866,10 @@
                     <li class="room-item" data-room="multimedia">
                         <i class="fas fa-photo-video room-icon"></i> Multimedia
                     </li>
+                    <!-- Nuevo canal de voz -->
+                    <li class="room-item" data-room="voice">
+                        <i class="fas fa-phone-alt room-icon"></i> Voz
+                    </li>
                 </ul>
             </div>
             
@@ -1834,7 +1921,7 @@
                 
                 <input type="text" class="message-input" id="message-input" placeholder="Escribe un mensaje...">
                 <div class="action-buttons">
-                    <button class="action-button file-button" id="file-button">
+                    <button class="action-button file-button show" id="file-button">
                         <i class="fas fa-paperclip"></i>
                     </button>
                     <button class="action-button">
@@ -1926,6 +2013,29 @@
         <span id="device-info">Detectando...</span>
     </div>
 
+    <!-- Canal de Voz -->
+    <div class="voice-call-container" id="voice-call-container">
+        <div class="voice-controls">
+            <button class="voice-control-btn" id="toggle-mic">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="voice-control-btn" id="toggle-headphones">
+                <i class="fas fa-headphones"></i>
+            </button>
+            <button class="voice-control-btn" id="leave-voice-call">
+                <i class="fas fa-phone-slash"></i>
+            </button>
+        </div>
+        
+        <div class="participants-list" id="participants-list">
+            <div class="participant-item">
+                <div class="participant-avatar">U</div>
+                <span>Tú</span>
+                <div class="mic-indicator active" id="user-mic-indicator"></div>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
         // URL del servidor WebSocket
@@ -1938,12 +2048,77 @@
         let isAdminPanelOpen = false;
         let contextMenuTarget = null;
         let contextMenuHelpShown = false;
+        let inVoiceCall = false;
+        let isMuted = false;
         
         // Detección de dispositivos
         let isMobile = false;
         let isTablet = false;
         let isDesktop = false;
         let deviceType = 'desktop';
+        
+        // Elementos DOM
+        const loginContainer = document.getElementById('login-container');
+        const registerContainer = document.getElementById('register-container');
+        const chatContainer = document.getElementById('chat-container');
+        const loginForm = document.getElementById('login-form');
+        const registerForm = document.getElementById('register-form');
+        const showRegister = document.getElementById('show-register');
+        const showLogin = document.getElementById('show-login');
+        const currentUserElement = document.getElementById('current-user');
+        const currentUserIdElement = document.getElementById('current-user-id');
+        const userAvatar = document.getElementById('user-avatar');
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        const onlineUsersList = document.getElementById('online-users');
+        const currentRoomElement = document.getElementById('current-room');
+        const logoutButton = document.getElementById('logout-button');
+        const rememberMe = document.getElementById('remember-me');
+        const adminButton = document.getElementById('admin-button');
+        const adminPanel = document.getElementById('admin-panel');
+        const adminClose = document.getElementById('admin-close');
+        const adminBadge = document.getElementById('admin-badge');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
+        const adminTokenGroup = document.getElementById('admin-token-group');
+        const adminLoginCheckbox = document.getElementById('admin-login');
+        const generateTokenButton = document.getElementById('generate-token-button');
+        const tokenResult = document.getElementById('token-result');
+        const generatedToken = document.getElementById('generated-token');
+        const contextMenu = document.getElementById('context-menu');
+        const copyUserIdBtn = document.getElementById('copy-user-id');
+        const copyMessageIdBtn = document.getElementById('copy-message-id');
+        const reportMessageBtn = document.getElementById('report-message');
+        const deleteMessageBtn = document.getElementById('delete-message');
+        const banUserBtn = document.getElementById('ban-user');
+        const openAdminPanelBtn = document.getElementById('open-admin-panel');
+        const closeContextMenuBtn = document.getElementById('close-context-menu');
+        const copiedIndicator = document.getElementById('copied-indicator');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileInput = document.getElementById('file-input');
+        const selectFilesBtn = document.getElementById('select-files-btn');
+        const uploadFilesBtn = document.getElementById('upload-files-btn');
+        const filePreview = document.getElementById('file-preview');
+        const fileButton = document.getElementById('file-button');
+        const imageModal = document.getElementById('image-modal');
+        const imageModalImg = document.getElementById('image-modal-img');
+        const imageModalClose = document.getElementById('image-modal-close');
+        const deleteMessageActionBtn = document.getElementById('delete-message-btn');
+        const banUserActionBtn = document.getElementById('ban-user-btn');
+        const adminPanelActionBtn = document.getElementById('admin-panel-btn');
+        const toggleIdsBtn = document.getElementById('toggle-ids-btn');
+        const voiceCallContainer = document.getElementById('voice-call-container');
+        const toggleMicBtn = document.getElementById('toggle-mic');
+        const toggleHeadphonesBtn = document.getElementById('toggle-headphones');
+        const leaveVoiceCallBtn = document.getElementById('leave-voice-call');
+        const participantsList = document.getElementById('participants-list');
+        const userMicIndicator = document.getElementById('user-mic-indicator');
+        
+        // Variables para archivos
+        let selectedFiles = [];
+        let isFileUploadActive = false;
         
         // Función para detectar tipo de dispositivo
         function detectDevice() {
@@ -1987,438 +2162,9 @@
             document.body.classList.remove('mobile', 'tablet', 'desktop');
             document.body.classList.add(deviceType);
             
-            console.log(`Dispositivo detectado: ${deviceType} (${screenWidth}x${screenHeight})`);
             return deviceType;
         }
         
-        // Función para adaptar interfaz según dispositivo
-        function adaptInterface() {
-            const device = detectDevice();
-            
-            // Adaptar menú contextual
-            if (isMobile || isTablet) {
-                // En móviles/tablets: clic largo para menú contextual
-                setupMobileContextMenu();
-            } else {
-                // En desktop: clic derecho para menú contextual
-                setupDesktopContextMenu();
-            }
-            
-            // Adaptar botones de admin
-            adaptAdminButtons();
-            
-            // Adaptar interfaz de archivos
-            adaptFileInterface();
-            
-            // Adaptar notificaciones
-            adaptNotifications();
-            
-            // Adaptar sidebar
-            adaptSidebar();
-            
-            // Actualizar información del dispositivo en las instrucciones
-            updateDeviceInfo();
-        }
-        
-        // Actualizar información del dispositivo en las instrucciones
-        function updateDeviceInfo() {
-            const deviceInfo = document.getElementById('device-info');
-            if (deviceInfo) {
-                const screenInfo = `${window.innerWidth}x${window.innerHeight}`;
-                deviceInfo.textContent = `${deviceType} (${screenInfo})`;
-            }
-        }
-        
-        // Configurar menú contextual para móviles/tablets
-        function setupMobileContextMenu() {
-            console.log('Configurando menú contextual para móviles/tablets');
-            
-            // Remover eventos de clic derecho
-            document.removeEventListener('contextmenu', handleContextMenu);
-            
-            // Agregar eventos de clic largo
-            document.addEventListener('touchstart', handleTouchStart, { passive: false });
-            document.addEventListener('touchend', handleTouchEnd, { passive: false });
-            document.addEventListener('touchmove', handleTouchMove, { passive: false });
-        }
-        
-        // Configurar menú contextual para desktop
-        function setupDesktopContextMenu() {
-            console.log('Configurando menú contextual para desktop');
-            
-            // Remover eventos táctiles
-            document.removeEventListener('touchstart', handleTouchStart);
-            document.removeEventListener('touchend', handleTouchEnd);
-            document.removeEventListener('touchmove', handleTouchMove);
-            
-            // Agregar eventos de clic derecho
-            document.addEventListener('contextmenu', handleContextMenu);
-        }
-        
-        // Variables para clic largo
-        let longPressTimer = null;
-        let longPressTarget = null;
-        let touchStartTime = 0;
-        let touchStartX = 0;
-        let touchStartY = 0;
-        
-        // Manejar inicio de toque
-        function handleTouchStart(e) {
-            touchStartTime = Date.now();
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-            longPressTarget = e.target;
-            
-            longPressTimer = setTimeout(() => {
-                handleLongPress(e);
-            }, 500);
-        }
-        
-        // Manejar fin de toque
-        function handleTouchEnd(e) {
-            if (longPressTimer) {
-                clearTimeout(longPressTimer);
-                longPressTimer = null;
-            }
-            longPressTarget = null;
-        }
-        
-        // Manejar movimiento de toque
-        function handleTouchMove(e) {
-            if (longPressTimer) {
-                const currentX = e.touches[0].clientX;
-                const currentY = e.touches[0].clientY;
-                const distance = Math.sqrt(
-                    Math.pow(currentX - touchStartX, 2) + 
-                    Math.pow(currentY - touchStartY, 2)
-                );
-                
-                if (distance > 10) {
-                    clearTimeout(longPressTimer);
-                    longPressTimer = null;
-                    longPressTarget = null;
-                }
-            }
-        }
-        
-        // Manejar clic largo
-        function handleLongPress(e) {
-            e.preventDefault();
-            
-            const messageElement = e.target.closest('.message');
-            const userElement = e.target.closest('.user-item');
-            
-            if (messageElement) {
-                const messageId = messageElement.getAttribute('data-message-id');
-                const userId = messageElement.getAttribute('data-user-id');
-                
-                showContextMenu(e, { 
-                    messageId, 
-                    userId,
-                    type: 'message'
-                }, 'message');
-            } else if (userElement) {
-                const userId = userElement.getAttribute('data-user-id');
-                
-                showContextMenu(e, { 
-                    id: userId, 
-                    type: 'user',
-                    userId: userId
-                }, 'user');
-            }
-        }
-        
-        // Manejar clic derecho (desktop)
-        function handleContextMenu(e) {
-            e.preventDefault();
-            
-            const messageElement = e.target.closest('.message');
-            const userElement = e.target.closest('.user-item');
-            
-            if (messageElement) {
-                const messageId = messageElement.getAttribute('data-message-id');
-                const userId = messageElement.getAttribute('data-user-id');
-                
-                showContextMenu(e, { 
-                    messageId, 
-                    userId,
-                    type: 'message'
-                }, 'message');
-            } else if (userElement) {
-                const userId = userElement.getAttribute('data-user-id');
-                
-                showContextMenu(e, { 
-                    id: userId, 
-                    type: 'user',
-                    userId: userId
-                }, 'user');
-            }
-        }
-        
-        // Adaptar botones de admin según dispositivo
-        function adaptAdminButtons() {
-            const adminButtons = document.querySelectorAll('.admin-action-button');
-            
-            adminButtons.forEach(button => {
-                if (isMobile) {
-                    // En móviles: botones más grandes y espaciados
-                    button.style.padding = '12px 16px';
-                    button.style.fontSize = '14px';
-                    button.style.margin = '4px';
-                } else if (isTablet) {
-                    // En tablets: tamaño medio
-                    button.style.padding = '10px 14px';
-                    button.style.fontSize = '13px';
-                    button.style.margin = '3px';
-                } else {
-                    // En desktop: tamaño normal
-                    button.style.padding = '8px 12px';
-                    button.style.fontSize = '12px';
-                    button.style.margin = '2px';
-                }
-            });
-        }
-        
-        // Adaptar interfaz de archivos según dispositivo
-        function adaptFileInterface() {
-            const fileButton = document.getElementById('file-button');
-            const fileInput = document.getElementById('file-input');
-            const filePreview = document.getElementById('file-preview');
-            
-            if (isMobile || isTablet) {
-                // En móviles/tablets: interfaz más grande y táctil
-                if (fileButton) {
-                    fileButton.style.padding = '12px 16px';
-                    fileButton.style.fontSize = '16px';
-                    fileButton.style.minHeight = '44px'; // Tamaño mínimo para toque
-                }
-                
-                if (fileInput) {
-                    fileInput.style.fontSize = '16px'; // Evitar zoom en iOS
-                }
-                
-                if (filePreview) {
-                    filePreview.style.maxWidth = '100%';
-                    filePreview.style.maxHeight = '200px';
-                }
-            } else {
-                // En desktop: tamaño normal
-                if (fileButton) {
-                    fileButton.style.padding = '8px 12px';
-                    fileButton.style.fontSize = '14px';
-                    fileButton.style.minHeight = 'auto';
-                }
-                
-                if (fileInput) {
-                    fileInput.style.fontSize = '14px';
-                }
-                
-                if (filePreview) {
-                    filePreview.style.maxWidth = '300px';
-                    filePreview.style.maxHeight = '150px';
-                }
-            }
-        }
-        
-        // Adaptar notificaciones según dispositivo
-        function adaptNotifications() {
-            const notification = document.querySelector('.notification');
-            
-            if (notification) {
-                if (isMobile) {
-                    // En móviles: notificación más grande y centrada
-                    notification.style.fontSize = '14px';
-                    notification.style.padding = '12px 16px';
-                    notification.style.maxWidth = '90%';
-                    notification.style.left = '5%';
-                    notification.style.right = '5%';
-                } else if (isTablet) {
-                    // En tablets: tamaño medio
-                    notification.style.fontSize = '13px';
-                    notification.style.padding = '10px 14px';
-                    notification.style.maxWidth = '80%';
-                    notification.style.left = '10%';
-                    notification.style.right = '10%';
-                } else {
-                    // En desktop: tamaño normal
-                    notification.style.fontSize = '12px';
-                    notification.style.padding = '8px 12px';
-                    notification.style.maxWidth = '400px';
-                    notification.style.left = 'auto';
-                    notification.style.right = '20px';
-                }
-            }
-        }
-        
-        // Adaptar sidebar según dispositivo
-        function adaptSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const chatContainer = document.querySelector('.chat-container');
-            
-            if (isMobile) {
-                // En móviles: sidebar oculto por defecto, toggle con botón
-                if (sidebar) {
-                    sidebar.style.position = 'fixed';
-                    sidebar.style.left = '-100%';
-                    sidebar.style.top = '0';
-                    sidebar.style.height = '100vh';
-                    sidebar.style.width = '280px';
-                    sidebar.style.zIndex = '1000';
-                    sidebar.style.transition = 'left 0.3s ease';
-                }
-                
-                // Agregar botón de toggle para sidebar
-                addSidebarToggleButton();
-            } else if (isTablet) {
-                // En tablets: sidebar más pequeño
-                if (sidebar) {
-                    sidebar.style.width = '250px';
-                    sidebar.style.position = 'relative';
-                    sidebar.style.left = '0';
-                }
-            } else {
-                // En desktop: sidebar normal
-                if (sidebar) {
-                    sidebar.style.width = '300px';
-                    sidebar.style.position = 'relative';
-                    sidebar.style.left = '0';
-                }
-            }
-        }
-        
-        // Agregar botón de toggle para sidebar en móviles
-        function addSidebarToggleButton() {
-            const existingButton = document.getElementById('sidebar-toggle');
-            if (existingButton) return;
-            
-            const toggleButton = document.createElement('button');
-            toggleButton.id = 'sidebar-toggle';
-            toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
-            toggleButton.className = 'sidebar-toggle-btn';
-            toggleButton.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 20px;
-                z-index: 1001;
-                background: var(--primary-color);
-                color: white;
-                border: none;
-                border-radius: 50%;
-                width: 50px;
-                height: 50px;
-                font-size: 18px;
-                cursor: pointer;
-                box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-                display: none;
-            `;
-            
-            toggleButton.addEventListener('click', toggleSidebar);
-            document.body.appendChild(toggleButton);
-            
-            // Mostrar botón solo en móviles
-            if (isMobile) {
-                toggleButton.style.display = 'block';
-            }
-        }
-        
-        // Toggle sidebar en móviles
-        function toggleSidebar() {
-            const sidebar = document.querySelector('.sidebar');
-            const toggleButton = document.getElementById('sidebar-toggle');
-            
-            if (sidebar) {
-                const isOpen = sidebar.style.left === '0px';
-                
-                if (isOpen) {
-                    sidebar.style.left = '-100%';
-                    toggleButton.innerHTML = '<i class="fas fa-bars"></i>';
-                } else {
-                    sidebar.style.left = '0px';
-                    toggleButton.innerHTML = '<i class="fas fa-times"></i>';
-                }
-            }
-        }
-
-        // Elementos DOM
-        const loginContainer = document.getElementById('login-container');
-        const registerContainer = document.getElementById('register-container');
-        const chatContainer = document.getElementById('chat-container');
-        const loginForm = document.getElementById('login-form');
-        const registerForm = document.getElementById('register-form');
-        const showRegister = document.getElementById('show-register');
-        const showLogin = document.getElementById('show-login');
-        const currentUserElement = document.getElementById('current-user');
-        const currentUserIdElement = document.getElementById('current-user-id');
-        const userAvatar = document.getElementById('user-avatar');
-        const chatMessages = document.getElementById('chat-messages');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        const onlineUsersList = document.getElementById('online-users');
-        const currentRoomElement = document.getElementById('current-room');
-        const logoutButton = document.getElementById('logout-button');
-        const rememberMe = document.getElementById('remember-me');
-        const adminButton = document.getElementById('admin-button');
-        const adminPanel = document.getElementById('admin-panel');
-        const adminClose = document.getElementById('admin-close');
-        const adminBadge = document.getElementById('admin-badge');
-        const adminUserList = document.getElementById('admin-user-list');
-        const adminMessageList = document.getElementById('admin-message-list');
-        const bannedIpList = document.getElementById('banned-ip-list');
-        const moderationLog = document.getElementById('moderation-log');
-        const banIpButton = document.getElementById('ban-ip-button');
-        const banIpInput = document.getElementById('ban-ip-input');
-        const banReasonInput = document.getElementById('ban-reason-input');
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-        const adminTokenGroup = document.getElementById('admin-token-group');
-        const adminLoginCheckbox = document.getElementById('admin-login');
-        const generateTokenButton = document.getElementById('generate-token-button');
-        const tokenResult = document.getElementById('token-result');
-        const generatedToken = document.getElementById('generated-token');
-        const ssoTokenList = document.getElementById('sso-token-list');
-        const contextMenu = document.getElementById('context-menu');
-        const copyUserIdBtn = document.getElementById('copy-user-id');
-        const copyMessageIdBtn = document.getElementById('copy-message-id');
-        const reportMessageBtn = document.getElementById('report-message');
-        const deleteMessageBtn = document.getElementById('delete-message');
-        const banUserBtn = document.getElementById('ban-user');
-        const openAdminPanelBtn = document.getElementById('open-admin-panel');
-        const closeContextMenuBtn = document.getElementById('close-context-menu');
-        const copiedIndicator = document.getElementById('copied-indicator');
-        
-        // Elementos para archivos
-        const fileUploadArea = document.getElementById('file-upload-area');
-        const fileInput = document.getElementById('file-input');
-        const selectFilesBtn = document.getElementById('select-files-btn');
-        const uploadFilesBtn = document.getElementById('upload-files-btn');
-        const filePreview = document.getElementById('file-preview');
-        const fileButton = document.getElementById('file-button');
-        const imageModal = document.getElementById('image-modal');
-        const imageModalImg = document.getElementById('image-modal-img');
-        const imageModalClose = document.getElementById('image-modal-close');
-        
-        // Botones de administración en la barra de acciones
-        const deleteMessageActionBtn = document.getElementById('delete-message-btn');
-        const banUserActionBtn = document.getElementById('ban-user-btn');
-        const adminPanelActionBtn = document.getElementById('admin-panel-btn');
-        
-        // Botón para mostrar/ocultar IDs
-        const toggleIdsBtn = document.getElementById('toggle-ids-btn');
-        
-        // Variables para archivos
-        let selectedFiles = [];
-        let isFileUploadActive = false;
-
-        // Toggle sidebar en dispositivos móviles
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-        }
-
-        // Cerrar sidebar al hacer clic en overlay
-        sidebarOverlay.addEventListener('click', toggleSidebar);
-
         // Funciones para manejar cookies
         function setCookie(name, value, days) {
             const date = new Date();
@@ -2474,6 +2220,15 @@
                     showNotification('Error al copiar al portapapeles', 'error');
                 });
         }
+
+        // Toggle sidebar en dispositivos móviles
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        }
+
+        // Cerrar sidebar al hacer clic en overlay
+        sidebarOverlay.addEventListener('click', toggleSidebar);
 
         // Mostrar menú contextual
         function showContextMenu(event, target, type) {
@@ -2553,50 +2308,6 @@
             setTimeout(() => {
                 contextMenu.style.display = 'none';
             }, 200);
-        }
-
-        // Mostrar instrucciones del menú contextual
-        function showContextMenuHelp() {
-            if (!contextMenuHelpShown) {
-                const helpElement = document.querySelector('.context-menu-help');
-                if (helpElement) {
-                    helpElement.style.display = 'block';
-                    setTimeout(() => {
-                        helpElement.style.display = 'none';
-                    }, 5000);
-                    contextMenuHelpShown = true;
-                }
-            }
-        }
-
-        // Mostrar/ocultar botones de administración
-        function toggleAdminButtons() {
-            const adminButtons = document.querySelectorAll('.admin-action-button');
-            adminButtons.forEach(button => {
-                if (currentUser?.role === 'admin') {
-                    button.classList.add('show');
-                } else {
-                    button.classList.remove('show');
-                }
-            });
-        }
-
-        // Mostrar/ocultar IDs
-        function toggleIds() {
-            const chatContainer = document.getElementById('chat-container');
-            const isShowing = chatContainer.classList.contains('show-ids');
-            
-            if (isShowing) {
-                chatContainer.classList.remove('show-ids');
-                toggleIdsBtn.innerHTML = '<i class="fas fa-eye"></i>';
-                toggleIdsBtn.title = 'Mostrar IDs';
-                showNotification('IDs ocultos', 'success');
-            } else {
-                chatContainer.classList.add('show-ids');
-                toggleIdsBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
-                toggleIdsBtn.title = 'Ocultar IDs';
-                showNotification('IDs visibles', 'success');
-            }
         }
 
         // Funciones para manejar archivos
@@ -2809,36 +2520,6 @@
             imageModal.classList.remove('active');
         }
 
-        // Funciones para botones de administración
-        function deleteLastMessage() {
-            const messages = document.querySelectorAll('.message');
-            if (messages.length > 0) {
-                const lastMessage = messages[messages.length - 1];
-                const messageId = lastMessage.getAttribute('data-message-id');
-                if (messageId && confirm('¿Estás seguro de que quieres eliminar el último mensaje?')) {
-                    socket.emit('admin:deleteMessage', { messageId });
-                    showNotification('Último mensaje eliminado', 'success');
-                }
-            } else {
-                showNotification('No hay mensajes para eliminar', 'error');
-            }
-        }
-
-        function banSelectedUser() {
-            const selectedUserId = prompt('Ingresa el ID del usuario a banear:');
-            if (selectedUserId) {
-                const reason = prompt('Razón del baneo:');
-                if (reason) {
-                    socket.emit('admin:banUser', { userId: selectedUserId, reason });
-                    showNotification('Usuario baneado', 'success');
-                }
-            }
-        }
-
-        function openAdminPanelFromButton() {
-            toggleAdminPanel();
-        }
-
         // Hacer removeFile global para que funcione con onclick
         window.removeFile = removeFile;
         window.showImageModal = showImageModal;
@@ -2927,32 +2608,7 @@
             // Agregar atributos necesarios para menú contextual
             messageElement.setAttribute('data-message-id', message.id);
             messageElement.setAttribute('data-user-id', message.senderId);
-            
-            // Los eventos de menú contextual se manejan globalmente según el dispositivo
-            
-            // Agregar evento de clic derecho al mensaje completo
-            messageElement.addEventListener('contextmenu', (e) => {
-                e.preventDefault();
-                const messageId = messageElement.getAttribute('data-message-id');
-                const userId = message.senderId;
-                
-                showContextMenu(e, { 
-                    messageId, 
-                    userId,
-                    type: 'message'
-                }, 'message');
-            });
-            
-
-            
-            // Agregar evento para menú contextual con tres dedos en móviles
-            if (isMobileDevice()) {
-                messageElement.addEventListener('touchstart', handleTouchStart);
-                messageElement.addEventListener('touchend', handleTouchEnd);
-            }
         }
-
-
 
         // Actualizar lista de usuarios en línea con IDs únicos
         function updateOnlineUsers(users) {
@@ -2980,8 +2636,6 @@
                 // Agregar atributos necesarios para menú contextual
                 userItem.setAttribute('data-user-id', user.id);
                 userItem.classList.add('user-item');
-                
-                // Los eventos de menú contextual se manejan globalmente según el dispositivo
             });
         }
 
@@ -3015,131 +2669,11 @@
                 if (window.innerWidth <= 768) {
                     toggleSidebar();
                 }
-                
-                // Cargar datos para el panel de administración
-                socket.emit('admin:getData');
             }
         }
 
-        // Renderizar datos del panel de administración
-        function renderAdminData(data) {
-            // Usuarios
-            adminUserList.innerHTML = '';
-            data.users.forEach(user => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${user.id}</td>
-                    <td>${user.nickname}</td>
-                    <td>${user.username}</td>
-                    <td>${user.role}</td>
-                    <td>${user.banned ? 'Baneado' : 'Activo'}</td>
-                    <td>
-                        ${user.role !== 'admin' ? `
-                        <button class="admin-action ban-button" data-user-id="${user.id}">Banear</button>
-                        ` : ''}
-                        ${user.banned ? `
-                        <button class="admin-action" data-user-id="${user.id}" style="background: var(--success-color);">Desbanear</button>
-                        ` : ''}
-                    </td>
-                `;
-                adminUserList.appendChild(tr);
-                
-                // Agregar eventos a los botones
-                const banBtn = tr.querySelector('.ban-button');
-                if (banBtn) {
-                    banBtn.addEventListener('click', () => {
-                        const reason = prompt('Razón del baneo:');
-                        if (reason) {
-                            socket.emit('admin:banUser', { userId: user.id, reason });
-                        }
-                    });
-                }
-                
-                const unbanBtn = tr.querySelector('[style*="var(--success-color)"]');
-                if (unbanBtn) {
-                    unbanBtn.addEventListener('click', () => {
-                        socket.emit('admin:unbanUser', { userId: user.id });
-                    });
-                }
-            });
-            
-            // Mensajes reportados
-            adminMessageList.innerHTML = '';
-            data.reportedMessages.forEach(msg => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${msg.id}</td>
-                    <td>${msg.sender}</td>
-                    <td>${msg.text}</td>
-                    <td>${new Date(msg.timestamp).toLocaleString()}</td>
-                    <td>
-                        <button class="admin-action delete-button" data-message-id="${msg.id}">Eliminar</button>
-                        <button class="admin-action" data-message-id="${msg.id}" style="background: var(--success-color);">Descartar</button>
-                    </td>
-                `;
-                adminMessageList.appendChild(tr);
-                
-                // Agregar eventos a los botones
-                const deleteBtn = tr.querySelector('.delete-button');
-                deleteBtn.addEventListener('click', () => {
-                    socket.emit('admin:deleteMessage', { messageId: msg.id });
-                });
-                
-                const dismissBtn = tr.querySelector('[style*="var(--success-color)"]');
-                dismissBtn.addEventListener('click', () => {
-                    socket.emit('admin:dismissReport', { messageId: msg.id });
-                });
-            });
-            
-            // IPs baneadas
-            bannedIpList.innerHTML = '';
-            data.bannedIps.forEach(ip => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${ip.ip}</td>
-                    <td>${ip.reason}</td>
-                    <td>${new Date(ip.timestamp).toLocaleDateString()}</td>
-                    <td>
-                        <button class="admin-action" data-ip="${ip.ip}" style="background: var(--success-color);">Desbanear</button>
-                    </td>
-                `;
-                bannedIpList.appendChild(tr);
-                
-                // Agregar evento al botón
-                const unbanBtn = tr.querySelector('button');
-                unbanBtn.addEventListener('click', () => {
-                    socket.emit('admin:unbanIp', { ip: ip.ip });
-                });
-            });
-            
-            // Registro de moderación
-            moderationLog.innerHTML = '';
-            data.moderationLog.forEach(log => {
-                const tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td>${log.moderator}</td>
-                    <td>${log.action_type}</td>
-                    <td>${log.target}</td>
-                    <td>${new Date(log.timestamp).toLocaleString()}</td>
-                `;
-                moderationLog.appendChild(tr);
-            });
-            
-            // Tokens SSO
-            ssoTokenList.innerHTML = '';
-            if (data.ssoTokens && data.ssoTokens.length > 0) {
-                data.ssoTokens.forEach(token => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
-                        <td>${token.token}</td>
-                        <td>${new Date(token.created_at).toLocaleString()}</td>
-                    `;
-                    ssoTokenList.appendChild(tr);
-                });
-            } else {
-                ssoTokenList.innerHTML = '<tr><td colspan="2">No hay tokens generados</td></tr>';
-            }
-        }
+        // Toggle menú sidebar
+        menuToggle.addEventListener('click', toggleSidebar);
 
         // Cambiar a pantalla de registro
         showRegister.addEventListener('click', (e) => {
@@ -3207,14 +2741,6 @@
                     loginContainer.classList.add('hidden');
                     chatContainer.classList.remove('hidden');
                     
-                    // Mostrar botón de archivo si está en sala multimedia
-                    if (currentRoom === 'multimedia') {
-                        fileButton.classList.add('show');
-                    }
-                    
-                    // Mostrar botones de administración si es admin
-                    toggleAdminButtons();
-                    
                     // Unirse al chat
                     socket.emit('join', {
                         user: currentUser,
@@ -3229,11 +2755,6 @@
                         senderId: 'system',
                         timestamp: Date.now()
                     });
-                    
-                    // Mostrar instrucciones del menú contextual después de un momento
-                    setTimeout(() => {
-                        showContextMenuHelp();
-                    }, 2000);
                 } else {
                     showNotification(response.message || 'Error en el inicio de sesión');
                 }
@@ -3281,9 +2802,6 @@
                     registerContainer.classList.add('hidden');
                     chatContainer.classList.remove('hidden');
                     
-                    // Mostrar botones de administración si es admin
-                    toggleAdminButtons();
-                    
                     // Unirse al chat
                     socket.emit('join', {
                         user: currentUser,
@@ -3317,7 +2835,8 @@
                                       roomName === 'develop' ? 'Desarrollo' :
                                       roomName === 'business' ? 'Negocios' :
                                       roomName === 'gaming' ? 'Gaming' : 
-                                      roomName === 'music' ? 'Música' : 'Multimedia';
+                                      roomName === 'music' ? 'Música' : 
+                                      roomName === 'multimedia' ? 'Multimedia' : 'Voz';
                 
                 // Mostrar/ocultar botón de archivo según la sala
                 if (roomName === 'multimedia') {
@@ -3328,6 +2847,14 @@
                     if (isFileUploadActive) {
                         toggleFileUpload();
                     }
+                }
+                
+                // Manejar sala de voz
+                if (roomName === 'voice') {
+                    voiceCallContainer.style.display = 'block';
+                    showNotification('Te has unido al canal de voz', 'success');
+                } else {
+                    voiceCallContainer.style.display = 'none';
                 }
                 
                 currentRoomElement.textContent = `Sala ${roomDisplayName}`;
@@ -3391,29 +2918,11 @@
         adminButton.addEventListener('click', toggleAdminPanel);
         adminClose.addEventListener('click', toggleAdminPanel);
 
-        // Botón de menú para móviles
-        menuToggle.addEventListener('click', toggleSidebar);
-
         // Event listeners para archivos
         fileButton.addEventListener('click', toggleFileUpload);
         selectFilesBtn.addEventListener('click', () => fileInput.click());
         uploadFilesBtn.addEventListener('click', uploadFiles);
         imageModalClose.addEventListener('click', hideImageModal);
-        
-        // Event listeners para botones de administración
-        deleteMessageActionBtn.addEventListener('click', deleteLastMessage);
-        banUserActionBtn.addEventListener('click', banSelectedUser);
-        adminPanelActionBtn.addEventListener('click', openAdminPanelFromButton);
-        
-        // Event listener para mostrar/ocultar IDs
-        toggleIdsBtn.addEventListener('click', toggleIds);
-        
-        // Cerrar modal al hacer clic fuera
-        imageModal.addEventListener('click', (e) => {
-            if (e.target === imageModal) {
-                hideImageModal();
-            }
-        });
         
         // Manejar selección de archivos
         fileInput.addEventListener('change', (e) => {
@@ -3436,118 +2945,73 @@
             handleFileSelect(e.dataTransfer.files);
         });
 
-        // Banear por IP
-        banIpButton.addEventListener('click', () => {
-            const ip = banIpInput.value.trim();
-            const reason = banReasonInput.value.trim();
+        // Botón para mostrar/ocultar IDs
+        toggleIdsBtn.addEventListener('click', () => {
+            const chatContainer = document.getElementById('chat-container');
+            const isShowing = chatContainer.classList.contains('show-ids');
             
-            if (!ip) {
-                showNotification('Debes ingresar una dirección IP');
-                return;
+            if (isShowing) {
+                chatContainer.classList.remove('show-ids');
+                toggleIdsBtn.innerHTML = '<i class="fas fa-eye"></i>';
+                toggleIdsBtn.title = 'Mostrar IDs';
+                showNotification('IDs ocultos', 'success');
+            } else {
+                chatContainer.classList.add('show-ids');
+                toggleIdsBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+                toggleIdsBtn.title = 'Ocultar IDs';
+                showNotification('IDs visibles', 'success');
             }
-            
-            if (!reason) {
-                showNotification('Debes ingresar una razón');
-                return;
-            }
-            
-            socket.emit('admin:banIp', { ip, reason });
-            banIpInput.value = '';
-            banReasonInput.value = '';
         });
 
-        // Generar token SSO
-        generateTokenButton.addEventListener('click', () => {
-            socket.emit('admin:generateToken', {}, (response) => {
-                if (response.success) {
-                    generatedToken.textContent = response.token;
-                    tokenResult.style.display = 'block';
-                    
-                    // Copiar al portapapeles automáticamente
-                    copyToClipboard(response.token);
-                } else {
-                    showNotification(response.error || 'Error al generar token', 'error');
-                }
+        // Controladores para el canal de voz
+        toggleMicBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            toggleMicBtn.classList.toggle('active', isMuted);
+            userMicIndicator.classList.toggle('active', !isMuted);
+            showNotification(isMuted ? 'Micrófono silenciado' : 'Micrófono activado', 'success');
+        });
+
+        leaveVoiceCallBtn.addEventListener('click', () => {
+            voiceCallContainer.style.display = 'none';
+            showNotification('Has salido del canal de voz', 'success');
+            // Cambiar a la sala general
+            document.querySelectorAll('.room-item').forEach(i => i.classList.remove('active'));
+            document.querySelector('.room-item[data-room="general"]').classList.add('active');
+            currentRoom = 'general';
+            currentRoomElement.textContent = 'Sala General';
+            socket.emit('changeRoom', {
+                user: currentUser,
+                newRoom: 'general'
             });
         });
 
-        // Acciones del menú contextual
-        copyUserIdBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.userId) {
-                copyToClipboard(contextMenuTarget.userId);
-                hideContextMenu();
-            }
-        });
-
-        copyMessageIdBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.messageId) {
-                copyToClipboard(contextMenuTarget.messageId);
-                hideContextMenu();
-            }
-        });
-
-        reportMessageBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.messageId) {
-                socket.emit('reportMessage', { 
-                    messageId: contextMenuTarget.messageId,
-                    userId: currentUser.id
-                });
-                showNotification('Mensaje reportado a los administradores', 'success');
-                hideContextMenu();
-            }
-        });
-
-        // Eliminar mensaje (solo admins)
-        deleteMessageBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.messageId) {
-                if (confirm('¿Estás seguro de que quieres eliminar este mensaje?')) {
-                    socket.emit('admin:deleteMessage', { messageId: contextMenuTarget.messageId });
-                    showNotification('Mensaje eliminado', 'success');
-                }
-                hideContextMenu();
-            }
-        });
-
-        // Banear usuario (solo admins)
-        banUserBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.userId) {
-                const reason = prompt('Razón del baneo:');
-                if (reason) {
-                    socket.emit('admin:banUser', { userId: contextMenuTarget.userId, reason });
-                    showNotification('Usuario baneado', 'success');
-                }
-                hideContextMenu();
-            }
-        });
-
-        // Abrir panel de administración
-        openAdminPanelBtn.addEventListener('click', () => {
-            toggleAdminPanel();
-            hideContextMenu();
-        });
-
-        closeContextMenuBtn.addEventListener('click', hideContextMenu);
-
-        // Cerrar menú contextual al hacer clic fuera
-        document.addEventListener('click', (e) => {
-            if (!contextMenu.contains(e.target) && contextMenu.style.display === 'block') {
-                hideContextMenu();
-            }
-        });
-
-        // Cerrar menú contextual al hacer scroll
-        document.addEventListener('scroll', () => {
-            if (contextMenu.style.display === 'block') {
-                hideContextMenu();
-            }
-        });
-
-        // Cerrar menú contextual al cambiar el tamaño de la ventana
-        window.addEventListener('resize', () => {
-            if (contextMenu.style.display === 'block') {
-                hideContextMenu();
-            }
-        });
+        // Simulación de participantes en el canal de voz
+        function simulateVoiceParticipants() {
+            participantsList.innerHTML = '';
+            
+            // Agregar usuario actual
+            const currentParticipant = document.createElement('div');
+            currentParticipant.className = 'participant-item';
+            currentParticipant.innerHTML = `
+                <div class="participant-avatar">${currentUser.nickname.charAt(0)}</div>
+                <span>Tú</span>
+                <div class="mic-indicator active" id="user-mic-indicator"></div>
+            `;
+            participantsList.appendChild(currentParticipant);
+            
+            // Agregar algunos participantes simulados
+            const sampleUsers = ['Ana', 'Carlos', 'María', 'Luis'];
+            sampleUsers.forEach(user => {
+                const participant = document.createElement('div');
+                participant.className = 'participant-item';
+                participant.innerHTML = `
+                    <div class="participant-avatar">${user.charAt(0)}</div>
+                    <span>${user}</span>
+                    <div class="mic-indicator ${Math.random() > 0.5 ? 'active' : ''}"></div>
+                `;
+                participantsList.appendChild(participant);
+            });
+        }
 
         // ===== Eventos de Socket.io =====
 
@@ -3634,6 +3098,9 @@
             const sessionToken = getCookie('sessionToken');
             const remember = getCookie('rememberMe') === 'true';
             
+            // Detectar dispositivo
+            detectDevice();
+            
             if (sessionToken) {
                 // Mostrar recordarme si está activo
                 if (remember) {
@@ -3664,9 +3131,6 @@
                         registerContainer.classList.add('hidden');
                         chatContainer.classList.remove('hidden');
                         
-                        // Mostrar botones de administración si es admin
-                        toggleAdminButtons();
-                        
                         // Unirse al chat
                         socket.emit('join', {
                             user: currentUser,
@@ -3679,324 +3143,10 @@
                     }
                 });
             }
-        });
-
-        // Recibir datos para el panel de administración
-        socket.on('admin:data', (data) => {
-            renderAdminData(data);
-        });
-
-        // Notificación de acción de administración
-        socket.on('admin:notification', (message) => {
-            showNotification(message, 'success');
             
-            // Si el panel está abierto, actualizar datos
-            if (isAdminPanelOpen) {
-                socket.emit('admin:getData');
-            }
-        });
-
-        // Usuario baneado
-        socket.on('user:banned', (data) => {
-            if (currentUser && currentUser.id === data.userId) {
-                showNotification('Has sido baneado: ' + data.reason, 'error');
-                logout();
-            }
-        });
-        
-        // ===== INICIALIZACIÓN DE DETECCIÓN DE DISPOSITIVOS =====
-        
-        // Detectar y adaptar interfaz según dispositivo al cargar
-        document.addEventListener('DOMContentLoaded', () => {
-            // Detectar dispositivo
-            detectDevice();
-            
-            // Adaptar interfaz
-            adaptInterface();
-            
-            // Mostrar información del dispositivo en consola
-            console.log(`Dispositivo detectado: ${deviceType}`);
-            console.log(`Resolución: ${window.innerWidth}x${window.innerHeight}`);
-            console.log(`User Agent: ${navigator.userAgent}`);
-        });
-        
-        // Adaptar interfaz cuando cambie el tamaño de la ventana
-        window.addEventListener('resize', () => {
-            const oldDeviceType = deviceType;
-            const newDeviceType = detectDevice();
-            
-            // Solo re-adaptar si cambió el tipo de dispositivo
-            if (oldDeviceType !== newDeviceType) {
-                console.log(`Dispositivo cambiado de ${oldDeviceType} a ${newDeviceType}`);
-                adaptInterface();
-            }
-        });
-        
-        // Adaptar interfaz cuando cambie la orientación (móviles)
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                console.log('Orientación cambiada, re-adaptando interfaz...');
-                detectDevice();
-                adaptInterface();
-            }, 100);
-        });
-        
-        // Función para mostrar información del dispositivo (debug)
-        function showDeviceInfo() {
-            const info = `
-                Dispositivo: ${deviceType}
-                Resolución: ${window.innerWidth}x${window.innerHeight}
-                User Agent: ${navigator.userAgent}
-                Móvil: ${isMobile}
-                Tablet: ${isTablet}
-                Desktop: ${isDesktop}
-            `;
-            console.log(info);
-            showNotification(`Dispositivo: ${deviceType}`, 'info');
-        }
-        
-        // Exponer función para debug (solo en desarrollo)
-        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
-            window.showDeviceInfo = showDeviceInfo;
-        }
-
-        // === ADAPTACIÓN DE LÍMITES SEGÚN CONEXIÓN ===
-        function adaptDataLimits() {
-            let connectionType = 'unknown';
-            if ('connection' in navigator) {
-                connectionType = navigator.connection.effectiveType;
-            }
-
-            // Defaults
-            let maxFileSize = 10 * 1024 * 1024; // 10MB
-            let maxMessages = 100;
-            let previewMedia = true;
-
-            if (connectionType === '2g' || connectionType === '3g' || connectionType === 'slow-2g' || connectionType === '4g') {
-                maxFileSize = 2 * 1024 * 1024; // 2MB
-                maxMessages = 20;
-                previewMedia = false;
-            }
-
-            window.MAX_FILE_SIZE = maxFileSize;
-            window.MAX_MESSAGES = maxMessages;
-            window.PREVIEW_MEDIA = previewMedia;
-
-            // Limitar input de archivos
-            const fileInput = document.getElementById('file-input');
-            if (fileInput) {
-                fileInput.setAttribute('data-max-size', maxFileSize);
-            }
-        }
-        document.addEventListener('DOMContentLoaded', adaptDataLimits);
-
-        // === SANITIZACIÓN DE MENSAJES ===
-        function escapeHTML(str) {
-            return str.replace(/[&<>"']/g, function(m) {
-                return ({
-                    '&': '&amp;',
-                    '<': '&lt;',
-                    '>': '&gt;',
-                    '"': '&quot;',
-                    "'": '&#39;'
-                })[m];
-            });
-        }
-        // Usar escapeHTML al renderizar mensajes:
-        // Ejemplo: messageElement.innerHTML = escapeHTML(message.text);
-
-        // === LÍMITE DE MENSAJES Y ARCHIVOS ===
-        // Al cargar mensajes del backend, usa window.MAX_MESSAGES
-        // Al validar archivos, usa window.MAX_FILE_SIZE
-        // Ejemplo en validateFile:
-        function validateFile(file) {
-            const maxSize = window.MAX_FILE_SIZE || (10 * 1024 * 1024);
-            // ... existing code ...
-            if (file.size > maxSize) {
-                showNotification(`El archivo ${file.name} es demasiado grande. Máximo ${(maxSize/1024/1024).toFixed(1)}MB.`, 'error');
-                return false;
-            }
-            // ... existing code ...
-        }
-        // ... existing code ...
-
-        // === WebRTC + Socket.IO señalización ===
-        let localStream = null;
-        let peerConnections = {};
-        let inCall = false;
-        const roomName = 'general'; // Puedes adaptar esto a la sala actual
-        const voiceVideoCall = document.getElementById('voice-video-call');
-        const localVideo = document.getElementById('local-video');
-        const remoteVideos = document.getElementById('remote-videos');
-        const callStatus = document.getElementById('call-status');
-        const toggleMicBtn = document.getElementById('toggle-mic');
-        const toggleCamBtn = document.getElementById('toggle-cam');
-        const shareScreenBtn = document.getElementById('share-screen');
-        const leaveCallBtn = document.getElementById('leave-call');
-
-        // Mostrar la UI de llamada al entrar a la sala
-        function joinVoiceVideoCall() {
-          voiceVideoCall.style.display = 'block';
-          callStatus.textContent = 'Uniéndote a la llamada...';
-          startLocalStream();
-          socket.emit('join-call', { room: roomName });
-          inCall = true;
-        }
-        // Salir de la llamada
-        function leaveVoiceVideoCall() {
-          voiceVideoCall.style.display = 'none';
-          callStatus.textContent = '';
-          stopLocalStream();
-          Object.values(peerConnections).forEach(pc => pc.close());
-          peerConnections = {};
-          remoteVideos.innerHTML = '';
-          socket.emit('leave-call', { room: roomName });
-          inCall = false;
-        }
-        // Iniciar cámara/micro
-        async function startLocalStream() {
-          try {
-            localStream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-            localVideo.srcObject = localStream;
-            callStatus.textContent = 'En llamada';
-            // Notificar a otros
-            socket.emit('ready-for-call', { room: roomName });
-          } catch (err) {
-            callStatus.textContent = 'No se pudo acceder a cámara/micrófono';
-          }
-        }
-        // Detener cámara/micro
-        function stopLocalStream() {
-          if (localStream) {
-            localStream.getTracks().forEach(track => track.stop());
-            localStream = null;
-            localVideo.srcObject = null;
-          }
-        }
-        // Prender/apagar micro
-        toggleMicBtn.onclick = () => {
-          if (localStream) {
-            localStream.getAudioTracks().forEach(track => track.enabled = !track.enabled);
-            toggleMicBtn.textContent = localStream.getAudioTracks()[0].enabled ? '🎤' : '🔇';
-          }
-        };
-        // Prender/apagar cámara
-        toggleCamBtn.onclick = () => {
-          if (localStream) {
-            localStream.getVideoTracks().forEach(track => track.enabled = !track.enabled);
-            toggleCamBtn.textContent = localStream.getVideoTracks()[0].enabled ? '📷' : '🚫';
-          }
-        };
-        // Compartir pantalla
-        shareScreenBtn.onclick = async () => {
-          if (!localStream) return;
-          try {
-            const screenStream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-            const videoTrack = screenStream.getVideoTracks()[0];
-            // Reemplazar video en localStream y en conexiones
-            localStream.removeTrack(localStream.getVideoTracks()[0]);
-            localStream.addTrack(videoTrack);
-            localVideo.srcObject = localStream;
-            Object.values(peerConnections).forEach(pc => {
-              const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
-              if (sender) sender.replaceTrack(videoTrack);
-            });
-            videoTrack.onended = () => {
-              // Volver a la cámara cuando termine compartir pantalla
-              navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then(camStream => {
-                const camTrack = camStream.getVideoTracks()[0];
-                localStream.removeTrack(videoTrack);
-                localStream.addTrack(camTrack);
-                localVideo.srcObject = localStream;
-                Object.values(peerConnections).forEach(pc => {
-                  const sender = pc.getSenders().find(s => s.track && s.track.kind === 'video');
-                  if (sender) sender.replaceTrack(camTrack);
-                });
-              });
-            };
-          } catch (err) {
-            callStatus.textContent = 'No se pudo compartir pantalla';
-          }
-        };
-        // Salir de la llamada
-        leaveCallBtn.onclick = leaveVoiceVideoCall;
-
-        // --- Señalización básica con Socket.IO ---
-        socket.on('call-user', async ({ from }) => {
-          if (!localStream) return;
-          const pc = createPeerConnection(from);
-          peerConnections[from] = pc;
-          localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-          const offer = await pc.createOffer();
-          await pc.setLocalDescription(offer);
-          socket.emit('call-offer', { to: from, offer });
-        });
-        socket.on('call-offer', async ({ from, offer }) => {
-          if (!localStream) return;
-          const pc = createPeerConnection(from);
-          peerConnections[from] = pc;
-          await pc.setRemoteDescription(new RTCSessionDescription(offer));
-          localStream.getTracks().forEach(track => pc.addTrack(track, localStream));
-          const answer = await pc.createAnswer();
-          await pc.setLocalDescription(answer);
-          socket.emit('call-answer', { to: from, answer });
-        });
-        socket.on('call-answer', async ({ from, answer }) => {
-          const pc = peerConnections[from];
-          if (pc) await pc.setRemoteDescription(new RTCSessionDescription(answer));
-        });
-        socket.on('call-ice-candidate', ({ from, candidate }) => {
-          const pc = peerConnections[from];
-          if (pc && candidate) pc.addIceCandidate(new RTCIceCandidate(candidate));
-        });
-        // --- PeerConnection helpers ---
-        function createPeerConnection(peerId) {
-          const pc = new RTCPeerConnection({ iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] });
-          pc.onicecandidate = (event) => {
-            if (event.candidate) {
-              socket.emit('call-ice-candidate', { to: peerId, candidate: event.candidate });
-            }
-          };
-          pc.ontrack = (event) => {
-            let remoteVideo = document.getElementById('remote-video-' + peerId);
-            if (!remoteVideo) {
-              remoteVideo = document.createElement('video');
-              remoteVideo.id = 'remote-video-' + peerId;
-              remoteVideo.autoplay = true;
-              remoteVideo.playsInline = true;
-              remoteVideo.style.width = '80px';
-              remoteVideo.style.height = '60px';
-              remoteVideo.style.background = '#000';
-              remoteVideo.style.borderRadius = '8px';
-              remoteVideos.appendChild(remoteVideo);
-            }
-            remoteVideo.srcObject = event.streams[0];
-          };
-          pc.onconnectionstatechange = () => {
-            if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
-              const remoteVideo = document.getElementById('remote-video-' + peerId);
-              if (remoteVideo) remoteVideo.remove();
-            }
-          };
-          return pc;
-        }
-        // --- Unirse automáticamente al canal de voz/video al entrar a la sala ---
-        document.addEventListener('DOMContentLoaded', () => {
-          joinVoiceVideoCall();
+            // Simular participantes en el canal de voz
+            simulateVoiceParticipants();
         });
     </script>
-
-    <!-- Canal de Voz/Video -->
-    <div id="voice-video-call" style="display:none; position:fixed; bottom:20px; right:20px; background:#23272A; border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,0.2); padding:16px; z-index:2000; min-width:320px;">
-      <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
-        <button id="toggle-mic" title="Prender/Apagar micrófono">🎤</button>
-        <button id="toggle-cam" title="Prender/Apagar cámara">📷</button>
-        <button id="share-screen" title="Compartir pantalla">🖥️</button>
-        <button id="leave-call" title="Salir de la llamada">❌</button>
-      </div>
-      <video id="local-video" autoplay muted playsinline style="width:80px; height:60px; background:#000; border-radius:8px;"></video>
-      <div id="remote-videos" style="display:flex; gap:8px; margin-top:10px;"></div>
-      <div id="call-status" style="color:#d1d5db; font-size:13px; margin-top:8px;"></div>
-    </div>
 </body>
 </html>
