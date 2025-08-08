@@ -22,13 +22,11 @@
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
-    "sqlite3-wasm": "git+https://github.com/sqlite/sqlite-wasm.git",
     "express": "^4.18.2",
     "socket.io": "^4.7.2",
-    "bcrypt": "^5.1.1",
+    "bcryptjs": "^2.4.3",
     "sqlite3": "^5.1.6",
     "connect-history-api-fallback": "^2.0.0",
-    "crypto": "^1.0.1",
     "request-ip": "^3.3.0",
     "multer": "^1.4.5-lts.1",
     "sharp": "^0.32.6",
@@ -41,16 +39,14 @@
     "node-cache": "^5.1.2",
     "lru-cache": "^10.1.0",
     "winston": "^3.11.0",
-    "ioredis": "^5.3.2",
-    "socket.io-redis": "^6.1.1",
     "jsonwebtoken": "^9.0.2",
-    "bcryptjs": "^2.4.3",
     "validator": "^13.11.0",
     "moment": "^2.29.4",
     "lodash": "^4.17.21",
     "axios": "^1.6.2",
     "node-cron": "^3.0.3",
-    "dotenv": "^16.3.1"
+    "dotenv": "^16.3.1",
+    "sanitize-html": "^2.11.0"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
