@@ -1014,6 +1014,13 @@
             display: none;
         }
 
+        .form-help {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin-top: 5px;
+            display: block;
+        }
+
         #token-result {
             margin-top: 15px;
             padding: 15px;
@@ -1856,7 +1863,15 @@
                 <!-- Campo SSO para administradores -->
                 <div class="form-group admin-token-group" id="admin-token-group">
                     <label for="admin-token">Token de Administrador:</label>
-                    <input type="password" id="admin-token" placeholder="Ingresa tu token SSO">
+                    <input type="password" 
+                           id="admin-token" 
+                           placeholder="Ingresa tu token SSO"
+                           autocomplete="off"
+                           spellcheck="false"
+                           maxlength="100"
+                           pattern="[A-Za-z0-9\-_]{10,}"
+                           title="El token debe tener al menos 10 caracteres alfanuméricos">
+                    <small class="form-help">El token debe tener al menos 10 caracteres</small>
                 </div>
                 <div class="form-group">
                     <input type="checkbox" id="admin-login">
@@ -2947,12 +2962,35 @@
                 return;
             }
             
+            // Validación específica para admin token
+            if (isAdminLogin) {
+                if (!adminToken || adminToken.trim() === '') {
+                    showNotification('El token de administrador es obligatorio cuando se selecciona acceso admin', 'error');
+                    return;
+                }
+                
+                if (adminToken.trim().length < 10) {
+                    showNotification('El token de administrador debe tener al menos 10 caracteres', 'error');
+                    return;
+                }
+            }
+            
+            // Mostrar indicador de carga
+            const loginButton = loginForm.querySelector('button[type="submit"]');
+            const originalButtonText = loginButton.textContent;
+            loginButton.textContent = 'Verificando...';
+            loginButton.disabled = true;
+            
             // Autenticación con el servidor
             socket.emit('login', { 
                 username, 
                 password,
-                adminToken
+                adminToken: adminToken.trim()
             }, (response) => {
+                // Restaurar botón
+                loginButton.textContent = originalButtonText;
+                loginButton.disabled = false;
+                
                 if (response.success) {
                     currentUser = response.user;
                     
@@ -2960,6 +2998,7 @@
                     if (currentUser.role === 'admin') {
                         adminButton.classList.remove('hidden');
                         adminBadge.classList.remove('hidden');
+                        showNotification('Acceso de administrador concedido', 'success');
                     }
                     
                     // Guardar sesión en cookie
@@ -2994,7 +3033,14 @@
                         timestamp: Date.now()
                     });
                 } else {
-                    showNotification(response.message || 'Error en el inicio de sesión');
+                    // Manejo específico de errores de admin token
+                    if (isAdminLogin && response.message.includes('admin')) {
+                        showNotification(response.message, 'error');
+                        // Limpiar campo de admin token en caso de error
+                        document.getElementById('admin-token').value = '';
+                    } else {
+                        showNotification(response.message || 'Error en el inicio de sesión', 'error');
+                    }
                 }
             });
         });

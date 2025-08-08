@@ -439,6 +439,58 @@ function recordLoginAttempt(ip, success) {
   }, SECURITY_CONFIG.lockoutDuration);
 }
 
+// Control de intentos de admin token
+const adminTokenAttempts = new Map();
+
+function checkAdminTokenAttempts(ip) {
+  const attempts = adminTokenAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+  const now = Date.now();
+  
+  // Reset después de 15 minutos
+  if (now - attempts.lastAttempt > 15 * 60 * 1000) {
+    attempts.count = 0;
+  }
+  
+  return attempts.count;
+}
+
+function recordAdminTokenAttempt(ip, success) {
+  const attempts = adminTokenAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+  
+  if (success) {
+    attempts.count = 0;
+  } else {
+    attempts.count++;
+  }
+  
+  attempts.lastAttempt = Date.now();
+  adminTokenAttempts.set(ip, attempts);
+  
+  // Banear IP si tiene demasiados intentos fallidos (10 o más)
+  if (!success && attempts.count >= 10) {
+    console.warn(`IP baneada por intentos excesivos de admin token: ${ip}`);
+    db.run('INSERT OR REPLACE INTO banned_ips (ip, reason, banned_at) VALUES (?, ?, ?)', 
+      [ip, 'Demasiados intentos de acceso admin', new Date().toISOString()], 
+      (err) => {
+        if (err) {
+          console.error('Error al banear IP:', err);
+        } else {
+          logAuditAction(null, 'IP_BANNED', {
+            ip: ip,
+            reason: 'Demasiados intentos de acceso admin',
+            attempts: attempts.count
+          });
+        }
+      }
+    );
+  }
+  
+  // Limpiar intentos antiguos después de 15 minutos
+  setTimeout(() => {
+    adminTokenAttempts.delete(ip);
+  }, 15 * 60 * 1000);
+}
+
 // Configuración de archivos
 const UPLOAD_DIR = process.env.UPLOAD_DIR || './public/uploads';
 const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 10 * 1024 * 1024; // 10MB por defecto
@@ -984,16 +1036,86 @@ function logModerationAction(moderatorId, actionType, target, reason) {
 }
 
 // Función para verificar token SSO de administrador
-function verifyAdminToken(token, callback) {
-      // Verificar contra el token predefinido
-  if (token === DEFAULT_ADMIN_TOKEN) {
+function verifyAdminToken(token, callback, clientIp = null) {
+  // Validar que el token no esté vacío, null o undefined
+  if (!token || typeof token !== 'string' || token.trim() === '') {
+    console.warn('Intento de acceso con token vacío o inválido');
+    if (clientIp) {
+      logAuditAction(null, 'ADMIN_TOKEN_ATTEMPT', {
+        ip: clientIp,
+        token: 'EMPTY_OR_INVALID',
+        success: false,
+        reason: 'Token vacío o inválido'
+      });
+    }
+    return callback(false);
+  }
+
+  // Sanitizar el token para prevenir inyección
+  const sanitizedToken = token.trim();
+  
+  // Verificar longitud mínima del token
+  if (sanitizedToken.length < 10) {
+    console.warn('Intento de acceso con token demasiado corto');
+    if (clientIp) {
+      logAuditAction(null, 'ADMIN_TOKEN_ATTEMPT', {
+        ip: clientIp,
+        token: 'TOO_SHORT',
+        success: false,
+        reason: 'Token demasiado corto'
+      });
+    }
+    return callback(false);
+  }
+
+  // Verificar contra el token predefinido
+  if (sanitizedToken === DEFAULT_ADMIN_TOKEN) {
+    console.log('Acceso admin exitoso con token predefinido');
+    if (clientIp) {
+      logAuditAction(null, 'ADMIN_TOKEN_ATTEMPT', {
+        ip: clientIp,
+        token: 'DEFAULT_TOKEN',
+        success: true
+      });
+    }
     return callback(true);
   }
   
   // Verificar contra tokens en base de datos
-  db.get('SELECT * FROM admin_sso_tokens WHERE token = ?', [token], (err, row) => {
-    if (err || !row) {
+  db.get('SELECT * FROM admin_sso_tokens WHERE token = ?', [sanitizedToken], (err, row) => {
+    if (err) {
+      console.error('Error al verificar token en base de datos:', err);
+      if (clientIp) {
+        logAuditAction(null, 'ADMIN_TOKEN_ATTEMPT', {
+          ip: clientIp,
+          token: 'DB_ERROR',
+          success: false,
+          reason: 'Error en base de datos'
+        });
+      }
       return callback(false);
+    }
+    
+    if (!row) {
+      console.warn('Intento de acceso con token inválido:', sanitizedToken.substring(0, 8) + '...');
+      if (clientIp) {
+        logAuditAction(null, 'ADMIN_TOKEN_ATTEMPT', {
+          ip: clientIp,
+          token: 'INVALID_TOKEN',
+          success: false,
+          reason: 'Token no encontrado en base de datos'
+        });
+      }
+      return callback(false);
+    }
+    
+    console.log('Acceso admin exitoso con token de base de datos');
+    if (clientIp) {
+      logAuditAction(null, 'ADMIN_TOKEN_ATTEMPT', {
+        ip: clientIp,
+        token: 'DB_TOKEN',
+        success: true
+      });
     }
     callback(true);
   });
@@ -1109,29 +1231,52 @@ io.on('connection', (socket) => {
         
         // Verificar token SSO de administrador si se proporciona
         if (adminToken) {
-          verifyAdminToken(adminToken, (isValid) => {
-            if (!isValid) {
-              return safeCallback(callback, { 
-                success: false, 
-                message: 'Token de administrador inválido' 
-              });
-            }
-            
-            // Convertir usuario en admin
-            db.run('UPDATE users SET role = "admin" WHERE id = ?', [user.id], (err) => {
-              if (err) {
-                console.error('Error al actualizar rol:', err);
+          // Verificar rate limiting para intentos de admin token
+          const adminAttempts = checkAdminTokenAttempts(clientIp);
+          if (adminAttempts >= 5) {
+            console.warn(`Demasiados intentos de admin token desde IP: ${clientIp}`);
+            logAuditAction(null, 'ADMIN_TOKEN_RATE_LIMIT', {
+              ip: clientIp,
+              attempts: adminAttempts
+            });
+            return safeCallback(callback, { 
+              success: false, 
+              message: 'Demasiados intentos de acceso admin. Intenta más tarde.' 
+            });
+          }
+
+          // Registrar intento de admin token
+          recordAdminTokenAttempt(clientIp, false);
+
+                    // Agregar delay artificial para prevenir ataques de fuerza bruta
+          setTimeout(() => {
+            verifyAdminToken(adminToken, (isValid) => {
+              if (!isValid) {
                 return safeCallback(callback, { 
                   success: false, 
-                  message: 'Error al asignar rol de administrador' 
+                  message: 'Token de administrador inválido' 
                 });
               }
               
-              // Actualizar objeto usuario
-              user.role = 'admin';
-              completeLogin(user);
-            });
-          });
+              // Registrar intento exitoso
+              recordAdminTokenAttempt(clientIp, true);
+              
+              // Convertir usuario en admin
+              db.run('UPDATE users SET role = "admin" WHERE id = ?', [user.id], (err) => {
+                if (err) {
+                  console.error('Error al actualizar rol:', err);
+                  return safeCallback(callback, { 
+                    success: false, 
+                    message: 'Error al asignar rol de administrador' 
+                  });
+                }
+                
+                // Actualizar objeto usuario
+                user.role = 'admin';
+                completeLogin(user);
+              });
+            }, clientIp);
+          }, 1000); // Delay de 1 segundo para prevenir ataques de fuerza bruta
         } else {
           completeLogin(user);
         }
