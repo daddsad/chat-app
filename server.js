@@ -14,7 +14,6 @@ const { v4: uuidv4 } = require('uuid');
 const sanitizeHtml = require('sanitize-html');
 
 // ===== MEJORAS AVANZADAS Y ULTRA AVANZADAS =====
-
 // Configuración de entorno
 require('dotenv').config();
 
@@ -67,7 +66,7 @@ const logger = winston.createLogger({
 
 // Crear directorio de logs si no existe
 if (!fs.existsSync('logs')) {
-  fs.mkdirSync('logs');
+  fs.mkdirSync('logs', { recursive: true });
 }
 
 // ===== CONFIGURACIÓN DE CACHE AVANZADO =====
@@ -79,12 +78,14 @@ const messageCache = new LRU({
 
 const userCache = new NodeCache({
   stdTTL: 300, // 5 minutos
-  checkperiod: 60 // Revisar cada minuto
+  checkperiod: 60, // Revisar cada minuto
+  useClones: false
 });
 
 const sessionCache = new NodeCache({
   stdTTL: 3600, // 1 hora
-  checkperiod: 300 // Revisar cada 5 minutos
+  checkperiod: 300, // Revisar cada 5 minutos
+  useClones: false
 });
 
 // ===== CONFIGURACIÓN DE CACHE LOCAL =====
@@ -101,10 +102,9 @@ const app = express();
 const server = http.createServer(app);
 
 // Inicialización del servidor
-
 // Middleware para obtener IP
 app.use(requestIp.mw());
-  
+
 // ===== MIDDLEWARE DE SEGURIDAD AVANZADO =====
 app.use(helmet({
   contentSecurityPolicy: {
@@ -138,7 +138,6 @@ const limiter = rateLimit({
     return req.headers.authorization && req.headers.authorization.includes('admin');
   }
 });
-
 app.use(limiter);
 
 // Rate limiting específico para login
@@ -269,10 +268,9 @@ const SECURITY_CONFIG = {
 };
 
 // ===== FUNCIONES AVANZADAS DE SEGURIDAD =====
-
 // Validación avanzada de contraseñas
 function validatePassword(password) {
-      const errors = [];
+  const errors = [];
   
   if (password.length < SECURITY_CONFIG.passwordMinLength) {
     errors.push(`La contraseña debe tener al menos ${SECURITY_CONFIG.passwordMinLength} caracteres`);
@@ -306,7 +304,7 @@ function validatePassword(password) {
 
 // Validación avanzada de nombres de usuario
 function validateUsername(username) {
-      const errors = [];
+  const errors = [];
   
   if (username.length < SECURITY_CONFIG.usernameMinLength) {
     errors.push(`El nombre de usuario debe tener al menos ${SECURITY_CONFIG.usernameMinLength} caracteres`);
@@ -332,7 +330,7 @@ function validateUsername(username) {
 
 // Validación de nickname
 function validateNickname(nickname) {
-      const errors = [];
+  const errors = [];
   
   if (nickname.length < SECURITY_CONFIG.nicknameMinLength) {
     errors.push(`El nickname debe tener al menos ${SECURITY_CONFIG.nicknameMinLength} caracteres`);
@@ -354,7 +352,7 @@ function validateNickname(nickname) {
 
 // Escaneo de archivos con antivirus (si está configurado)
 async function scanFile(filePath) {
-      if (!SECURITY_CONFIG.fileScanEnabled || !SECURITY_CONFIG.antivirusApiKey) {
+  if (!SECURITY_CONFIG.fileScanEnabled || !SECURITY_CONFIG.antivirusApiKey) {
     return { isClean: true };
   }
   
@@ -383,7 +381,7 @@ async function scanFile(filePath) {
 
 // Verificación de reCAPTCHA
 async function verifyRecaptcha(token, ip) {
-      if (!SECURITY_CONFIG.recaptchaEnabled) {
+  if (!SECURITY_CONFIG.recaptchaEnabled) {
     return { success: true };
   }
   
@@ -409,9 +407,8 @@ async function verifyRecaptcha(token, ip) {
 
 // Control de intentos de login
 const loginAttempts = new Map();
-
 function checkLoginAttempts(ip) {
-      const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+  const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
   const now = Date.now();
   
   if (now - attempts.lastAttempt > SECURITY_CONFIG.lockoutDuration) {
@@ -422,7 +419,7 @@ function checkLoginAttempts(ip) {
 }
 
 function recordLoginAttempt(ip, success) {
-      const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
+  const attempts = loginAttempts.get(ip) || { count: 0, lastAttempt: 0 };
   
   if (success) {
     attempts.count = 0;
@@ -441,7 +438,6 @@ function recordLoginAttempt(ip, success) {
 
 // Control de intentos de admin token
 const adminTokenAttempts = new Map();
-
 function checkAdminTokenAttempts(ip) {
   const attempts = adminTokenAttempts.get(ip) || { count: 0, lastAttempt: 0 };
   const now = Date.now();
@@ -516,7 +512,7 @@ uploadDirs.forEach(dir => {
 
 // Configuración de multer para subida de archivos
 const storage = multer.diskStorage({
-      destination: function (req, file, cb) {
+  destination: function (req, file, cb) {
     let uploadPath = `${UPLOAD_DIR}/others`;
     
     if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
@@ -539,7 +535,7 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-      const allowedTypes = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_AUDIO_TYPES, ...ALLOWED_DOCUMENT_TYPES, ...ALLOWED_VIDEO_TYPES];
+  const allowedTypes = [...ALLOWED_IMAGE_TYPES, ...ALLOWED_AUDIO_TYPES, ...ALLOWED_DOCUMENT_TYPES, ...ALLOWED_VIDEO_TYPES];
   
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
@@ -558,20 +554,23 @@ const upload = multer({
 });
 
 // ===== CONFIGURACIÓN AVANZADA DE BASE DE DATOS =====
-
 // Backup automático de la base de datos usando fs.copyFileSync
 function backupDatabase() {
-      // En Render, el sistema de archivos es efímero, no hacer backups automáticos
+  // En Render, el sistema de archivos es efímero, no hacer backups automáticos
   if (process.env.RENDER) {
     logger.info('Backup automático deshabilitado en Render (sistema de archivos efímero)');
     return;
   }
+  
   const dbPath = path.join(__dirname, 'chat.db');
   const backupDir = path.join(__dirname, 'backups');
+  
   if (!fs.existsSync(backupDir)) {
     fs.mkdirSync(backupDir, { recursive: true });
   }
+  
   const backupPath = path.join(backupDir, `chat_backup_${moment().format('YYYY-MM-DD_HH-mm-ss')}.db`);
+  
   try {
     fs.copyFileSync(dbPath, backupPath);
     logger.info(`Backup creado: ${backupPath}`);
@@ -584,7 +583,7 @@ function backupDatabase() {
 
 // Limpiar backups antiguos
 function cleanupOldBackups() {
-      const backupDir = './backups';
+  const backupDir = './backups';
   if (!fs.existsSync(backupDir)) return;
   
   const files = fs.readdirSync(backupDir);
@@ -604,7 +603,7 @@ function cleanupOldBackups() {
 
 // Optimización de base de datos
 function optimizeDatabase() {
-      db.serialize(() => {
+  db.serialize(() => {
     db.run('VACUUM');
     db.run('ANALYZE');
     db.run('REINDEX');
@@ -614,7 +613,7 @@ function optimizeDatabase() {
 
 // Crear tablas si no existen
 db.serialize(() => {
-      db.run(`
+  db.run(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       username TEXT UNIQUE NOT NULL,
@@ -625,8 +624,8 @@ db.serialize(() => {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-    
-      db.run(`
+  
+  db.run(`
     CREATE TABLE IF NOT EXISTS messages (
       id TEXT PRIMARY KEY,
       room TEXT NOT NULL,
@@ -637,8 +636,8 @@ db.serialize(() => {
       FOREIGN KEY(sender_id) REFERENCES users(id)
     )
   `);
-    
-      db.run(`
+  
+  db.run(`
     CREATE TABLE IF NOT EXISTS sessions (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -648,8 +647,8 @@ db.serialize(() => {
       FOREIGN KEY(user_id) REFERENCES users(id)
     )
   `);
-    
-      db.run(`
+  
+  db.run(`
     CREATE TABLE IF NOT EXISTS banned_ips (
       id TEXT PRIMARY KEY,
       ip TEXT NOT NULL,
@@ -657,8 +656,8 @@ db.serialize(() => {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-    
-      db.run(`
+  
+  db.run(`
     CREATE TABLE IF NOT EXISTS reported_messages (
       id TEXT PRIMARY KEY,
       message_id TEXT NOT NULL,
@@ -669,8 +668,8 @@ db.serialize(() => {
       FOREIGN KEY(reporter_id) REFERENCES users(id)
     )
   `);
-    
-      db.run(`
+  
+  db.run(`
     CREATE TABLE IF NOT EXISTS moderation_log (
       id TEXT PRIMARY KEY,
       moderator_id TEXT NOT NULL,
@@ -681,8 +680,8 @@ db.serialize(() => {
       FOREIGN KEY(moderator_id) REFERENCES users(id)
     )
   `);
-    
-      db.run(`
+  
+  db.run(`
     CREATE TABLE IF NOT EXISTS files (
       id TEXT PRIMARY KEY,
       original_name TEXT NOT NULL,
@@ -699,8 +698,8 @@ db.serialize(() => {
       FOREIGN KEY(message_id) REFERENCES messages(id)
     )
   `);
-    
-      // Nueva tabla para tokens SSO de administradores
+  
+  // Nueva tabla para tokens SSO de administradores
   db.run(`
     CREATE TABLE IF NOT EXISTS admin_sso_tokens (
       id TEXT PRIMARY KEY,
@@ -709,8 +708,8 @@ db.serialize(() => {
       expires_at DATETIME
     )
   `);
-    
-      // Tabla para estadísticas y métricas
+  
+  // Tabla para estadísticas y métricas
   db.run(`
     CREATE TABLE IF NOT EXISTS server_stats (
       id TEXT PRIMARY KEY,
@@ -719,8 +718,8 @@ db.serialize(() => {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-    
-      // Tabla para logs de auditoría
+  
+  // Tabla para logs de auditoría
   db.run(`
     CREATE TABLE IF NOT EXISTS audit_log (
       id TEXT PRIMARY KEY,
@@ -732,8 +731,8 @@ db.serialize(() => {
       timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-    
-      // Tabla para configuración del sistema
+  
+  // Tabla para configuración del sistema
   db.run(`
     CREATE TABLE IF NOT EXISTS system_config (
       key TEXT PRIMARY KEY,
@@ -741,8 +740,8 @@ db.serialize(() => {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-    
-      // Tabla para rate limiting
+  
+  // Tabla para rate limiting
   db.run(`
     CREATE TABLE IF NOT EXISTS rate_limits (
       id TEXT PRIMARY KEY,
@@ -753,8 +752,8 @@ db.serialize(() => {
       last_request DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-    
-      // Índices para optimización
+  
+  // Índices para optimización
   db.run('CREATE INDEX IF NOT EXISTS idx_messages_room_timestamp ON messages(room, timestamp)');
   db.run('CREATE INDEX IF NOT EXISTS idx_messages_sender ON messages(sender_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_sessions_token ON sessions(token)');
@@ -763,8 +762,8 @@ db.serialize(() => {
   db.run('CREATE INDEX IF NOT EXISTS idx_audit_log_user ON audit_log(user_id)');
   db.run('CREATE INDEX IF NOT EXISTS idx_audit_log_timestamp ON audit_log(timestamp)');
   db.run('CREATE INDEX IF NOT EXISTS idx_rate_limits_ip_endpoint ON rate_limits(ip_address, endpoint)');
-    
-      console.log('Base de datos inicializada con tablas avanzadas');
+  
+  console.log('Base de datos inicializada con tablas avanzadas');
   
   // Insertar token predefinido al iniciar
   db.run(`
@@ -787,12 +786,14 @@ app.use(express.static(path.join(__dirname, 'public'), {
 
 // Middleware para bloquear acceso directo a archivos sensibles
 app.use((req, res, next) => {
-      const forbidden = [
+  const forbidden = [
     '/.env', '/chat.db', '/package.json', '/package-lock.json', '/render.yaml', '/README.md', '/ADVANCED_FEATURES.md', '/sds.md', '/server.js', '/render-setup.md', '/.git', '/.qodo', '/backups', '/logs'
   ];
+  
   if (forbidden.some(f => req.path.startsWith(f))) {
     return res.status(403).send('Acceso denegado');
   }
+  
   next();
 });
 
@@ -801,17 +802,17 @@ let onlineUsers = [];
 
 // Función para generar ID único
 function generateId() {
-      return crypto.randomBytes(16).toString('hex');
+  return crypto.randomBytes(16).toString('hex');
 }
 
 // Función para generar token de sesión
 function generateToken() {
-      return crypto.randomBytes(32).toString('hex');
+  return crypto.randomBytes(32).toString('hex');
 }
 
 // Función para obtener el tipo de archivo
 function getFileType(mimeType) {
-      if (ALLOWED_IMAGE_TYPES.includes(mimeType)) return 'image';
+  if (ALLOWED_IMAGE_TYPES.includes(mimeType)) return 'image';
   if (ALLOWED_AUDIO_TYPES.includes(mimeType)) return 'audio';
   if (ALLOWED_DOCUMENT_TYPES.includes(mimeType)) return 'document';
   if (ALLOWED_VIDEO_TYPES.includes(mimeType)) return 'video';
@@ -820,7 +821,7 @@ function getFileType(mimeType) {
 
 // Función para guardar información de archivo en la base de datos
 function saveFileInfo(fileInfo, callback) {
-      const fileId = generateId();
+  const fileId = generateId();
   
   db.run(`
     INSERT INTO files (id, original_name, filename, file_path, file_type, file_size, mime_type, uploaded_by, room)
@@ -843,7 +844,7 @@ function saveFileInfo(fileInfo, callback) {
 
 // Función para procesar imagen con Sharp (optimización)
 async function processImage(inputPath, outputPath) {
-      try {
+  try {
     await sharp(inputPath)
       .resize(1920, 1080, { 
         fit: 'inside',
@@ -859,18 +860,22 @@ async function processImage(inputPath, outputPath) {
     return true;
   } catch (error) {
     console.error('Error procesando imagen:', error);
+    // Asegurarse de eliminar el archivo temporal si existe
+    if (fs.existsSync(outputPath)) {
+      fs.unlinkSync(outputPath);
+    }
     return false;
   }
 }
 
 // Función para obtener un usuario por nombre de usuario
 function getUserByUsername(username, callback) {
-      db.get('SELECT * FROM users WHERE username = ?', [username], callback);
+  db.get('SELECT * FROM users WHERE username = ?', [username], callback);
 }
 
 // Función para crear un nuevo usuario
 function createUser(nickname, username, password, callback) {
-      const userId = generateId();
+  const userId = generateId();
   
   bcrypt.hash(password, 10, (err, hash) => {
     if (err) return callback(err);
@@ -893,7 +898,7 @@ function createUser(nickname, username, password, callback) {
 
 // Función para crear una sesión
 function createSession(userId, callback) {
-      const sessionId = generateId();
+  const sessionId = generateId();
   const token = generateToken();
   const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 días
   
@@ -909,7 +914,7 @@ function createSession(userId, callback) {
 
 // Función para validar una sesión
 function validateSession(token, callback) {
-      // Primero verificar en cache
+  // Primero verificar en cache
   const cachedSession = getCachedSession(token);
   if (cachedSession) {
     return callback(null, cachedSession);
@@ -944,12 +949,12 @@ function validateSession(token, callback) {
 
 // Función para eliminar una sesión
 function deleteSession(token, callback) {
-      db.run('DELETE FROM sessions WHERE token = ?', [token], callback);
+  db.run('DELETE FROM sessions WHERE token = ?', [token], callback);
 }
 
 // Función para guardar un mensaje
 function saveMessage(message, callback) {
-      const messageId = generateId();
+  const messageId = generateId();
   
   db.run(
     'INSERT INTO messages (id, room, sender_id, text, timestamp) VALUES (?, ?, ?, ?, ?)',
@@ -966,7 +971,7 @@ function saveMessage(message, callback) {
 
 // Función para obtener los últimos mensajes de una sala
 function getRoomMessages(room, limit = 100, callback) {
-      db.all(
+  db.all(
     `SELECT m.id, m.room, m.sender_id, m.text, m.banned, m.timestamp, u.nickname as sender 
      FROM messages m
      JOIN users u ON m.sender_id = u.id
@@ -980,7 +985,7 @@ function getRoomMessages(room, limit = 100, callback) {
 
 // Función para obtener datos para el panel de administración
 function getAdminData(callback) {
-      db.serialize(() => {
+  db.serialize(() => {
     const data = {};
     
     db.all('SELECT id, nickname, username, role, banned FROM users', [], (err, users) => {
@@ -1024,7 +1029,7 @@ function getAdminData(callback) {
 
 // Función para registrar acción de moderación
 function logModerationAction(moderatorId, actionType, target, reason) {
-      const logId = generateId();
+  const logId = generateId();
   
   db.run(
     'INSERT INTO moderation_log (id, moderator_id, action_type, target, reason) VALUES (?, ?, ?, ?, ?)',
@@ -1050,7 +1055,7 @@ function verifyAdminToken(token, callback, clientIp = null) {
     }
     return callback(false);
   }
-
+  
   // Sanitizar el token para prevenir inyección
   const sanitizedToken = token.trim();
   
@@ -1067,7 +1072,7 @@ function verifyAdminToken(token, callback, clientIp = null) {
     }
     return callback(false);
   }
-
+  
   // Verificar contra el token predefinido
   if (sanitizedToken === DEFAULT_ADMIN_TOKEN) {
     console.log('Acceso admin exitoso con token predefinido');
@@ -1123,7 +1128,7 @@ function verifyAdminToken(token, callback, clientIp = null) {
 
 // Función para crear token SSO de administrador
 function createAdminToken(callback) {
-      const tokenId = generateId();
+  const tokenId = generateId();
   const token = generateToken();
   
   db.run(
@@ -1138,7 +1143,7 @@ function createAdminToken(callback) {
 
 // Manejar conexiones de Socket.io
 io.on('connection', (socket) => {
-      console.log('Nuevo usuario conectado:', socket.id);
+  console.log('Nuevo usuario conectado:', socket.id);
   
   // Obtener IP del cliente
   const clientIp = socket.handshake.headers['x-forwarded-for'] || socket.handshake.address;
@@ -1162,14 +1167,41 @@ io.on('connection', (socket) => {
       callback(response);
     }
   };
-
-      // Manejar registro de usuario
+  
+  // Manejar registro de usuario
   socket.on('register', (data, callback) => {
-          const { nickname, username, password } = data;
+    const { nickname, username, password } = data;
     
     // Validar datos
     if (!nickname || !username || !password) {
       return safeCallback(callback, { success: false, message: 'Todos los campos son obligatorios' });
+    }
+    
+    // Validar nickname
+    const nicknameValidation = validateNickname(nickname);
+    if (!nicknameValidation.isValid) {
+      return safeCallback(callback, { 
+        success: false, 
+        message: 'Nickname inválido: ' + nicknameValidation.errors.join(', ') 
+      });
+    }
+    
+    // Validar username
+    const usernameValidation = validateUsername(username);
+    if (!usernameValidation.isValid) {
+      return safeCallback(callback, { 
+        success: false, 
+        message: 'Username inválido: ' + usernameValidation.errors.join(', ') 
+      });
+    }
+    
+    // Validar contraseña
+    const passwordValidation = validatePassword(password);
+    if (!passwordValidation.isValid) {
+      return safeCallback(callback, { 
+        success: false, 
+        message: 'Contraseña inválida: ' + passwordValidation.errors.join(', ') 
+      });
     }
     
     // Verificar si el usuario ya existe
@@ -1203,10 +1235,10 @@ io.on('connection', (socket) => {
       });
     });
   });
-    
-      // Manejar inicio de sesión
+  
+  // Manejar inicio de sesión
   socket.on('login', (data, callback) => {
-          const { username, password, adminToken } = data;
+    const { username, password, adminToken } = data;
     
     // Validar datos
     if (!username || !password) {
@@ -1244,11 +1276,11 @@ io.on('connection', (socket) => {
               message: 'Demasiados intentos de acceso admin. Intenta más tarde.' 
             });
           }
-
+          
           // Registrar intento de admin token
           recordAdminTokenAttempt(clientIp, false);
-
-                    // Agregar delay artificial para prevenir ataques de fuerza bruta
+          
+          // Agregar delay artificial para prevenir ataques de fuerza bruta
           setTimeout(() => {
             verifyAdminToken(adminToken, (isValid) => {
               if (!isValid) {
@@ -1289,14 +1321,14 @@ io.on('connection', (socket) => {
         if (err) {
           return safeCallback(callback, { success: false, message: 'Error al crear la sesión' });
         }
-
+        
         const userData = {
           id: user.id,
           nickname: user.nickname,
           username: user.username,
           role: user.role
         };
-
+        
         safeCallback(callback, { 
           success: true, 
           user: userData,
@@ -1305,62 +1337,74 @@ io.on('connection', (socket) => {
       });
     }
   });
-    
-      // Validar sesión
+  
+  // Validar sesión
   socket.on('validateSession', (token, callback) => {
-          validateSession(token, (err, user) => {
+    validateSession(token, (err, user) => {
       if (err || !user) {
         return safeCallback(callback, { valid: false });
       }
+      
       safeCallback(callback, { 
         valid: true,
         user
       });
     });
   });
-    
-      // Unirse a una sala
+  
+  // Unirse a una sala
   socket.on('join', (data) => {
-          const { user, room } = data;
+    const { user, room } = data;
+    
+    // Validar datos
+    if (!user || !room) {
+      socket.emit('error', { message: 'Datos incompletos para unirse a la sala' });
+      return;
+    }
+    
+    // Sanitizar nombre de sala
+    const sanitizedRoom = room.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 30);
     
     // Guardar referencia del usuario
     socket.user = user;
-    socket.room = room;
+    socket.room = sanitizedRoom;
     
     // Agregar usuario a la lista de usuarios en línea
     onlineUsers = onlineUsers.filter(u => u.id !== user.id);
-    onlineUsers.push({ ...user, socketId: socket.id, room });
+    onlineUsers.push({ ...user, socketId: socket.id, room: sanitizedRoom });
     
     // Unir al usuario a la sala
-    socket.join(room);
+    socket.join(sanitizedRoom);
     
     // Actualizar lista de usuarios en línea
     io.emit('updateUsers', onlineUsers);
     
     // Notificar a la sala
-    io.to(room).emit('systemMessage', {
+    const systemMessage = {
       id: `system-${Date.now()}`,
       text: `${user.nickname} se ha unido al chat`,
       sender: 'Sistema',
       senderId: 'system',
       timestamp: Date.now(),
-      room
-    });
+      room: sanitizedRoom
+    };
+    
+    io.to(sanitizedRoom).emit('systemMessage', systemMessage);
     
     // Enviar mensajes históricos
-    getRoomMessages(room, 100, (err, messages) => {
+    getRoomMessages(sanitizedRoom, 100, (err, messages) => {
       if (!err) {
         socket.emit('initialData', {
-          room,
+          room: sanitizedRoom,
           messages: messages
         });
       }
     });
   });
-    
-      // Cambiar de sala
+  
+  // Cambiar de sala
   socket.on('changeRoom', (data) => {
-          const { user, newRoom } = data;
+    const { user, newRoom } = data;
     
     // Verificar que el usuario está autenticado
     if (!socket.user || socket.user.id !== user.id) {
@@ -1368,493 +1412,647 @@ io.on('connection', (socket) => {
       return;
     }
     
+    // Sanitizar nombre de sala
+    const sanitizedNewRoom = newRoom.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 30);
+    
     // Salir de la sala anterior
     socket.leave(socket.room);
     
     // Actualizar usuario en línea
     onlineUsers = onlineUsers.map(u => 
-      u.id === user.id ? { ...u, room: newRoom } : u
+      u.id === user.id ? { ...u, room: sanitizedNewRoom } : u
     );
     
     // Unirse a la nueva sala
-    socket.join(newRoom);
-    socket.room = newRoom;
+    socket.join(sanitizedNewRoom);
+    socket.room = sanitizedNewRoom;
     
     // Actualizar lista de usuarios en línea
     io.emit('updateUsers', onlineUsers);
     
     // Notificar cambio de sala
-    io.to(newRoom).emit('systemMessage', {
+    const systemMessage = {
       id: `system-${Date.now()}`,
       text: `${user.nickname} se ha unido al chat`,
       sender: 'Sistema',
       senderId: 'system',
       timestamp: Date.now(),
-      room: newRoom
-    });
+      room: sanitizedNewRoom
+    };
+    
+    io.to(sanitizedNewRoom).emit('systemMessage', systemMessage);
     
     // Enviar mensajes históricos de la nueva sala
-    getRoomMessages(newRoom, 100, (err, messages) => {
+    getRoomMessages(sanitizedNewRoom, 100, (err, messages) => {
       if (!err) {
         socket.emit('initialData', {
-          room: newRoom,
+          room: sanitizedNewRoom,
           messages: messages
         });
       }
     });
   });
-    
-      // Manejar mensajes
+  
+  // Manejar mensajes
   socket.on('message', (message) => {
-      // Verificar que el usuario está autenticado
-      if (!socket.user) {
-        socket.emit('authError', 'Debes iniciar sesión para enviar mensajes');
+    // Verificar que el usuario está autenticado
+    if (!socket.user) {
+      socket.emit('authError', 'Debes iniciar sesión para enviar mensajes');
+      return;
+    }
+    
+    // Validar mensaje
+    if (!message.text || !message.room) {
+      return;
+    }
+    
+    // Sanitizar mensaje
+    message.text = cleanMessage(message.text);
+    
+    // Limitar longitud del mensaje
+    if (message.text.length > 500) {
+      message.text = message.text.substring(0, 500);
+    }
+    
+    // Asignar remitente
+    message.senderId = socket.user.id;
+    message.sender = socket.user.nickname;
+    message.timestamp = Date.now();
+    
+    // Guardar mensaje en la base de datos
+    saveMessage(message, (err, savedMessage) => {
+      if (err) {
+        console.error('Error al guardar mensaje:', err);
+        socket.emit('error', { message: 'Error al guardar el mensaje' });
         return;
       }
       
-      // Validar mensaje
-      if (!message.text || !message.room) {
-        return;
+      // Enviar mensaje a todos en la sala
+      io.to(message.room).emit('message', savedMessage);
+    });
+  });
+  
+  // Cerrar sesión
+  socket.on('logout', (data, callback) => {
+    const { userId } = data;
+    
+    // Función para manejar respuesta segura
+    const respond = (response) => {
+      safeCallback(callback, response);
+    };
+    
+    if (!socket.user || socket.user.id !== userId) {
+      return respond({ 
+        success: false, 
+        message: 'No autorizado' 
+      });
+    }
+    
+    // Eliminar de usuarios en línea
+    onlineUsers = onlineUsers.filter(u => u.id !== userId);
+    
+    // Actualizar lista de usuarios
+    io.emit('updateUsers', onlineUsers);
+    
+    // Notificar desconexión
+    if (socket.room) {
+      const systemMessage = {
+        id: `system-${Date.now()}`,
+        text: `${socket.user.nickname} ha abandonado el chat`,
+        sender: 'Sistema',
+        senderId: 'system',
+        timestamp: Date.now(),
+        room: socket.room
+      };
+      
+      io.to(socket.room).emit('systemMessage', systemMessage);
+    }
+    
+    respond({ success: true });
+  });
+  
+  // ===== ADMIN FUNCTIONS =====
+  
+  // Obtener datos para el panel de administración
+  socket.on('admin:getData', (callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    getAdminData((err, data) => {
+      if (err) {
+        console.error('Error al obtener datos de administración:', err);
+        return safeCallback(callback, { error: 'Error en el servidor' });
       }
       
-      // Sanitizar mensaje
-      message.text = cleanMessage(message.text);
-      
-      // Asignar remitente
-      message.senderId = socket.user.id;
-      message.sender = socket.user.nickname;
-      message.timestamp = Date.now();
-      
-      // Guardar mensaje en la base de datos
-      saveMessage(message, (err, savedMessage) => {
+      safeCallback(callback, data);
+    });
+  });
+  
+  // Banear usuario
+  socket.on('admin:banUser', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      logAuditAction(socket.user ? socket.user.id : null, 'ADMIN_BAN_USER_ATTEMPT', { 
+        targetUserId: data.userId,
+        success: false 
+      }, socket.request);
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { userId, reason } = data;
+    
+    db.run(
+      'UPDATE users SET banned = 1 WHERE id = ?',
+      [userId],
+      function(err) {
         if (err) {
-          console.error('Error al guardar mensaje:', err);
-          return;
+          console.error('Error al banear usuario:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
         }
         
-        // Enviar mensaje a todos en la sala
-        io.to(message.room).emit('message', savedMessage);
-      });
-    });
-    
-    // Cerrar sesión
-    socket.on('logout', (data, callback) => {
-      const { userId } = data;
-      
-      // Función para manejar respuesta segura
-      const respond = (response) => {
-        safeCallback(callback, response);
-      };
-
-      if (!socket.user || socket.user.id !== userId) {
-        return respond({ 
-          success: false, 
-          message: 'No autorizado' 
-        });
+        // Registrar acción
+        logModerationAction(socket.user.id, 'ban_user', userId, reason);
+        logAuditAction(socket.user.id, 'ADMIN_BAN_USER', { 
+          targetUserId: userId,
+          reason: reason 
+        }, socket.request);
+        
+        // Notificar al usuario si está conectado
+        const userSocket = onlineUsers.find(u => u.id === userId);
+        if (userSocket) {
+          io.to(userSocket.socketId).emit('user:banned', { reason });
+        }
+        
+        // Actualizar lista de usuarios en línea
+        onlineUsers = onlineUsers.filter(u => u.id !== userId);
+        io.emit('updateUsers', onlineUsers);
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
       }
-
-      // Eliminar de usuarios en línea
-      onlineUsers = onlineUsers.filter(u => u.id !== userId);
+    );
+  });
+  
+  // Desbanear usuario
+  socket.on('admin:unbanUser', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      logAuditAction(socket.user ? socket.user.id : null, 'ADMIN_UNBAN_USER_ATTEMPT', { 
+        targetUserId: data.userId,
+        success: false 
+      }, socket.request);
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { userId } = data;
+    
+    db.run(
+      'UPDATE users SET banned = 0 WHERE id = ?',
+      [userId],
+      function(err) {
+        if (err) {
+          console.error('Error al desbanear usuario:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'unban_user', userId, '');
+        logAuditAction(socket.user.id, 'ADMIN_UNBAN_USER', { 
+          targetUserId: userId
+        }, socket.request);
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Banear IP
+  socket.on('admin:banIp', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      logAuditAction(socket.user ? socket.user.id : null, 'ADMIN_BAN_IP_ATTEMPT', { 
+        targetIp: data.ip,
+        success: false 
+      }, socket.request);
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { ip, reason } = data;
+    const banId = generateId();
+    
+    db.run(
+      'INSERT INTO banned_ips (id, ip, reason) VALUES (?, ?, ?)',
+      [banId, ip, reason],
+      function(err) {
+        if (err) {
+          console.error('Error al banear IP:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'ban_ip', ip, reason);
+        logAuditAction(socket.user.id, 'ADMIN_BAN_IP', { 
+          targetIp: ip,
+          reason: reason 
+        }, socket.request);
+        
+        // Desconectar usuarios con esa IP
+        io.sockets.sockets.forEach(sock => {
+          const sockIp = sock.handshake.headers['x-forwarded-for'] || sock.handshake.address;
+          if (sockIp === ip) {
+            sock.emit('user:banned', { reason: `Tu IP ha sido baneada: ${reason}` });
+            sock.disconnect();
+          }
+        });
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Desbanear IP
+  socket.on('admin:unbanIp', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      logAuditAction(socket.user ? socket.user.id : null, 'ADMIN_UNBAN_IP_ATTEMPT', { 
+        targetIp: data.ip,
+        success: false 
+      }, socket.request);
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { ip } = data;
+    
+    db.run(
+      'DELETE FROM banned_ips WHERE ip = ?',
+      [ip],
+      function(err) {
+        if (err) {
+          console.error('Error al desbanear IP:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'unban_ip', ip, '');
+        logAuditAction(socket.user.id, 'ADMIN_UNBAN_IP', { 
+          targetIp: ip
+        }, socket.request);
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Eliminar mensaje
+  socket.on('admin:deleteMessage', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      logAuditAction(socket.user ? socket.user.id : null, 'ADMIN_DELETE_MESSAGE_ATTEMPT', { 
+        targetMessageId: data.messageId,
+        success: false 
+      }, socket.request);
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { messageId } = data;
+    
+    db.run(
+      'UPDATE messages SET banned = 1 WHERE id = ?',
+      [messageId],
+      function(err) {
+        if (err) {
+          console.error('Error al eliminar mensaje:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'delete_message', messageId, '');
+        logAuditAction(socket.user.id, 'ADMIN_DELETE_MESSAGE', { 
+          targetMessageId: messageId
+        }, socket.request);
+        
+        // Notificar a todos que el mensaje fue eliminado
+        io.emit('message:deleted', { messageId });
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Descartar reporte
+  socket.on('admin:dismissReport', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      logAuditAction(socket.user ? socket.user.id : null, 'ADMIN_DISMISS_REPORT_ATTEMPT', { 
+        targetMessageId: data.messageId,
+        success: false 
+      }, socket.request);
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    const { messageId } = data;
+    
+    db.run(
+      'DELETE FROM reported_messages WHERE message_id = ?',
+      [messageId],
+      function(err) {
+        if (err) {
+          console.error('Error al descartar reporte:', err);
+          return safeCallback(callback, { error: 'Error en el servidor' });
+        }
+        
+        // Registrar acción
+        logModerationAction(socket.user.id, 'dismiss_report', messageId, '');
+        logAuditAction(socket.user.id, 'ADMIN_DISMISS_REPORT', { 
+          targetMessageId: messageId
+        }, socket.request);
+        
+        // Notificar al admin
+        safeCallback(callback, { success: true });
+      }
+    );
+  });
+  
+  // Generar token SSO de administrador
+  socket.on('admin:generateToken', (data, callback) => {
+    if (!socket.user || socket.user.role !== 'admin') {
+      logAuditAction(socket.user ? socket.user.id : null, 'ADMIN_GENERATE_TOKEN_ATTEMPT', { 
+        success: false 
+      }, socket.request);
+      return safeCallback(callback, { error: 'No autorizado' });
+    }
+    
+    createAdminToken((token) => {
+      if (!token) {
+        return safeCallback(callback, { error: 'Error al generar token' });
+      }
       
-      // Actualizar lista de usuarios
-      io.emit('updateUsers', onlineUsers);
+      logAuditAction(socket.user.id, 'ADMIN_GENERATE_TOKEN', { 
+        success: true 
+      }, socket.request);
+      
+      safeCallback(callback, { success: true, token });
+    });
+  });
+  
+  // Desconexión
+  socket.on('disconnect', () => {
+    if (socket.user) {
+      // Eliminar de usuarios en línea
+      onlineUsers = onlineUsers.filter(u => u.socketId !== socket.id);
       
       // Notificar desconexión
       if (socket.room) {
-        io.to(socket.room).emit('systemMessage', {
+        const systemMessage = {
           id: `system-${Date.now()}`,
           text: `${socket.user.nickname} ha abandonado el chat`,
           sender: 'Sistema',
           senderId: 'system',
           timestamp: Date.now(),
           room: socket.room
-        });
-      }
-      
-      respond({ success: true });
-    });
-    
-    // ===== ADMIN FUNCTIONS =====
-    
-    // Obtener datos para el panel de administración
-    socket.on('admin:getData', (callback) => {
-      if (!socket.user || socket.user.role !== 'admin') {
-        return safeCallback(callback, { error: 'No autorizado' });
-      }
-      
-      getAdminData((err, data) => {
-        if (err) {
-          console.error('Error al obtener datos de administración:', err);
-          return safeCallback(callback, { error: 'Error en el servidor' });
-        }
+        };
         
-        safeCallback(callback, data);
-      });
-    });
+        io.to(socket.room).emit('systemMessage', systemMessage);
+      }
+      
+      // Actualizar lista de usuarios
+      io.emit('updateUsers', onlineUsers);
+    }
     
-    // Banear usuario
-    socket.on('admin:banUser', (data, callback) => {
-      if (!socket.user || socket.user.role !== 'admin') {
-        return safeCallback(callback, { error: 'No autorizado' });
-      }
-      
-      const { userId, reason } = data;
-      
-      db.run(
-        'UPDATE users SET banned = 1 WHERE id = ?',
-        [userId],
-        function(err) {
-          if (err) {
-            console.error('Error al banear usuario:', err);
-            return safeCallback(callback, { error: 'Error en el servidor' });
-          }
-          
-          // Registrar acción
-          logModerationAction(socket.user.id, 'ban_user', userId, reason);
-          
-          // Notificar al usuario si está conectado
-          const userSocket = onlineUsers.find(u => u.id === userId);
-          if (userSocket) {
-            io.to(userSocket.socketId).emit('user:banned', { reason });
-          }
-          
-          // Actualizar lista de usuarios en línea
-          onlineUsers = onlineUsers.filter(u => u.id !== userId);
-          io.emit('updateUsers', onlineUsers);
-          
-          // Notificar al admin
-          safeCallback(callback, { success: true });
-        }
-      );
-    });
-    
-    // Desbanear usuario
-    socket.on('admin:unbanUser', (data, callback) => {
-      if (!socket.user || socket.user.role !== 'admin') {
-        return safeCallback(callback, { error: 'No autorizado' });
-      }
-      
-      const { userId } = data;
-      
-      db.run(
-        'UPDATE users SET banned = 0 WHERE id = ?',
-        [userId],
-        function(err) {
-          if (err) {
-            console.error('Error al desbanear usuario:', err);
-            return safeCallback(callback, { error: 'Error en el servidor' });
-          }
-          
-          // Registrar acción
-          logModerationAction(socket.user.id, 'unban_user', userId, '');
-          
-          // Notificar al admin
-          safeCallback(callback, { success: true });
-        }
-      );
-    });
-    
-    // Banear IP
-    socket.on('admin:banIp', (data, callback) => {
-      if (!socket.user || socket.user.role !== 'admin') {
-        return safeCallback(callback, { error: 'No autorizado' });
-      }
-      
-      const { ip, reason } = data;
-      const banId = generateId();
-      
-      db.run(
-        'INSERT INTO banned_ips (id, ip, reason) VALUES (?, ?, ?)',
-        [banId, ip, reason],
-        function(err) {
-          if (err) {
-            console.error('Error al banear IP:', err);
-            return safeCallback(callback, { error: 'Error en el servidor' });
-          }
-          
-          // Registrar acción
-          logModerationAction(socket.user.id, 'ban_ip', ip, reason);
-          
-          // Desconectar usuarios con esa IP
-          io.sockets.sockets.forEach(sock => {
-            const sockIp = sock.handshake.headers['x-forwarded-for'] || sock.handshake.address;
-            if (sockIp === ip) {
-              sock.emit('user:banned', { reason: `Tu IP ha sido baneada: ${reason}` });
-              sock.disconnect();
-            }
-          });
-          
-          // Notificar al admin
-          safeCallback(callback, { success: true });
-        }
-      );
-    });
-    
-    // Desbanear IP
-    socket.on('admin:unbanIp', (data, callback) => {
-      if (!socket.user || socket.user.role !== 'admin') {
-        return safeCallback(callback, { error: 'No autorizado' });
-      }
-      
-      const { ip } = data;
-      
-      db.run(
-        'DELETE FROM banned_ips WHERE ip = ?',
-        [ip],
-        function(err) {
-          if (err) {
-            console.error('Error al desbanear IP:', err);
-            return safeCallback(callback, { error: 'Error en el servidor' });
-          }
-          
-          // Registrar acción
-          logModerationAction(socket.user.id, 'unban_ip', ip, '');
-          
-          // Notificar al admin
-          safeCallback(callback, { success: true });
-        }
-      );
-    });
-    
-    // Eliminar mensaje
-    socket.on('admin:deleteMessage', (data, callback) => {
-      if (!socket.user || socket.user.role !== 'admin') {
-        return safeCallback(callback, { error: 'No autorizado' });
-      }
-      
-      const { messageId } = data;
-      
-      db.run(
-        'UPDATE messages SET banned = 1 WHERE id = ?',
-        [messageId],
-        function(err) {
-          if (err) {
-            console.error('Error al eliminar mensaje:', err);
-            return safeCallback(callback, { error: 'Error en el servidor' });
-          }
-          
-          // Registrar acción
-          logModerationAction(socket.user.id, 'delete_message', messageId, '');
-          
-          // Notificar a todos que el mensaje fue eliminado
-          io.emit('message:deleted', { messageId });
-          
-          // Notificar al admin
-          safeCallback(callback, { success: true });
-        }
-      );
-    });
-    
-    // Descartar reporte
-    socket.on('admin:dismissReport', (data, callback) => {
-      if (!socket.user || socket.user.role !== 'admin') {
-        return safeCallback(callback, { error: 'No autorizado' });
-      }
-      
-      const { messageId } = data;
-      
-      db.run(
-        'DELETE FROM reported_messages WHERE message_id = ?',
-        [messageId],
-        function(err) {
-          if (err) {
-            console.error('Error al descartar reporte:', err);
-            return safeCallback(callback, { error: 'Error en el servidor' });
-          }
-          
-          // Registrar acción
-          logModerationAction(socket.user.id, 'dismiss_report', messageId, '');
-          
-          // Notificar al admin
-          safeCallback(callback, { success: true });
-        }
-      );
-    });
-    
-    // Generar token SSO de administrador
-    socket.on('admin:generateToken', (data, callback) => {
-      if (!socket.user || socket.user.role !== 'admin') {
-        return safeCallback(callback, { error: 'No autorizado' });
-      }
-      
-      createAdminToken((token) => {
-        if (!token) {
-          return safeCallback(callback, { error: 'Error al generar token' });
-        }
-        
-        safeCallback(callback, { success: true, token });
-      });
-    });
-    
-    // Desconexión
-    socket.on('disconnect', () => {
-      if (socket.user) {
-        // Eliminar de usuarios en línea
-        onlineUsers = onlineUsers.filter(u => u.socketId !== socket.id);
-        
-        // Notificar desconexión
-        if (socket.room) {
-          io.to(socket.room).emit('systemMessage', {
-            id: `system-${Date.now()}`,
-            text: `${socket.user.nickname} ha abandonado el chat`,
-            sender: 'Sistema',
-            senderId: 'system',
-            timestamp: Date.now(),
-            room: socket.room
-          });
-        }
-        
-        // Actualizar lista de usuarios
-        io.emit('updateUsers', onlineUsers);
-      }
-      console.log('Usuario desconectado:', socket.id);
-    });
-
-    // --- Señalización WebRTC para canal de voz/video ---
-    const callRooms = {};
-
-    // Unirse a canal de llamada
-    socket.on('join-call', ({ room }) => {
-      socket.join('call-' + room);
-      if (!callRooms[room]) callRooms[room] = [];
-      callRooms[room].push(socket.id);
-      // Notificar a otros usuarios en la llamada
-      socket.to('call-' + room).emit('call-user', { from: socket.id });
-    });
-
-    // Salir de la llamada
-    socket.on('leave-call', ({ room }) => {
-      socket.leave('call-' + room);
-      if (callRooms[room]) {
-        callRooms[room] = callRooms[room].filter(id => id !== socket.id);
-        if (callRooms[room].length === 0) delete callRooms[room];
-      }
-    });
-
-    // Listo para llamada (negociación)
-    socket.on('ready-for-call', ({ room }) => {
-      socket.to('call-' + room).emit('call-user', { from: socket.id });
-    });
-
-    // Oferta WebRTC
-    socket.on('call-offer', ({ to, offer }) => {
-      io.to(to).emit('call-offer', { from: socket.id, offer });
-    });
-
-    // Respuesta WebRTC
-    socket.on('call-answer', ({ to, answer }) => {
-      io.to(to).emit('call-answer', { from: socket.id, answer });
-    });
-
-    // ICE candidates
-    socket.on('call-ice-candidate', ({ to, candidate }) => {
-      io.to(to).emit('call-ice-candidate', { from: socket.id, candidate });
-    });
+    console.log('Usuario desconectado:', socket.id);
   });
-
-  // Rutas HTTP para manejo de archivos
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
-
-  // Endpoint para subir archivos
-  app.post('/upload', upload.array('file', 5), async (req, res) => {
-    try {
-      // Verificar que el usuario esté autenticado
-      const authHeader = req.headers.authorization;
-      if (!authHeader) {
-        return res.status(401).json({ success: false, error: 'No autorizado' });
-      }
-
-      const token = authHeader.replace('Bearer ', '');
+  
+  // --- Señalización WebRTC para canal de voz/video ---
+  const callRooms = {};
+  
+  // Unirse a canal de llamada
+  socket.on('join-call', ({ room }) => {
+    // Verificar que el usuario está autenticado
+    if (!socket.user) {
+      socket.emit('error', { message: 'Debes iniciar sesión para unirte a una llamada' });
+      return;
+    }
+    
+    // Sanitizar nombre de sala
+    const sanitizedRoom = room.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 30);
+    
+    socket.join('call-' + sanitizedRoom);
+    
+    if (!callRooms[sanitizedRoom]) {
+      callRooms[sanitizedRoom] = [];
+    }
+    
+    // Limitar número de participantes en la llamada
+    if (callRooms[sanitizedRoom].length >= 10) {
+      socket.emit('error', { message: 'La sala de llamada está llena' });
+      socket.leave('call-' + sanitizedRoom);
+      return;
+    }
+    
+    callRooms[sanitizedRoom].push(socket.id);
+    
+    // Notificar a otros usuarios en la llamada
+    socket.to('call-' + sanitizedRoom).emit('call-user', { from: socket.id });
+  });
+  
+  // Salir de la llamada
+  socket.on('leave-call', ({ room }) => {
+    const sanitizedRoom = room.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 30);
+    
+    socket.leave('call-' + sanitizedRoom);
+    
+    if (callRooms[sanitizedRoom]) {
+      callRooms[sanitizedRoom] = callRooms[sanitizedRoom].filter(id => id !== socket.id);
       
-      // Validar sesión
-      validateSession(token, (err, user) => {
-        if (err || !user) {
-          return res.status(401).json({ success: false, error: 'Sesión inválida' });
-        }
-
-        if (!req.files || req.files.length === 0) {
-          return res.status(400).json({ success: false, error: 'No se seleccionaron archivos' });
-        }
-
-        const uploadedFiles = [];
-        let processedCount = 0;
-
-        req.files.forEach(async (file) => {
-          try {
-            // Procesar imagen si es necesario
-            if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
-              const tempPath = file.path + '_temp';
-              await processImage(file.path, tempPath);
-            }
-
-            // Guardar información en la base de datos
-            const fileInfo = {
-              originalName: file.originalname,
-              filename: file.filename,
-              filePath: file.path,
-              fileType: getFileType(file.mimetype),
-              fileSize: file.size,
-              mimeType: file.mimetype,
-              uploadedBy: user.id,
-              room: req.body.room || 'multimedia'
-            };
-
-            saveFileInfo(fileInfo, (err, fileId) => {
-              if (err) {
-                console.error('Error guardando archivo en BD:', err);
-                return;
-              }
-
-              const fileUrl = `/uploads/${getFileType(file.mimetype)}s/${file.filename}`;
-              
-              uploadedFiles.push({
-                id: fileId,
-                name: file.originalname,
-                url: fileUrl,
-                type: file.mimetype,
-                size: file.size
-              });
-
-              processedCount++;
-              
-              // Si todos los archivos han sido procesados, enviar respuesta
-              if (processedCount === req.files.length) {
-                res.json({
-                  success: true,
-                  files: uploadedFiles,
-                  message: `${uploadedFiles.length} archivo(s) subido(s) exitosamente`
-                });
-              }
-            });
-
-          } catch (error) {
-            console.error('Error procesando archivo:', error);
-            processedCount++;
-            
-            if (processedCount === req.files.length) {
-              res.status(500).json({
-                success: false,
-                error: 'Error procesando archivos'
-              });
-            }
-          }
-        });
-
-      });
-
-    } catch (error) {
-      console.error('Error en endpoint de upload:', error);
-      res.status(500).json({
-        success: false,
-        error: 'Error interno del servidor'
-      });
+      if (callRooms[sanitizedRoom].length === 0) {
+        delete callRooms[sanitizedRoom];
+      }
     }
   });
+  
+  // Listo para llamada (negociación)
+  socket.on('ready-for-call', ({ room }) => {
+    const sanitizedRoom = room.replace(/[^a-zA-Z0-9_-]/g, '').substring(0, 30);
+    socket.to('call-' + sanitizedRoom).emit('call-user', { from: socket.id });
+  });
+  
+  // Oferta WebRTC
+  socket.on('call-offer', ({ to, offer }) => {
+    io.to(to).emit('call-offer', { from: socket.id, offer });
+  });
+  
+  // Respuesta WebRTC
+  socket.on('call-answer', ({ to, answer }) => {
+    io.to(to).emit('call-answer', { from: socket.id, answer });
+  });
+  
+  // ICE candidates
+  socket.on('call-ice-candidate', ({ to, candidate }) => {
+    io.to(to).emit('call-ice-candidate', { from: socket.id, candidate });
+  });
+});
 
-  // Endpoint para obtener información de archivo
-  app.get('/file/:fileId', (req, res) => {
-    const { fileId } = req.params;
+// Rutas HTTP para manejo de archivos
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// Endpoint para subir archivos
+app.post('/upload', upload.array('file', 5), async (req, res) => {
+  try {
+    // Verificar que el usuario esté autenticado
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({ success: false, error: 'No autorizado' });
+    }
+    
+    const token = authHeader.replace('Bearer ', '');
+    
+    // Validar sesión
+    validateSession(token, (err, user) => {
+      if (err || !user) {
+        return res.status(401).json({ success: false, error: 'Sesión inválida' });
+      }
+      
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ success: false, error: 'No se seleccionaron archivos' });
+      }
+      
+      const uploadedFiles = [];
+      let processedCount = 0;
+      
+      req.files.forEach(async (file) => {
+        try {
+          // Procesar imagen si es necesario
+          if (ALLOWED_IMAGE_TYPES.includes(file.mimetype)) {
+            const tempPath = file.path + '_temp';
+            await processImage(file.path, tempPath);
+          }
+          
+          // Escanear archivo si está habilitado
+          if (SECURITY_CONFIG.fileScanEnabled) {
+            const scanResult = await scanFile(file.path);
+            if (!scanResult.isClean) {
+              // Eliminar archivo
+              fs.unlinkSync(file.path);
+              processedCount++;
+              
+              if (processedCount === req.files.length) {
+                return res.status(400).json({
+                  success: false,
+                  error: 'Uno o más archivos contienen virus y han sido eliminados.'
+                });
+              }
+              return;
+            }
+          }
+          
+          // Guardar información en la base de datos
+          const fileInfo = {
+            originalName: file.originalname,
+            filename: file.filename,
+            filePath: file.path,
+            fileType: getFileType(file.mimetype),
+            fileSize: file.size,
+            mimeType: file.mimetype,
+            uploadedBy: user.id,
+            room: req.body.room || 'multimedia'
+          };
+          
+          saveFileInfo(fileInfo, (err, fileId) => {
+            if (err) {
+              console.error('Error guardando archivo en BD:', err);
+              return;
+            }
+            
+            const fileUrl = `/uploads/${getFileType(file.mimetype)}s/${file.filename}`;
+            
+            uploadedFiles.push({
+              id: fileId,
+              name: file.originalname,
+              url: fileUrl,
+              type: file.mimetype,
+              size: file.size
+            });
+            
+            processedCount++;
+            
+            // Si todos los archivos han sido procesados, enviar respuesta
+            if (processedCount === req.files.length) {
+              res.json({
+                success: true,
+                files: uploadedFiles,
+                message: `${uploadedFiles.length} archivo(s) subido(s) exitosamente`
+              });
+            }
+          });
+        } catch (error) {
+          console.error('Error procesando archivo:', error);
+          processedCount++;
+          
+          if (processedCount === req.files.length) {
+            res.status(500).json({
+              success: false,
+              error: 'Error procesando archivos'
+            });
+          }
+        }
+      });
+    });
+  } catch (error) {
+    console.error('Error en endpoint de upload:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Error interno del servidor'
+    });
+  }
+});
+
+// Endpoint para obtener información de archivo
+app.get('/file/:fileId', (req, res) => {
+  const { fileId } = req.params;
+  
+  db.get('SELECT * FROM files WHERE id = ?', [fileId], (err, file) => {
+    if (err) {
+      return res.status(500).json({ success: false, error: 'Error en el servidor' });
+    }
+    
+    if (!file) {
+      return res.status(404).json({ success: false, error: 'Archivo no encontrado' });
+    }
+    
+    res.json({
+      success: true,
+      file: {
+        id: file.id,
+        name: file.original_name,
+        url: `/uploads/${file.file_type}s/${file.filename}`,
+        type: file.mime_type,
+        size: file.file_size,
+        uploadedBy: file.uploaded_by,
+        createdAt: file.created_at
+      }
+    });
+  });
+});
+
+// Endpoint para eliminar archivo (solo admins)
+app.delete('/file/:fileId', (req, res) => {
+  const { fileId } = req.params;
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ success: false, error: 'No autorizado' });
+  }
+  
+  const token = authHeader.replace('Bearer ', '');
+  
+  validateSession(token, (err, user) => {
+    if (err || !user || user.role !== 'admin') {
+      logAuditAction(user ? user.id : null, 'ADMIN_DELETE_FILE_ATTEMPT', { 
+        targetFileId: fileId,
+        success: false 
+      }, req);
+      return res.status(401).json({ success: false, error: 'No autorizado' });
+    }
     
     db.get('SELECT * FROM files WHERE id = ?', [fileId], (err, file) => {
       if (err) {
@@ -1865,389 +2063,367 @@ io.on('connection', (socket) => {
         return res.status(404).json({ success: false, error: 'Archivo no encontrado' });
       }
       
-      res.json({
-        success: true,
-        file: {
-          id: file.id,
-          name: file.original_name,
-          url: `/uploads/${file.file_type}s/${file.filename}`,
-          type: file.mime_type,
-          size: file.file_size,
-          uploadedBy: file.uploaded_by,
-          createdAt: file.created_at
-        }
-      });
-    });
-  });
-
-  // Endpoint para eliminar archivo (solo admins)
-  app.delete('/file/:fileId', (req, res) => {
-    const { fileId } = req.params;
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader) {
-      return res.status(401).json({ success: false, error: 'No autorizado' });
-    }
-
-    const token = authHeader.replace('Bearer ', '');
-    
-    validateSession(token, (err, user) => {
-      if (err || !user || user.role !== 'admin') {
-        return res.status(401).json({ success: false, error: 'No autorizado' });
-      }
-
-      db.get('SELECT * FROM files WHERE id = ?', [fileId], (err, file) => {
-        if (err) {
-          return res.status(500).json({ success: false, error: 'Error en el servidor' });
+      // Eliminar archivo físico
+      fs.unlink(file.file_path, (unlinkErr) => {
+        if (unlinkErr) {
+          console.error('Error eliminando archivo físico:', unlinkErr);
         }
         
-        if (!file) {
-          return res.status(404).json({ success: false, error: 'Archivo no encontrado' });
-        }
-
-        // Eliminar archivo físico
-        fs.unlink(file.file_path, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error('Error eliminando archivo físico:', unlinkErr);
+        // Eliminar registro de la base de datos
+        db.run('DELETE FROM files WHERE id = ?', [fileId], (deleteErr) => {
+          if (deleteErr) {
+            return res.status(500).json({ success: false, error: 'Error eliminando archivo' });
           }
-
-          // Eliminar registro de la base de datos
-          db.run('DELETE FROM files WHERE id = ?', [fileId], (deleteErr) => {
-            if (deleteErr) {
-              return res.status(500).json({ success: false, error: 'Error eliminando archivo' });
-            }
-
-            // Registrar acción de moderación
-            logModerationAction(user.id, 'delete_file', fileId, 'Archivo eliminado por admin');
-
-            res.json({ success: true, message: 'Archivo eliminado exitosamente' });
-          });
+          
+          // Registrar acción de moderación
+          logModerationAction(user.id, 'delete_file', fileId, 'Archivo eliminado por admin');
+          logAuditAction(user.id, 'ADMIN_DELETE_FILE', { 
+            targetFileId: fileId
+          }, req);
+          
+          res.json({ success: true, message: 'Archivo eliminado exitosamente' });
         });
       });
     });
   });
+});
 
-  // Middleware de manejo de errores para multer
-  app.use((error, req, res, next) => {
-    if (error instanceof multer.MulterError) {
-      if (error.code === 'LIMIT_FILE_SIZE') {
-        return res.status(400).json({
-          success: false,
-          error: 'El archivo es demasiado grande. Máximo 10MB.'
-        });
-      }
-      if (error.code === 'LIMIT_FILE_COUNT') {
-        return res.status(400).json({
-          success: false,
-          error: 'Demasiados archivos. Máximo 5 archivos por subida.'
-        });
-      }
-      if (error.code === 'LIMIT_UNEXPECTED_FILE') {
-        return res.status(400).json({
-          success: false,
-          error: 'Campo de archivo inesperado.'
-        });
-      }
-    }
-    
-    if (error.message === 'Tipo de archivo no permitido') {
+// Middleware de manejo de errores para multer
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        error: 'Tipo de archivo no permitido.'
+        error: 'El archivo es demasiado grande. Máximo 10MB.'
       });
     }
     
-    console.error('Error en upload:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Error interno del servidor'
-    });
-  });
-
-  // ===== FUNCIONES AVANZADAS DE CACHE Y OPTIMIZACIÓN =====
-
-  // Cache inteligente para mensajes
-  function getCachedMessages(room, limit = 100) {
-    const cacheKey = `messages:${room}:${limit}`;
-    let messages = messageCache.get(cacheKey);
-    
-    if (!messages) {
-      return null;
+    if (error.code === 'LIMIT_FILE_COUNT') {
+      return res.status(400).json({
+        success: false,
+        error: 'Demasiados archivos. Máximo 5 archivos por subida.'
+      });
     }
     
-    return messages;
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      return res.status(400).json({
+        success: false,
+        error: 'Campo de archivo inesperado.'
+      });
+    }
   }
-
-  function setCachedMessages(room, limit, messages) {
-    const cacheKey = `messages:${room}:${limit}`;
-    messageCache.set(cacheKey, messages);
-  }
-
-  // Cache para usuarios
-  function getCachedUser(userId) {
-    return userCache.get(userId);
-  }
-
-  function setCachedUser(userId, userData) {
-    userCache.set(userId, userData);
-  }
-
-  // Cache para sesiones
-  function getCachedSession(token) {
-    return sessionCache.get(token);
-  }
-
-  function setCachedSession(token, sessionData) {
-    sessionCache.set(token, sessionData);
-  }
-
-  // ===== FUNCIONES DE MONITOREO Y MÉTRICAS =====
-
-  // Registrar métricas del servidor
-  function recordMetric(metricName, value) {
-    const metricId = generateId();
-    db.run(`
-      INSERT INTO server_stats (id, metric_name, metric_value)
-      VALUES (?, ?, ?)
-    `, [metricId, metricName, value], (err) => {
-      if (err) {
-        logger.error('Error registrando métrica:', err);
-      }
+  
+  if (error.message === 'Tipo de archivo no permitido') {
+    return res.status(400).json({
+      success: false,
+      error: 'Tipo de archivo no permitido.'
     });
   }
+  
+  console.error('Error en upload:', error);
+  res.status(500).json({
+    success: false,
+    error: 'Error interno del servidor'
+  });
+});
 
-  // Obtener estadísticas del servidor
-  function getServerStats(callback) {
-    const stats = {
-      uptime: process.uptime(),
-      memory: process.memoryUsage(),
-      cpu: process.cpuUsage(),
-      connections: io.engine.clientsCount,
-      onlineUsers: onlineUsers.length,
-      cacheStats: {
-        messages: messageCache.size,
-        users: userCache.stats.keys,
-        sessions: sessionCache.stats.keys
-      }
-    };
+// ===== FUNCIONES AVANZADAS DE CACHE Y OPTIMIZACIÓN =====
+// Cache inteligente para mensajes
+function getCachedMessages(room, limit = 100) {
+  const cacheKey = `messages:${room}:${limit}`;
+  let messages = messageCache.get(cacheKey);
+  
+  if (!messages) {
+    return null;
+  }
+  
+  return messages;
+}
+
+function setCachedMessages(room, limit, messages) {
+  const cacheKey = `messages:${room}:${limit}`;
+  messageCache.set(cacheKey, messages);
+}
+
+// Cache para usuarios
+function getCachedUser(userId) {
+  return userCache.get(userId);
+}
+
+function setCachedUser(userId, userData) {
+  userCache.set(userId, userData);
+}
+
+// Cache para sesiones
+function getCachedSession(token) {
+  return sessionCache.get(token);
+}
+
+function setCachedSession(token, sessionData) {
+  sessionCache.set(token, sessionData);
+}
+
+// ===== FUNCIONES DE MONITOREO Y MÉTRICAS =====
+// Registrar métricas del servidor
+function recordMetric(metricName, value) {
+  const metricId = generateId();
+  
+  db.run(`
+    INSERT INTO server_stats (id, metric_name, metric_value)
+    VALUES (?, ?, ?)
+  `, [metricId, metricName, value], (err) => {
+    if (err) {
+      logger.error('Error registrando métrica:', err);
+    }
+  });
+}
+
+// Obtener estadísticas del servidor
+function getServerStats(callback) {
+  const stats = {
+    uptime: process.uptime(),
+    memory: process.memoryUsage(),
+    cpu: process.cpuUsage(),
+    connections: io.engine.clientsCount,
+    onlineUsers: onlineUsers.length,
+    cacheStats: {
+      messages: messageCache.size,
+      users: userCache.stats.keys,
+      sessions: sessionCache.stats.keys
+    }
+  };
+  
+  callback(null, stats);
+}
+
+// ===== FUNCIONES DE AUDITORÍA =====
+// Registrar acción de auditoría
+function logAuditAction(userId, action, details, req) {
+  const auditId = generateId();
+  const ip = req ? (req.ip || req.connection.remoteAddress || req.socket.remoteAddress) : 'unknown';
+  const userAgent = req ? (req.headers['user-agent'] || 'unknown') : 'unknown';
+  
+  db.run(`
+    INSERT INTO audit_log (id, user_id, action, details, ip_address, user_agent)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `, [auditId, userId, action, JSON.stringify(details), ip, userAgent], (err) => {
+    if (err) {
+      logger.error('Error registrando auditoría:', err);
+    }
+  });
+}
+
+// ===== TAREAS PROGRAMADAS =====
+// En Render, las tareas programadas pueden no funcionar como esperado
+// Solo ejecutar si no estamos en un entorno serverless
+if (process.env.NODE_ENV === 'production' && !process.env.RENDER) {
+  // Backup automático diario
+  cron.schedule('0 2 * * *', () => {
+    logger.info('Iniciando backup automático de base de datos...');
+    backupDatabase();
+  });
+  
+  // Optimización semanal de base de datos
+  cron.schedule('0 3 * * 0', () => {
+    logger.info('Iniciando optimización de base de datos...');
+    optimizeDatabase();
+  });
+}
+
+// Limpieza de cache cada hora (siempre activa)
+cron.schedule('0 * * * *', () => {
+  messageCache.clear();
+  userCache.flushAll();
+  sessionCache.flushAll();
+  logger.info('Cache limpiado');
+});
+
+// Registro de métricas cada 5 minutos (siempre activo)
+cron.schedule('*/5 * * * *', () => {
+  getServerStats((err, stats) => {
+    if (!err) {
+      recordMetric('memory_usage', stats.memory.heapUsed);
+      recordMetric('online_users', stats.onlineUsers);
+      recordMetric('active_connections', stats.connections);
+    }
+  });
+});
+
+// ===== MANEJO DE ERRORES AVANZADO =====
+// Capturar errores no manejados
+process.on('uncaughtException', (error) => {
+  logger.error('Error no manejado:', error);
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Promesa rechazada no manejada:', reason);
+});
+
+// Manejo de señales de terminación
+process.on('SIGTERM', () => {
+  logger.info('Recibida señal SIGTERM, cerrando servidor...');
+  server.close(() => {
+    logger.info('Servidor cerrado');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  logger.info('Recibida señal SIGINT, cerrando servidor...');
+  server.close(() => {
+    logger.info('Servidor cerrado');
+    process.exit(0);
+  });
+});
+
+// ===== ENDPOINTS AVANZADOS =====
+// Endpoint de salud del servidor
+app.get('/health', (req, res) => {
+  getServerStats((err, stats) => {
+    if (err) {
+      return res.status(500).json({ status: 'error', error: err.message });
+    }
     
-    callback(null, stats);
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      uptime: stats.uptime,
+      memory: stats.memory,
+      connections: stats.connections,
+      onlineUsers: stats.onlineUsers
+    });
+  });
+});
+
+// Endpoint de métricas (solo para admins)
+app.get('/metrics', (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ error: 'No autorizado' });
   }
-
-  // ===== FUNCIONES DE AUDITORÍA =====
-
-  // Registrar acción de auditoría
-  function logAuditAction(userId, action, details, req) {
-    const auditId = generateId();
-    const ip = req ? req.ip : 'unknown';
-    const userAgent = req ? req.headers['user-agent'] : 'unknown';
+  
+  const token = authHeader.replace('Bearer ', '');
+  
+  validateSession(token, (err, user) => {
+    if (err || !user || user.role !== 'admin') {
+      logAuditAction(user ? user.id : null, 'ADMIN_METRICS_ACCESS_ATTEMPT', { 
+        success: false 
+      }, req);
+      return res.status(401).json({ error: 'No autorizado' });
+    }
     
-    db.run(`
-      INSERT INTO audit_log (id, user_id, action, details, ip_address, user_agent)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `, [auditId, userId, action, JSON.stringify(details), ip, userAgent], (err) => {
-      if (err) {
-        logger.error('Error registrando auditoría:', err);
-      }
-    });
-  }
-
-  // ===== TAREAS PROGRAMADAS =====
-
-  // En Render, las tareas programadas pueden no funcionar como esperado
-  // Solo ejecutar si no estamos en un entorno serverless
-  if (process.env.NODE_ENV === 'production' && !process.env.RENDER) {
-    // Backup automático diario
-    cron.schedule('0 2 * * *', () => {
-      logger.info('Iniciando backup automático de base de datos...');
-      backupDatabase();
-    });
-
-    // Optimización semanal de base de datos
-    cron.schedule('0 3 * * 0', () => {
-      logger.info('Iniciando optimización de base de datos...');
-      optimizeDatabase();
-    });
-  }
-
-  // Limpieza de cache cada hora (siempre activa)
-  cron.schedule('0 * * * *', () => {
-    messageCache.clear();
-    userCache.flushAll();
-    sessionCache.flushAll();
-    logger.info('Cache limpiado');
-  });
-
-  // Registro de métricas cada 5 minutos (siempre activo)
-  cron.schedule('*/5 * * * *', () => {
-    getServerStats((err, stats) => {
-      if (!err) {
-        recordMetric('memory_usage', stats.memory.heapUsed);
-        recordMetric('online_users', stats.onlineUsers);
-        recordMetric('active_connections', stats.connections);
-      }
-    });
-  });
-
-  // ===== MANEJO DE ERRORES AVANZADO =====
-
-  // Capturar errores no manejados
-  process.on('uncaughtException', (error) => {
-    logger.error('Error no manejado:', error);
-    process.exit(1);
-  });
-
-  process.on('unhandledRejection', (reason, promise) => {
-    logger.error('Promesa rechazada no manejada:', reason);
-  });
-
-  // Manejo de señales de terminación
-  process.on('SIGTERM', () => {
-    logger.info('Recibida señal SIGTERM, cerrando servidor...');
-    server.close(() => {
-      logger.info('Servidor cerrado');
-      process.exit(0);
-    });
-  });
-
-  process.on('SIGINT', () => {
-    logger.info('Recibida señal SIGINT, cerrando servidor...');
-    server.close(() => {
-      logger.info('Servidor cerrado');
-      process.exit(0);
-    });
-  });
-
-  // ===== ENDPOINTS AVANZADOS =====
-
-  // Endpoint de salud del servidor
-  app.get('/health', (req, res) => {
     getServerStats((err, stats) => {
       if (err) {
-        return res.status(500).json({ status: 'error', error: err.message });
+        return res.status(500).json({ error: err.message });
       }
+      
+      logAuditAction(user.id, 'ADMIN_METRICS_ACCESS', { 
+        success: true 
+      }, req);
       
       res.json({
-        status: 'healthy',
-        timestamp: new Date().toISOString(),
-        uptime: stats.uptime,
-        memory: stats.memory,
-        connections: stats.connections,
-        onlineUsers: stats.onlineUsers
+        server: stats,
+        cache: stats.cacheStats,
+        timestamp: new Date().toISOString()
       });
     });
   });
+});
 
-  // Endpoint de métricas (solo para admins)
-  app.get('/metrics', (req, res) => {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader) {
-      return res.status(401).json({ error: 'No autorizado' });
-    }
-    
-    const token = authHeader.replace('Bearer ', '');
-    
-    validateSession(token, (err, user) => {
-      if (err || !user || user.role !== 'admin') {
-        return res.status(401).json({ error: 'No autorizado' });
-      }
-      
-      getServerStats((err, stats) => {
-        if (err) {
-          return res.status(500).json({ error: err.message });
-        }
-        
-        res.json({
-          server: stats,
-          cache: stats.cacheStats,
-          timestamp: new Date().toISOString()
-        });
-      });
-    });
-  });
-
-  // Endpoint para logs de auditoría (solo para admins)
-  app.get('/audit-logs', (req, res) => {
-    const authHeader = req.headers.authorization;
-    
-    if (!authHeader) {
-      return res.status(401).json({ error: 'No autorizado' });
-    }
-    
-    const token = authHeader.replace('Bearer ', '');
-    
-    validateSession(token, (err, user) => {
-      if (err || !user || user.role !== 'admin') {
-        return res.status(401).json({ error: 'No autorizado' });
-      }
-      
-      const limit = parseInt(req.query.limit) || 100;
-      const offset = parseInt(req.query.offset) || 0;
-      
-      db.all(`
-        SELECT * FROM audit_log 
-        ORDER BY timestamp DESC 
-        LIMIT ? OFFSET ?
-      `, [limit, offset], (err, logs) => {
-        if (err) {
-          return res.status(500).json({ error: err.message });
-        }
-        
-        res.json({
-          logs: logs.map(log => ({
-            ...log,
-            details: JSON.parse(log.details || '{}')
-          })),
-          total: logs.length
-        });
-      });
-    });
-  });
-
-  // Sanitización de mensajes
-  function cleanMessage(text) {
-    return sanitizeHtml(text, {
-      allowedTags: ['b', 'i', 'em', 'strong', 'a'],
-      allowedAttributes: {
-        'a': ['href', 'target', 'rel']
-      },
-      allowedSchemes: ['http', 'https'],
-      transformTags: {
-        'a': (tagName, attribs) => {
-          return {
-            tagName: 'a',
-            attribs: {
-              href: attribs.href,
-              target: '_blank',
-              rel: 'noopener noreferrer'
-            }
-          };
-        }
-      }
-    });
+// Endpoint para logs de auditoría (solo para admins)
+app.get('/audit-logs', (req, res) => {
+  const authHeader = req.headers.authorization;
+  
+  if (!authHeader) {
+    return res.status(401).json({ error: 'No autorizado' });
   }
-
-  // Sanitización de mensajes en endpoint de mensajes
-  app.post('/mensaje', (req, res) => {
-    let { texto } = req.body;
-    texto = cleanMessage(texto);
-    if (texto.length < 1 || texto.length > 500) {
-      return res.status(400).json({ error: 'Mensaje inválido.' });
+  
+  const token = authHeader.replace('Bearer ', '');
+  
+  validateSession(token, (err, user) => {
+    if (err || !user || user.role !== 'admin') {
+      logAuditAction(user ? user.id : null, 'ADMIN_AUDIT_LOGS_ACCESS_ATTEMPT', { 
+        success: false 
+      }, req);
+      return res.status(401).json({ error: 'No autorizado' });
     }
-    // ...guardar mensaje...
-    res.json({ success: true, message: 'Mensaje sanitizado correctamente' });
-  });
-
-  // Iniciar servidor
-  const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {
-    logger.info(`Servidor escuchando en http://localhost:${PORT}`);
-    logger.info(`Token SSO predefinido: ${DEFAULT_ADMIN_TOKEN}`);
-    logger.info(`Directorio de uploads: ${UPLOAD_DIR}`);
-    logger.info(`Modo: ${process.env.NODE_ENV || 'development'}`);
-    logger.info(`Servidor único (Render optimizado)`);
     
-    // Registrar métricas iniciales
-    recordMetric('server_start', Date.now());
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+    
+    db.all(`
+      SELECT * FROM audit_log 
+      ORDER BY timestamp DESC 
+      LIMIT ? OFFSET ?
+    `, [limit, offset], (err, logs) => {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      
+      logAuditAction(user.id, 'ADMIN_AUDIT_LOGS_ACCESS', { 
+        success: true,
+        limit: limit,
+        offset: offset
+      }, req);
+      
+      res.json({
+        logs: logs.map(log => ({
+          ...log,
+          details: JSON.parse(log.details || '{}')
+        })),
+        total: logs.length
+      });
+    });
   });
+});
+
+// Sanitización de mensajes
+function cleanMessage(text) {
+  return sanitizeHtml(text, {
+    allowedTags: ['b', 'i', 'em', 'strong', 'a'],
+    allowedAttributes: {
+      'a': ['href', 'target', 'rel']
+    },
+    allowedSchemes: ['http', 'https'],
+    transformTags: {
+      'a': (tagName, attribs) => {
+        return {
+          tagName: 'a',
+          attribs: {
+            href: attribs.href,
+            target: '_blank',
+            rel: 'noopener noreferrer'
+          }
+        };
+      }
+    }
+  });
+}
+
+// Sanitización de mensajes en endpoint de mensajes
+app.post('/mensaje', (req, res) => {
+  let { texto } = req.body;
+  texto = cleanMessage(texto);
+  
+  if (texto.length < 1 || texto.length > 500) {
+    return res.status(400).json({ error: 'Mensaje inválido.' });
+  }
+  
+  // ...guardar mensaje...
+  res.json({ success: true, message: 'Mensaje sanitizado correctamente' });
+});
+
+// Iniciar servidor
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  logger.info(`Servidor escuchando en http://localhost:${PORT}`);
+  logger.info(`Token SSO predefinido: ${DEFAULT_ADMIN_TOKEN}`);
+  logger.info(`Directorio de uploads: ${UPLOAD_DIR}`);
+  logger.info(`Modo: ${process.env.NODE_ENV || 'development'}`);
+  logger.info(`Servidor único (Render optimizado)`);
+  
+  // Registrar métricas iniciales
+  recordMetric('server_start', Date.now());
+});
