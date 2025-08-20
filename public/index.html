@@ -7,8 +7,9 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
-    <title>YChat v2.0 - Multi-Platform Chat</title>
+    <title>YChat v2.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
     <style>
         :root {
             --primary-color: #5865F2;
@@ -1293,10 +1294,16 @@
             opacity: 0;
             transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             backdrop-filter: blur(10px);
+            /* Asegurar que esté por encima de todo */
+            margin: 0;
+            /* Forzar el centrado correcto */
+            max-height: 90vh;
+            overflow-y: auto;
         }
         
         .file-upload-area.active {
-            display: block;
+            display: flex;
+            flex-direction: column;
             opacity: 1;
             transform: translate(-50%, -50%) scale(1);
         }
@@ -1311,6 +1318,7 @@
             color: var(--gray-color);
             margin-bottom: 25px;
             font-size: 18px;
+            flex-shrink: 0;
         }
         
         .file-upload-text i {
@@ -1337,6 +1345,7 @@
             gap: 15px;
             flex-wrap: wrap;
             margin-top: 20px;
+            flex-shrink: 0;
         }
         
         .file-upload-button {
@@ -1372,6 +1381,8 @@
             border-radius: 12px;
             overflow-y: auto;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            flex-grow: 1;
+            min-height: 0;
         }
         
         .file-item {
@@ -1428,6 +1439,7 @@
             justify-content: center;
             transition: all 0.3s ease;
             margin-left: 10px;
+            flex-shrink: 0;
         }
         
         .file-remove:hover {
@@ -1458,6 +1470,7 @@
                 width: 95%;
                 padding: 25px 20px;
                 border-radius: 12px;
+                max-height: 85vh;
             }
             
             .file-upload-text {
@@ -1482,6 +1495,7 @@
             .file-preview {
                 margin-top: 20px;
                 padding: 12px;
+                max-height: 200px;
             }
             
             .file-item {
@@ -1505,6 +1519,64 @@
                 width: 28px;
                 height: 28px;
                 font-size: 12px;
+            }
+        }
+        
+        /* Para pantallas muy pequeñas */
+        @media (max-width: 480px) {
+            .file-upload-area {
+                width: 98%;
+                padding: 20px 15px;
+                border-radius: 10px;
+            }
+            
+            .file-upload-text {
+                font-size: 14px;
+                margin-bottom: 15px;
+            }
+            
+            .file-upload-text i {
+                font-size: 32px;
+                margin-bottom: 12px;
+            }
+            
+            .file-upload-text p {
+                font-size: 12px;
+            }
+            
+            .file-upload-button {
+                padding: 8px 16px;
+                font-size: 12px;
+                gap: 6px;
+            }
+            
+            .file-preview {
+                margin-top: 15px;
+                padding: 10px;
+                max-height: 150px;
+            }
+            
+            .file-item {
+                padding: 8px;
+            }
+            
+            .file-icon {
+                font-size: 20px;
+                margin-right: 10px;
+            }
+            
+            .file-name {
+                font-size: 12px;
+            }
+            
+            .file-size {
+                font-size: 11px;
+            }
+            
+            .file-remove {
+                width: 24px;
+                height: 24px;
+                font-size: 10px;
             }
         }
         
@@ -1536,11 +1608,14 @@
             display: none;
             opacity: 0;
             transition: opacity 0.3s ease;
+            /* Asegurar que esté por debajo del modal pero por encima del resto */
+            pointer-events: none;
         }
         
         .file-upload-overlay.active {
             display: block;
             opacity: 1;
+            pointer-events: auto;
         }
         
         /* Botón de cerrar para el modal de subida */
@@ -1561,11 +1636,19 @@
             justify-content: center;
             transition: all 0.3s ease;
             z-index: 1001;
+            flex-shrink: 0;
         }
         
         .file-upload-close:hover {
             background: rgba(255, 255, 255, 0.2);
             transform: rotate(90deg);
+        }
+        
+        /* Para asegurar el centrado en navegadores antiguos */
+        @supports not (backdrop-filter: blur(10px)) {
+            .file-upload-area {
+                background: rgba(44, 47, 51, 0.95);
+            }
         }
         
         /* Estilos para mensajes con archivos */
@@ -2251,1422 +2334,4 @@
         const rememberMe = document.getElementById('remember-me');
         const adminButton = document.getElementById('admin-button');
         const adminPanel = document.getElementById('admin-panel');
-        const adminClose = document.getElementById('admin-close');
-        const adminBadge = document.getElementById('admin-badge');
-        const menuToggle = document.getElementById('menu-toggle');
-        const sidebar = document.getElementById('sidebar');
-        const sidebarOverlay = document.getElementById('sidebar-overlay');
-        const adminTokenGroup = document.getElementById('admin-token-group');
-        const adminLoginCheckbox = document.getElementById('admin-login');
-        const generateTokenButton = document.getElementById('generate-token-button');
-        const tokenResult = document.getElementById('token-result');
-        const generatedToken = document.getElementById('generated-token');
-        const contextMenu = document.getElementById('context-menu');
-        const copyUserIdBtn = document.getElementById('copy-user-id');
-        const copyMessageIdBtn = document.getElementById('copy-message-id');
-        const reportMessageBtn = document.getElementById('report-message');
-        const deleteMessageBtn = document.getElementById('delete-message');
-        const banUserBtn = document.getElementById('ban-user');
-        const openAdminPanelBtn = document.getElementById('open-admin-panel');
-        const closeContextMenuBtn = document.getElementById('close-context-menu');
-        const copiedIndicator = document.getElementById('copied-indicator');
-        const fileUploadArea = document.getElementById('file-upload-area');
-        const fileUploadOverlay = document.getElementById('file-upload-overlay');
-        const fileUploadClose = document.getElementById('file-upload-close');
-        const fileInput = document.getElementById('file-input');
-        const selectFilesBtn = document.getElementById('select-files-btn');
-        const uploadFilesBtn = document.getElementById('upload-files-btn');
-        const filePreview = document.getElementById('file-preview');
-        const fileButton = document.getElementById('file-button');
-        const imageModal = document.getElementById('image-modal');
-        const imageModalImg = document.getElementById('image-modal-img');
-        const imageModalClose = document.getElementById('image-modal-close');
-        const deleteMessageActionBtn = document.getElementById('delete-message-btn');
-        const banUserActionBtn = document.getElementById('ban-user-btn');
-        const adminPanelActionBtn = document.getElementById('admin-panel-btn');
-        const toggleIdsBtn = document.getElementById('toggle-ids-btn');
-        const voiceCallContainer = document.getElementById('voice-call-container');
-        const toggleMicBtn = document.getElementById('toggle-mic');
-        const toggleHeadphonesBtn = document.getElementById('toggle-headphones');
-        const leaveVoiceCallBtn = document.getElementById('leave-voice-call');
-        const participantsList = document.getElementById('participants-list');
-        const userMicIndicator = document.getElementById('user-mic-indicator');
-        
-        // Variables para archivos
-        let selectedFiles = [];
-        let isFileUploadActive = false;
-        
-        // Función para detectar tipo de dispositivo
-        function detectDevice() {
-            const userAgent = navigator.userAgent;
-            const screenWidth = window.innerWidth;
-            const screenHeight = window.innerHeight;
-            
-            // Detectar móvil
-            const mobileRegex = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
-            const isMobileUserAgent = mobileRegex.test(userAgent);
-            
-            // Detectar tablet específicamente
-            const isTabletUserAgent = /iPad|Android(?=.*\bMobile\b)(?=.*\bSafari\b)/i.test(userAgent);
-            
-            // Detectar por tamaño de pantalla
-            const isSmallScreen = screenWidth <= 768;
-            const isMediumScreen = screenWidth > 768 && screenWidth <= 1024;
-            const isLargeScreen = screenWidth > 1024;
-            
-            // Determinar tipo de dispositivo
-            if (isMobileUserAgent && (isSmallScreen || isMediumScreen)) {
-                if (isTabletUserAgent || isMediumScreen) {
-                    isTablet = true;
-                    isMobile = false;
-                    isDesktop = false;
-                    deviceType = 'tablet';
-                } else {
-                    isMobile = true;
-                    isTablet = false;
-                    isDesktop = false;
-                    deviceType = 'mobile';
-                }
-            } else {
-                isDesktop = true;
-                isMobile = false;
-                isTablet = false;
-                deviceType = 'desktop';
-            }
-            
-            // Aplicar clases CSS según dispositivo
-            document.body.classList.remove('mobile', 'tablet', 'desktop');
-            document.body.classList.add(deviceType);
-            
-            return deviceType;
-        }
-        
-        // Funciones para manejar cookies
-        function setCookie(name, value, days) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            const expires = "expires=" + date.toUTCString();
-            document.cookie = name + "=" + value + ";" + expires + ";path=/";
-        }
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for(let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
-            }
-            return null;
-        }
-        function deleteCookie(name) {
-            document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
-        }
-        // Función para mostrar notificaciones
-        function showNotification(message, type = 'error') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            
-            // Add icon based on type
-            const icon = type === 'success' ? '✓' : 
-                        type === 'error' ? '✗' : 
-                        type === 'warning' ? '⚠' : 'ℹ';
-            notification.innerHTML = `<span class="notification-icon">${icon}</span>${message}`;
-            
-            document.body.appendChild(notification);
-            
-            // Position notification for mobile
-            if (document.body.classList.contains('mobile-device')) {
-                notification.style.top = '20px';
-                notification.style.left = '10px';
-                notification.style.right = '10px';
-                notification.style.width = 'auto';
-                notification.style.maxWidth = 'none';
-            }
-            
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 100);
-            
-            // Auto-hide after delay
-            const hideDelay = type === 'error' ? 5000 : 3000;
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    if (document.body.contains(notification)) {
-                        notification.remove();
-                    }
-                }, 300);
-            }, hideDelay);
-            
-            // Allow manual dismissal
-            notification.addEventListener('click', () => {
-                notification.classList.remove('show');
-                setTimeout(() => {
-                    if (document.body.contains(notification)) {
-                        notification.remove();
-                    }
-                }, 300);
-            });
-        }
-        // Formatear fecha/hora
-        function formatDateTime(date) {
-            return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-        }
-        // Copiar texto al portapapeles
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text)
-                .then(() => {
-                    // Mostrar indicador de copiado
-                    copiedIndicator.style.display = 'block';
-                    setTimeout(() => {
-                        copiedIndicator.style.display = 'none';
-                    }, 1500);
-                })
-                .catch(err => {
-                    console.error('Error al copiar:', err);
-                    showNotification('Error al copiar al portapapeles', 'error');
-                });
-        }
-        // Toggle sidebar en dispositivos móviles
-        function toggleSidebar() {
-            sidebar.classList.toggle('active');
-            sidebarOverlay.classList.toggle('active');
-        }
-        // Cerrar sidebar al hacer clic en overlay
-        sidebarOverlay.addEventListener('click', toggleSidebar);
-        // Mostrar menú contextual
-        function showContextMenu(event, target, type) {
-            event.preventDefault();
-            contextMenuTarget = target;
-            
-            // Posicionar el menú contextual
-            contextMenu.style.display = 'block';
-            contextMenu.classList.add('show');
-            
-            // Obtener coordenadas del evento
-            let clientX, clientY;
-            if (event.touches && event.touches.length > 0) {
-                // Evento táctil
-                clientX = event.touches[0].clientX;
-                clientY = event.touches[0].clientY;
-            } else if (event.changedTouches && event.changedTouches.length > 0) {
-                // Evento táctil final
-                clientX = event.changedTouches[0].clientX;
-                clientY = event.changedTouches[0].clientY;
-            } else {
-                // Evento de ratón
-                clientX = event.clientX;
-                clientY = event.clientY;
-            }
-            
-            // Ajustar posición para que no se salga de la pantalla
-            const menuWidth = 200; // Ancho aproximado del menú
-            const menuHeight = 300; // Alto aproximado del menú
-            
-            let left = clientX;
-            let top = clientY;
-            
-            // Ajustar horizontalmente
-            if (left + menuWidth > window.innerWidth) {
-                left = window.innerWidth - menuWidth - 10;
-            }
-            
-            // Ajustar verticalmente
-            if (top + menuHeight > window.innerHeight) {
-                top = window.innerHeight - menuHeight - 10;
-            }
-            
-            contextMenu.style.left = `${left}px`;
-            contextMenu.style.top = `${top}px`;
-            
-            // Mostrar/ocultar opciones según el tipo
-            copyMessageIdBtn.style.display = type === 'message' ? 'flex' : 'none';
-            copyUserIdBtn.style.display = type === 'user' ? 'flex' : 'none';
-            reportMessageBtn.style.display = type === 'message' ? 'flex' : 'none';
-            
-            // Mostrar opciones de administrador si el usuario es admin
-            const adminOptions = document.querySelectorAll('.context-menu-item.admin-only');
-            adminOptions.forEach(option => {
-                if (currentUser?.role === 'admin') {
-                    option.classList.add('show');
-                } else {
-                    option.classList.remove('show');
-                }
-            });
-            
-            // Mostrar opciones específicas según el tipo
-            if (currentUser?.role === 'admin') {
-                deleteMessageBtn.style.display = type === 'message' ? 'flex' : 'none';
-                banUserBtn.style.display = type === 'user' ? 'flex' : 'none';
-                openAdminPanelBtn.style.display = 'flex';
-            } else {
-                deleteMessageBtn.style.display = 'none';
-                banUserBtn.style.display = 'none';
-                openAdminPanelBtn.style.display = 'none';
-            }
-        }
-        // Ocultar menú contextual
-        function hideContextMenu() {
-            contextMenu.classList.remove('show');
-            setTimeout(() => {
-                contextMenu.style.display = 'none';
-            }, 200);
-        }
-        // Funciones para manejar archivos
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-        function getFileIcon(fileType) {
-            if (fileType.startsWith('image/')) {
-                return 'fas fa-image';
-            } else if (fileType.startsWith('audio/')) {
-                return 'fas fa-music';
-            } else if (fileType.startsWith('video/')) {
-                return 'fas fa-video';
-            } else if (fileType.includes('pdf')) {
-                return 'fas fa-file-pdf';
-            } else if (fileType.includes('doc')) {
-                return 'fas fa-file-word';
-            } else if (fileType.includes('xls') || fileType.includes('excel')) {
-                return 'fas fa-file-excel';
-            } else if (fileType.includes('txt')) {
-                return 'fas fa-file-alt';
-            } else {
-                return 'fas fa-file';
-            }
-        }
-        function validateFile(file) {
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            const allowedTypes = [
-                // Imágenes
-                'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
-                // Audio
-                'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a',
-                // Documentos
-                'application/pdf', 'application/msword', 
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-                'text/plain', 'application/vnd.ms-excel',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                // Video
-                'video/mp4', 'video/webm', 'video/ogg', 'video/avi'
-            ];
-            if (file.size > maxSize) {
-                showNotification(`El archivo ${file.name} es demasiado grande. Máximo 10MB.`, 'error');
-                return false;
-            }
-            if (!allowedTypes.includes(file.type)) {
-                showNotification(`El tipo de archivo ${file.name} no está permitido.`, 'error');
-                return false;
-            }
-            // Additional mobile-specific validations
-            if (document.body.classList.contains('mobile-device')) {
-                // Check for mobile-specific file size limits
-                const mobileMaxSize = 5 * 1024 * 1024; // 5MB for mobile
-                if (file.size > mobileMaxSize) {
-                    showNotification(`En dispositivos móviles, el archivo máximo es 5MB: ${file.name}`, 'error');
-                    return false;
-                }
-                
-                // Check for mobile-specific file types
-                const mobileAllowedTypes = [
-                    'image/jpeg', 'image/jpg', 'image/png', 'image/gif',
-                    'audio/mpeg', 'audio/mp3', 'audio/wav',
-                    'video/mp4', 'video/webm',
-                    'text/plain'
-                ];
-                
-                if (!mobileAllowedTypes.includes(file.type)) {
-                    showNotification(`Tipo de archivo no soportado en móviles: ${file.name}`, 'error');
-                    return false;
-                }
-            }
-            return true;
-        }
-        function toggleFileUpload() {
-            if (currentRoom === 'multimedia') {
-                isFileUploadActive = !isFileUploadActive;
-                fileUploadArea.classList.toggle('active', isFileUploadActive);
-                fileUploadOverlay.classList.toggle('active', isFileUploadActive);
-                
-                if (!isFileUploadActive) {
-                    // Limpiar archivos seleccionados
-                    selectedFiles = [];
-                    filePreview.innerHTML = '';
-                    uploadFilesBtn.style.display = 'none';
-                }
-            } else {
-                showNotification('La subida de archivos solo está disponible en la sala Multimedia', 'error');
-            }
-        }
-        function handleFileSelect(files) {
-            if (!files || files.length === 0) return;
-            
-            // Check if device supports file upload
-            if (!window.File || !window.FileReader || !window.FileList || !window.Blob) {
-                showNotification('Tu dispositivo no soporta subida de archivos', 'error');
-                return;
-            }
-            
-            selectedFiles = [];
-            filePreview.innerHTML = '';
-            
-            Array.from(files).forEach(file => {
-                if (validateFile(file)) {
-                    selectedFiles.push(file);
-                    addFilePreview(file);
-                }
-            });
-            
-            if (selectedFiles.length > 0) {
-                uploadFilesBtn.style.display = 'inline-block';
-            }
-        }
-        function addFilePreview(file) {
-            const fileItem = document.createElement('div');
-            fileItem.className = 'file-item';
-            
-            const icon = getFileIcon(file.type);
-            const size = formatFileSize(file.size);
-            
-            fileItem.innerHTML = `
-                <i class="${icon} file-icon"></i>
-                <div class="file-info">
-                    <div class="file-name">${file.name}</div>
-                    <div class="file-size">${size}</div>
-                    <div class="upload-progress">
-                        <div class="upload-progress-bar" data-file="${file.name}"></div>
-                    </div>
-                </div>
-                <button class="file-remove" onclick="removeFile('${file.name}')">
-                    <i class="fas fa-times"></i>
-                </button>
-            `;
-            
-            filePreview.appendChild(fileItem);
-        }
-        function removeFile(fileName) {
-            selectedFiles = selectedFiles.filter(file => file.name !== fileName);
-            const fileItem = filePreview.querySelector(`[data-file="${fileName}"]`).closest('.file-item');
-            fileItem.remove();
-            
-            if (selectedFiles.length === 0) {
-                uploadFilesBtn.style.display = 'none';
-            }
-        }
-        function uploadFiles() {
-            if (selectedFiles.length === 0) return;
-            
-            selectedFiles.forEach(file => {
-                uploadFile(file);
-            });
-        }
-        function uploadFile(file) {
-            const formData = new FormData();
-            formData.append('file', file);
-            formData.append('room', currentRoom);
-            
-            const xhr = new XMLHttpRequest();
-            const progressBar = filePreview.querySelector(`[data-file="${file.name}"] .upload-progress-bar`);
-            
-            // Agregar token de autorización
-            const sessionToken = getCookie('sessionToken');
-            if (sessionToken) {
-                xhr.setRequestHeader('Authorization', `Bearer ${sessionToken}`);
-            }
-            
-            xhr.upload.addEventListener('progress', (e) => {
-                if (e.lengthComputable) {
-                    const percentComplete = (e.loaded / e.total) * 100;
-                    progressBar.style.width = percentComplete + '%';
-                }
-            });
-            
-            xhr.addEventListener('load', () => {
-                if (xhr.status === 200) {
-                    const response = JSON.parse(xhr.responseText);
-                    if (response.success && response.files && response.files.length > 0) {
-                        const uploadedFile = response.files.find(f => f.name === file.name);
-                        if (uploadedFile) {
-                            // Enviar mensaje con archivo
-                            const message = {
-                                text: `Archivo compartido: ${file.name}`,
-                                sender: currentUser.nickname,
-                                senderId: currentUser.id,
-                                room: currentRoom,
-                                timestamp: Date.now(),
-                                file: {
-                                    name: uploadedFile.name,
-                                    url: uploadedFile.url,
-                                    type: uploadedFile.type,
-                                    size: uploadedFile.size
-                                }
-                            };
-                            
-                            socket.emit('message', message);
-                            showNotification(`Archivo ${file.name} subido exitosamente`, 'success');
-                        }
-                    } else {
-                        showNotification(`Error al subir ${file.name}: ${response.error || 'Error desconocido'}`, 'error');
-                    }
-                } else if (xhr.status === 401) {
-                    showNotification('Sesión expirada. Por favor, inicia sesión nuevamente.', 'error');
-                    logout();
-                } else {
-                    try {
-                        const response = JSON.parse(xhr.responseText);
-                        showNotification(`Error al subir ${file.name}: ${response.error || 'Error del servidor'}`, 'error');
-                    } catch (e) {
-                        showNotification(`Error al subir ${file.name}`, 'error');
-                    }
-                }
-            });
-            
-            xhr.addEventListener('error', () => {
-                showNotification(`Error de red al subir ${file.name}`, 'error');
-            });
-            
-            xhr.open('POST', '/upload');
-            xhr.send(formData);
-        }
-        function showImageModal(imageSrc) {
-            imageModalImg.src = imageSrc;
-            imageModal.classList.add('active');
-        }
-        function hideImageModal() {
-            imageModal.classList.remove('active');
-        }
-        // Hacer removeFile global para que funcione con onclick
-        window.removeFile = removeFile;
-        window.showImageModal = showImageModal;
-        // Añadir mensaje al chat con ID único
-        function addMessage(message, isCurrentUser = false) {
-            // Verificar si el mensaje ya existe
-            if (document.querySelector(`[data-message-id="${message.id}"]`)) {
-                return;
-            }
-            
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message');
-            messageElement.classList.add(isCurrentUser ? 'sent' : 'received');
-            
-            if (message.banned) {
-                messageElement.classList.add('banned-message');
-            }
-            
-            messageElement.setAttribute('data-message-id', message.id);
-            
-            let fileContent = '';
-            if (message.file && !message.banned) {
-                if (message.file.type.startsWith('image/')) {
-                    fileContent = `
-                        <div class="message-file">
-                            <img src="${message.file.url}" alt="${message.file.name}" class="message-image" onclick="showImageModal('${message.file.url}')">
-                            <div style="margin-top: 8px; font-size: 12px; color: var(--gray-color);">
-                                ${message.file.name} (${formatFileSize(message.file.size)})
-                            </div>
-                        </div>
-                    `;
-                } else if (message.file.type.startsWith('audio/')) {
-                    fileContent = `
-                        <div class="message-file">
-                            <audio controls style="width: 100%; margin-bottom: 8px;">
-                                <source src="${message.file.url}" type="${message.file.type}">
-                                Tu navegador no soporta el elemento de audio.
-                            </audio>
-                            <a href="${message.file.url}" class="message-file-link" target="_blank" download="${message.file.name}">
-                                <i class="${getFileIcon(message.file.type)} file-download-icon"></i>
-                                ${message.file.name} (${formatFileSize(message.file.size)})
-                            </a>
-                        </div>
-                    `;
-                } else if (message.file.type.startsWith('video/')) {
-                    fileContent = `
-                        <div class="message-file">
-                            <video controls style="width: 100%; max-height: 300px; margin-bottom: 8px;">
-                                <source src="${message.file.url}" type="${message.file.type}">
-                                Tu navegador no soporta el elemento de video.
-                            </video>
-                            <a href="${message.file.url}" class="message-file-link" target="_blank" download="${message.file.name}">
-                                <i class="${getFileIcon(message.file.type)} file-download-icon"></i>
-                                ${message.file.name} (${formatFileSize(message.file.size)})
-                            </a>
-                        </div>
-                    `;
-                } else {
-                    fileContent = `
-                        <div class="message-file">
-                            <a href="${message.file.url}" class="message-file-link" target="_blank" download="${message.file.name}">
-                                <i class="${getFileIcon(message.file.type)} file-download-icon"></i>
-                                ${message.file.name} (${formatFileSize(message.file.size)})
-                            </a>
-                        </div>
-                    `;
-                }
-            }
-            messageElement.innerHTML = `
-                <div class="message-header">
-                    <span class="message-sender">${isCurrentUser ? 'Tú' : message.sender}</span>
-                    <span class="message-time">${formatDateTime(new Date(message.timestamp))}</span>
-                </div>
-                <div class="message-text">${message.banned ? '[MENSAJE ELIMINADO POR ADMINISTRADOR]' : message.text}</div>
-                ${fileContent}
-                <div class="message-info">
-                    <!-- IDs ocultos por defecto, accesibles solo por menú contextual -->
-                </div>
-            `;
-            
-            chatMessages.appendChild(messageElement);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            // Agregar atributos necesarios para menú contextual
-            messageElement.setAttribute('data-message-id', message.id);
-            messageElement.setAttribute('data-user-id', message.senderId);
-        }
-        // Actualizar lista de usuarios en línea con IDs únicos
-        function updateOnlineUsers(users) {
-            onlineUsers = users;
-            onlineUsersList.innerHTML = '';
-            
-            users.forEach(user => {
-                if (user.id === currentUser?.id) return;
-                
-                const userItem = document.createElement('li');
-                userItem.classList.add('user-item');
-                userItem.setAttribute('data-user-id', user.id);
-                
-                userItem.innerHTML = `
-                    <div class="user-avatar-sm">${user.nickname.charAt(0)}</div>
-                    <div>
-                        <div>${user.nickname}</div>
-                        <!-- ID oculto por defecto, accesible solo por menú contextual -->
-                    </div>
-                    ${user.role === 'admin' ? '<div class="admin-indicator">A</div>' : ''}
-                `;
-                
-                onlineUsersList.appendChild(userItem);
-                
-                // Agregar atributos necesarios para menú contextual
-                userItem.setAttribute('data-user-id', user.id);
-                userItem.classList.add('user-item');
-            });
-        }
-        // Cerrar sesión
-        function logout() {
-            // Eliminar cookies de sesión
-            deleteCookie('sessionToken');
-            deleteCookie('rememberMe');
-            
-            // Notificar al servidor
-            socket.emit('logout', { userId: currentUser.id });
-            
-            // Resetear estado
-            currentUser = null;
-            
-            // Mostrar pantalla de login
-            chatContainer.classList.add('hidden');
-            loginContainer.classList.remove('hidden');
-            
-            // Desconectar el socket
-            socket.disconnect();
-        }
-        // Toggle panel de administración
-        function toggleAdminPanel() {
-            isAdminPanelOpen = !isAdminPanelOpen;
-            adminPanel.classList.toggle('active', isAdminPanelOpen);
-            
-            if (isAdminPanelOpen) {
-                // Cerrar sidebar si está abierto en móviles
-                if (window.innerWidth <= 768) {
-                    toggleSidebar();
-                }
-            }
-        }
-        // Toggle menú sidebar
-        menuToggle.addEventListener('click', toggleSidebar);
-        // Cambiar a pantalla de registro
-        showRegister.addEventListener('click', (e) => {
-            e.preventDefault();
-            loginContainer.classList.add('hidden');
-            registerContainer.classList.remove('hidden');
-        });
-        // Cambiar a pantalla de login
-        showLogin.addEventListener('click', (e) => {
-            e.preventDefault();
-            registerContainer.classList.add('hidden');
-            loginContainer.classList.remove('hidden');
-        });
-        // Mostrar/ocultar campo SSO
-        adminLoginCheckbox.addEventListener('change', function() {
-            adminTokenGroup.style.display = this.checked ? 'block' : 'none';
-        });
-        // Login
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const remember = rememberMe.checked;
-            const isAdminLogin = document.getElementById('admin-login').checked;
-            const adminToken = isAdminLogin ? document.getElementById('admin-token').value : '';
-            
-            // Validación básica
-            if (!username || !password) {
-                showNotification('Por favor completa todos los campos');
-                return;
-            }
-            
-            // Validación específica para admin token
-            if (isAdminLogin) {
-                if (!adminToken || adminToken.trim() === '') {
-                    showNotification('El token de administrador es obligatorio cuando se selecciona acceso admin', 'error');
-                    return;
-                }
-                
-                if (adminToken.trim().length < 10) {
-                    showNotification('El token de administrador debe tener al menos 10 caracteres', 'error');
-                    return;
-                }
-            }
-            
-            // Mostrar indicador de carga
-            const loginButton = loginForm.querySelector('button[type="submit"]');
-            const originalButtonText = loginButton.textContent;
-            loginButton.textContent = 'Verificando...';
-            loginButton.disabled = true;
-            
-            // Autenticación con el servidor
-            socket.emit('login', { 
-                username, 
-                password,
-                adminToken: adminToken.trim()
-            }, (response) => {
-                // Restaurar botón
-                loginButton.textContent = originalButtonText;
-                loginButton.disabled = false;
-                
-                if (response.success) {
-                    currentUser = response.user;
-                    
-                    // Mostrar elementos de admin si corresponde
-                    if (currentUser.role === 'admin') {
-                        adminButton.classList.remove('hidden');
-                        adminBadge.classList.remove('hidden');
-                        showNotification('Acceso de administrador concedido', 'success');
-                    }
-                    
-                    // Guardar sesión en cookie
-                    if (remember) {
-                        setCookie('sessionToken', response.token, 30);
-                        setCookie('rememberMe', 'true', 30);
-                    } else {
-                        setCookie('sessionToken', response.token, 1); // Sesión de 1 día
-                    }
-                    
-                    // Actualizar UI
-                    currentUserElement.textContent = currentUser.nickname;
-                    currentUserIdElement.textContent = `ID: ${currentUser.id}`;
-                    userAvatar.textContent = currentUser.nickname.charAt(0).toUpperCase();
-                    
-                    // Cambiar a pantalla de chat
-                    loginContainer.classList.add('hidden');
-                    chatContainer.classList.remove('hidden');
-                    
-                    // Unirse al chat
-                    socket.emit('join', {
-                        user: currentUser,
-                        room: currentRoom
-                    });
-                    
-                    // Mensaje de bienvenida
-                    addMessage({
-                        id: 'system-' + Date.now(),
-                        text: `¡Bienvenido ${currentUser.nickname}! Has entrado al chat.`,
-                        sender: 'Sistema',
-                        senderId: 'system',
-                        timestamp: Date.now()
-                    });
-                } else {
-                    // Manejo específico de errores de admin token
-                    if (isAdminLogin && response.message.includes('admin')) {
-                        showNotification(response.message, 'error');
-                        // Limpiar campo de admin token en caso de error
-                        document.getElementById('admin-token').value = '';
-                    } else {
-                        showNotification(response.message || 'Error en el inicio de sesión', 'error');
-                    }
-                }
-            });
-        });
-        // Registro
-        registerForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const nickname = document.getElementById('reg-nickname').value;
-            const username = document.getElementById('reg-username').value;
-            const password = document.getElementById('reg-password').value;
-            const confirm = document.getElementById('reg-confirm').value;
-            
-            // Validaciones
-            if (!nickname || !username || !password || !confirm) {
-                showNotification('Por favor completa todos los campos');
-                return;
-            }
-            
-            if (password !== confirm) {
-                showNotification('Las contraseñas no coinciden');
-                return;
-            }
-            
-            if (password.length < 6) {
-                showNotification('La contraseña debe tener al menos 6 caracteres');
-                return;
-            }
-            
-            // Registro con el servidor
-            socket.emit('register', { nickname, username, password }, (response) => {
-                if (response.success) {
-                    currentUser = response.user;
-                    
-                    // Guardar sesión en cookie
-                    setCookie('sessionToken', response.token, 30);
-                    
-                    // Actualizar UI
-                    currentUserElement.textContent = currentUser.nickname;
-                    currentUserIdElement.textContent = `ID: ${currentUser.id}`;
-                    userAvatar.textContent = currentUser.nickname.charAt(0).toUpperCase();
-                    
-                    // Cambiar a pantalla de chat
-                    registerContainer.classList.add('hidden');
-                    chatContainer.classList.remove('hidden');
-                    
-                    // Unirse al chat
-                    socket.emit('join', {
-                        user: currentUser,
-                        room: currentRoom
-                    });
-                    
-                    // Mensaje de bienvenida
-                    addMessage({
-                        id: 'system-' + Date.now(),
-                        text: `¡Bienvenido ${currentUser.nickname}! Has entrado al chat.`,
-                        sender: 'Sistema',
-                        senderId: 'system',
-                        timestamp: Date.now()
-                    });
-                } else {
-                    showNotification(response.message || 'Error en el registro');
-                }
-            });
-        });
-        // Cambiar sala de chat
-        document.querySelectorAll('.room-item').forEach(item => {
-            item.addEventListener('click', function() {
-                document.querySelectorAll('.room-item').forEach(i => i.classList.remove('active'));
-                this.classList.add('active');
-                
-                const roomName = this.getAttribute('data-room');
-                currentRoom = roomName;
-                
-                const roomDisplayName = roomName === 'general' ? 'General' : 
-                                      roomName === 'develop' ? 'Desarrollo' :
-                                      roomName === 'business' ? 'Negocios' :
-                                      roomName === 'gaming' ? 'Gaming' : 
-                                      roomName === 'music' ? 'Música' : 
-                                      roomName === 'multimedia' ? 'Multimedia' : 'Voz';
-                
-                // Mostrar/ocultar botón de archivo según la sala
-                if (roomName === 'multimedia') {
-                    fileButton.classList.add('show');
-                } else {
-                    fileButton.classList.remove('show');
-                    // Cerrar área de subida si está abierta
-                    if (isFileUploadActive) {
-                        toggleFileUpload();
-                    }
-                }
-                
-                // Manejar sala de voz
-                if (roomName === 'voice') {
-                    voiceCallContainer.style.display = 'block';
-                    showNotification('Te has unido al canal de voz', 'success');
-                    
-                    // Enviar mensaje al chat sobre la entrada al canal de voz
-                    const voiceMessage = {
-                        id: 'system-' + Date.now(),
-                        text: `${currentUser.nickname} ha entrado al canal de voz`,
-                        sender: 'Sistema',
-                        senderId: 'system',
-                        timestamp: Date.now(),
-                        room: 'voice'
-                    };
-                    socket.emit('message', voiceMessage);
-                } else {
-                    voiceCallContainer.style.display = 'none';
-                    
-                    // Si estaba en canal de voz, enviar mensaje de salida
-                    if (inVoiceCall) {
-                        const leaveMessage = {
-                            id: 'system-' + Date.now(),
-                            text: `${currentUser.nickname} ha salido del canal de voz`,
-                            sender: 'Sistema',
-                            senderId: 'system',
-                            timestamp: Date.now(),
-                            room: 'voice'
-                        };
-                        socket.emit('message', leaveMessage);
-                        inVoiceCall = false;
-                    }
-                }
-                
-                currentRoomElement.textContent = `Sala ${roomDisplayName}`;
-                
-                // Notificar cambio de sala
-                socket.emit('changeRoom', {
-                    user: currentUser,
-                    newRoom: roomName
-                });
-                
-                // Limpiar mensajes actuales
-                chatMessages.innerHTML = '';
-                
-                // Mensaje de sistema
-                addMessage({
-                    id: 'system-' + Date.now(),
-                    text: `Te has unido a la sala ${roomDisplayName}.`,
-                    sender: 'Sistema',
-                    senderId: 'system',
-                    timestamp: Date.now()
-                });
-                
-                // En móviles, cerrar el sidebar después de seleccionar sala
-                if (window.innerWidth <= 768) {
-                    toggleSidebar();
-                }
-            });
-        });
-        // Enviar mensaje
-        function sendMessage() {
-            const text = messageInput.value.trim();
-            if (text && currentUser) {
-                const message = {
-                    text: text,
-                    sender: currentUser.nickname,
-                    senderId: currentUser.id,
-                    room: currentRoom,
-                    timestamp: Date.now()
-                };
-                
-                // Añadir mensaje localmente
-                socket.emit('message', message);
-                
-                // Limpiar input
-                messageInput.value = '';
-            }
-        }
-        sendButton.addEventListener('click', sendMessage);
-        messageInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
-        // Botón de cerrar sesión
-        logoutButton.addEventListener('click', logout);
-        // Botones de administración
-        adminButton.addEventListener('click', toggleAdminPanel);
-        adminClose.addEventListener('click', toggleAdminPanel);
-        // Event listeners para archivos
-        fileButton.addEventListener('click', toggleFileUpload);
-        selectFilesBtn.addEventListener('click', () => fileInput.click());
-        uploadFilesBtn.addEventListener('click', uploadFiles);
-        imageModalClose.addEventListener('click', hideImageModal);
-        
-        // Manejar selección de archivos
-        fileInput.addEventListener('change', (e) => {
-            handleFileSelect(e.target.files);
-        });
-        
-        // Drag and drop para archivos
-        fileUploadArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            fileUploadArea.classList.add('dragover');
-        });
-        
-        fileUploadArea.addEventListener('dragleave', () => {
-            fileUploadArea.classList.remove('dragover');
-        });
-        
-        fileUploadArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            fileUploadArea.classList.remove('dragover');
-            handleFileSelect(e.dataTransfer.files);
-        });
-        // Botón para mostrar/ocultar IDs
-        toggleIdsBtn.addEventListener('click', () => {
-            const chatContainer = document.getElementById('chat-container');
-            const isShowing = chatContainer.classList.contains('show-ids');
-            
-            if (isShowing) {
-                chatContainer.classList.remove('show-ids');
-                toggleIdsBtn.innerHTML = '<i class="fas fa-eye"></i>';
-                toggleIdsBtn.title = 'Mostrar IDs';
-                showNotification('IDs ocultos', 'success');
-            } else {
-                chatContainer.classList.add('show-ids');
-                toggleIdsBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
-                toggleIdsBtn.title = 'Ocultar IDs';
-                showNotification('IDs visibles', 'success');
-            }
-        });
-        // Controladores para el canal de voz
-        toggleMicBtn.addEventListener('click', () => {
-            isMuted = !isMuted;
-            toggleMicBtn.classList.toggle('active', isMuted);
-            userMicIndicator.classList.toggle('active', !isMuted);
-            showNotification(isMuted ? 'Micrófono silenciado' : 'Micrófono activado', 'success');
-        });
-        leaveVoiceCallBtn.addEventListener('click', () => {
-            voiceCallContainer.style.display = 'none';
-            showNotification('Has salido del canal de voz', 'success');
-            
-            // Enviar mensaje al chat sobre la salida del canal de voz
-            const leaveMessage = {
-                id: 'system-' + Date.now(),
-                text: `${currentUser.nickname} ha salido del canal de voz`,
-                sender: 'Sistema',
-                senderId: 'system',
-                timestamp: Date.now(),
-                room: 'voice'
-            };
-            socket.emit('message', leaveMessage);
-            
-            inVoiceCall = false;
-            
-            // Cambiar a la sala general
-            document.querySelectorAll('.room-item').forEach(i => i.classList.remove('active'));
-            document.querySelector('.room-item[data-room="general"]').classList.add('active');
-            currentRoom = 'general';
-            currentRoomElement.textContent = 'Sala General';
-            socket.emit('changeRoom', {
-                user: currentUser,
-                newRoom: 'general'
-            });
-        });
-        // Simulación de participantes en el canal de voz
-        function simulateVoiceParticipants() {
-            participantsList.innerHTML = '';
-            
-            // Agregar usuario actual
-            const currentParticipant = document.createElement('div');
-            currentParticipant.className = 'participant-item';
-            currentParticipant.innerHTML = `
-                <div class="participant-avatar">${currentUser.nickname.charAt(0)}</div>
-                <span>Tú</span>
-                <div class="mic-indicator active" id="user-mic-indicator"></div>
-            `;
-            participantsList.appendChild(currentParticipant);
-            
-            // Agregar algunos participantes simulados
-            const sampleUsers = ['Ana', 'Carlos', 'María', 'Luis'];
-            sampleUsers.forEach(user => {
-                const participant = document.createElement('div');
-                participant.className = 'participant-item';
-                participant.innerHTML = `
-                    <div class="participant-avatar">${user.charAt(0)}</div>
-                    <span>${user}</span>
-                    <div class="mic-indicator ${Math.random() > 0.5 ? 'active' : ''}"></div>
-                `;
-                participantsList.appendChild(participant);
-            });
-        }
-        // ===== Multi-Platform Support =====
-        
-        // Detect device type
-        function detectDevice() {
-            const userAgent = navigator.userAgent;
-            const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-            const isIOS = /iPad|iPhone|iPod/.test(userAgent);
-            const isAndroid = /Android/.test(userAgent);
-            
-            if (isMobile) {
-                document.body.classList.add('mobile-device');
-                if (isIOS) {
-                    document.body.classList.add('ios-device');
-                } else if (isAndroid) {
-                    document.body.classList.add('android-device');
-                }
-            }
-            
-            // Add touch support
-            if ('ontouchstart' in window) {
-                document.body.classList.add('touch-device');
-            }
-        }
-        
-        // Handle mobile sidebar toggle
-        function toggleMobileSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.getElementById('overlay');
-            
-            if (sidebar.classList.contains('active')) {
-                sidebar.classList.remove('active');
-                overlay.classList.remove('active');
-            } else {
-                sidebar.classList.add('active');
-                overlay.classList.add('active');
-            }
-        }
-        
-        // Close sidebar when clicking overlay
-        document.getElementById('overlay').addEventListener('click', () => {
-            toggleMobileSidebar();
-        });
-        
-        // Handle mobile menu toggle
-        document.getElementById('menu-toggle').addEventListener('click', (e) => {
-            e.preventDefault();
-            toggleMobileSidebar();
-        });
-        
-        // Handle orientation change
-        window.addEventListener('orientationchange', () => {
-            setTimeout(() => {
-                // Recalculate heights and positions
-                const chatMessages = document.getElementById('chat-messages');
-                if (chatMessages) {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
-            }, 100);
-        });
-        
-        // Handle viewport resize
-        let resizeTimeout;
-        window.addEventListener('resize', () => {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(() => {
-                const chatMessages = document.getElementById('chat-messages');
-                if (chatMessages) {
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
-            }, 250);
-        });
-        
-        // ===== Error Handling =====
-        
-        // Global error handler
-        window.addEventListener('error', (e) => {
-            console.error('Global error:', e.error);
-            showNotification('Error en la aplicación', 'error');
-        });
-        
-        // Handle unhandled promise rejections
-        window.addEventListener('unhandledrejection', (e) => {
-            console.error('Unhandled promise rejection:', e.reason);
-            showNotification('Error de conexión', 'error');
-        });
-        
-        // ===== Eventos de Socket.io =====
-        // Escuchar mensajes del servidor
-        socket.on('message', (message) => {
-            if (message.room === currentRoom) {
-                const isCurrentUser = currentUser && message.senderId === currentUser.id;
-                addMessage(message, isCurrentUser);
-            }
-        });
-        // Escuchar actualizaciones de usuarios
-        socket.on('updateUsers', (users) => {
-            updateOnlineUsers(users);
-        });
-        // Escuchar mensajes del sistema
-        socket.on('systemMessage', (message) => {
-            if (message.room === currentRoom) {
-                addMessage(message);
-            }
-        });
-        // Escuchar errores de autenticación
-        socket.on('authError', (message) => {
-            showNotification(message);
-        });
-        // Escuchar cuando un usuario se une
-        socket.on('userJoined', (user) => {
-            if (user.room === currentRoom) {
-                addMessage({
-                    id: 'system-' + Date.now(),
-                    text: `${user.nickname} se ha unido al chat`,
-                    sender: 'Sistema',
-                    senderId: 'system',
-                    timestamp: Date.now()
-                });
-            }
-        });
-        // Escuchar cuando un usuario abandona
-        socket.on('userLeft', (user) => {
-            if (user.room === currentRoom) {
-                addMessage({
-                    id: 'system-' + Date.now(),
-                    text: `${user.nickname} ha abandonado el chat`,
-                    sender: 'Sistema',
-                    senderId: 'system',
-                    timestamp: Date.now()
-                });
-            }
-        });
-        // Manejar reconexión
-        socket.on('reconnect', () => {
-            showNotification('Reconectado al servidor', 'success');
-            if (currentUser) {
-                socket.emit('rejoin', {
-                    user: currentUser,
-                    room: currentRoom
-                });
-            }
-        });
-        
-        // Handle connection errors
-        socket.on('connect_error', (error) => {
-            console.error('Connection error:', error);
-            showNotification('Error de conexión al servidor', 'error');
-        });
-        
-        socket.on('disconnect', (reason) => {
-            console.log('Disconnected:', reason);
-            if (reason === 'io server disconnect') {
-                // Server disconnected us, try to reconnect
-                socket.connect();
-            }
-            showNotification('Desconectado del servidor', 'warning');
-        });
-        
-        // Handle reconnection attempts
-        socket.on('reconnect_attempt', (attemptNumber) => {
-            console.log('Reconnection attempt:', attemptNumber);
-            showNotification(`Intentando reconectar... (${attemptNumber})`, 'info');
-        });
-        
-        socket.on('reconnect_failed', () => {
-            showNotification('No se pudo reconectar al servidor', 'error');
-        });
-        // Cargar mensajes iniciales
-        socket.on('initialData', (data) => {
-            if (data.room === currentRoom) {
-                data.messages.forEach(message => {
-                    const isCurrentUser = currentUser && message.sender_id === currentUser.id;
-                    addMessage({
-                        id: message.id,
-                        text: message.text,
-                        sender: message.sender,
-                        senderId: message.sender_id,
-                        timestamp: new Date(message.timestamp).getTime(),
-                        banned: message.banned
-                    }, isCurrentUser);
-                });
-            }
-        });
-        // Validar sesión al cargar la página
-        window.addEventListener('DOMContentLoaded', () => {
-            const sessionToken = getCookie('sessionToken');
-            const remember = getCookie('rememberMe') === 'true';
-            
-            // Detectar dispositivo
-            detectDevice();
-            
-            if (sessionToken) {
-                // Mostrar recordarme si está activo
-                if (remember) {
-                    rememberMe.checked = true;
-                }
-                
-                // Conectar al servidor
-                socket.connect();
-                
-                // Validar sesión
-                socket.emit('validateSession', sessionToken, (response) => {
-                    if (response.valid) {
-                        currentUser = response.user;
-                        
-                        // Mostrar elementos de admin si corresponde
-                        if (currentUser.role === 'admin') {
-                            adminButton.classList.remove('hidden');
-                            adminBadge.classList.remove('hidden');
-                        }
-                        
-                        // Actualizar UI
-                        currentUserElement.textContent = currentUser.nickname;
-                        currentUserIdElement.textContent = `ID: ${currentUser.id}`;
-                        userAvatar.textContent = currentUser.nickname.charAt(0).toUpperCase();
-                        
-                        // Cambiar a pantalla de chat
-                        loginContainer.classList.add('hidden');
-                        registerContainer.classList.add('hidden');
-                        chatContainer.classList.remove('hidden');
-                        
-                        // Unirse al chat
-                        socket.emit('join', {
-                            user: currentUser,
-                            room: currentRoom
-                        });
-                    } else {
-                        // Eliminar cookies inválidas
-                        deleteCookie('sessionToken');
-                        deleteCookie('rememberMe');
-                    }
-                });
-            }
-            
-            // Simular participantes en el canal de voz
-            simulateVoiceParticipants();
-        });
-        
-        // Event listeners para cerrar el área de subida
-        fileUploadClose.addEventListener('click', toggleFileUpload);
-        fileUploadOverlay.addEventListener('click', toggleFileUpload);
-        
-        // Evitar que el clic dentro del área de subida la cierre
-        fileUploadArea.addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
-        
-        // Event listeners para menú contextual
-        document.addEventListener('click', (e) => {
-            // Ocultar menú contextual si se hace clic fuera
-            if (!contextMenu.contains(e.target)) {
-                hideContextMenu();
-            }
-        });
-        
-        // Event listeners para mensajes
-        document.addEventListener('contextmenu', (e) => {
-            const messageElement = e.target.closest('.message');
-            if (messageElement) {
-                e.preventDefault();
-                const messageId = messageElement.getAttribute('data-message-id');
-                const userId = messageElement.getAttribute('data-user-id');
-                showContextMenu(e, { messageId, userId }, 'message');
-            }
-        });
-        
-        // Event listeners para usuarios
-        document.addEventListener('contextmenu', (e) => {
-            const userElement = e.target.closest('.user-item');
-            if (userElement) {
-                e.preventDefault();
-                const userId = userElement.getAttribute('data-user-id');
-                showContextMenu(e, { userId }, 'user');
-            }
-        });
-        
-        // Event listeners para opciones del menú contextual
-        copyUserIdBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.userId) {
-                copyToClipboard(contextMenuTarget.userId);
-                hideContextMenu();
-            }
-        });
-        
-        copyMessageIdBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.messageId) {
-                copyToClipboard(contextMenuTarget.messageId);
-                hideContextMenu();
-            }
-        });
-        
-        reportMessageBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.messageId) {
-                // Aquí iría la lógica para reportar el mensaje
-                showNotification('Mensaje reportado', 'success');
-                hideContextMenu();
-            }
-        });
-        
-        deleteMessageBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.messageId) {
-                // Aquí iría la lógica para eliminar el mensaje
-                showNotification('Mensaje eliminado', 'success');
-                hideContextMenu();
-            }
-        });
-        
-        banUserBtn.addEventListener('click', () => {
-            if (contextMenuTarget && contextMenuTarget.userId) {
-                // Aquí iría la lógica para banear al usuario
-                showNotification('Usuario baneado', 'success');
-                hideContextMenu();
-            }
-        });
-        
-        openAdminPanelBtn.addEventListener('click', () => {
-            toggleAdminPanel();
-            hideContextMenu();
-        });
-        
-        closeContextMenuBtn.addEventListener('click', hideContextMenu);
-        
-        // Event listeners para botones de administración
-        deleteMessageActionBtn.addEventListener('click', () => {
-            // Aquí iría la lógica para eliminar el último mensaje
-            showNotification('Último mensaje eliminado', 'success');
-        });
-        
-        banUserActionBtn.addEventListener('click', () => {
-            // Aquí iría la lógica para banear al usuario seleccionado
-            showNotification('Usuario baneado', 'success');
-        });
-        
-        adminPanelActionBtn.addEventListener('click', toggleAdminPanel);
-        
-        // Event listeners para el panel de administración
-        generateTokenButton.addEventListener('click', () => {
-            // Aquí iría la lógica para generar un nuevo token
-            const newToken = 'TOKEN_GENERADO_' + Math.random().toString(36).substring(2, 15);
-            generatedToken.textContent = newToken;
-            tokenResult.style.display = 'block';
-            showNotification('Token generado exitosamente', 'success');
-        });
-        
-        // Event listeners para banear IPs
-        document.getElementById('ban-ip-button').addEventListener('click', () => {
-            const ip = document.getElementById('ban-ip-input').value;
-            const reason = document.getElementById('ban-reason-input').value;
-            
-            if (ip && reason) {
-                // Aquí iría la lógica para banear la IP
-                showNotification(`IP ${ip} baneada por: ${reason}`, 'success');
-                document.getElementById('ban-ip-input').value = '';
-                document.getElementById('ban-reason-input').value = '';
-            } else {
-                showNotification('Por favor completa todos los campos', 'error');
-            }
-        });
-        
-        // Event listeners para dispositivos táctiles
-        if ('ontouchstart' in window) {
-            // Manejar toques largos para menú contextual
-            let touchTimer;
-            
-            document.addEventListener('touchstart', (e) => {
-                const messageElement = e.target.closest('.message');
-                const userElement = e.target.closest('.user-item');
-                
-                if (messageElement || userElement) {
-                    touchTimer = setTimeout(() => {
-                        const messageId = messageElement ? messageElement.getAttribute('data-message-id') : null;
-                        const userId = userElement ? userElement.getAttribute('data-user-id') : null;
-                        const type = messageElement ? 'message' : 'user';
-                        
-                        showContextMenu(e, { messageId, userId }, type);
-                    }, 500); // 500ms para toque largo
-                }
-            });
-            
-            document.addEventListener('touchend', () => {
-                clearTimeout(touchTimer);
-            });
-            
-            document.addEventListener('touchmove', () => {
-                clearTimeout(touchTimer);
-            });
-        }
-    </script>
-</body>
-</html>
+        const adminClose =
