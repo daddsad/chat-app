@@ -3,2011 +3,1866 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#5865F2">
+    <meta name="theme-color" content="#6366f1">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="format-detection" content="telephone=no">
     <title>YChat v2.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>💬</text></svg>">
     <style>
         :root {
-            --primary-color: #5865F2;
-            --secondary-color: #4752C4;
-            --admin-color: #F04747;
-            --success-color: #57F287;
-            --dark-color: #23272A;
-            --light-color: #f8f9fa;
-            --danger-color: #ED4245;
-            --gray-color: #99AAB5;
-            --dark-gray: #2C2F33;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --border-radius: 8px;
+            --primary: #6366f1;
+            --primary-dark: #4f46e5;
+            --secondary: #8b5cf6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --dark: #1e293b;
+            --darker: #0f172a;
+            --light: #f1f5f9;
+            --lighter: #f8fafc;
+            --gray: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 0.75rem;
+            --radius-sm: 0.5rem;
+            --radius-lg: 1rem;
         }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
-            -webkit-user-select: none;
-            -moz-user-select: none;
-            -ms-user-select: none;
-            user-select: none;
         }
-        *:focus {
-            outline: none;
-        }
-        input, textarea {
-            -webkit-user-select: text;
-            -moz-user-select: text;
-            -ms-user-select: text;
-            user-select: text;
-        }
+
         body {
-            background: linear-gradient(135deg, #1d2b64, #f8cdda);
-            color: #fff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0f172a, #1e293b);
+            color: var(--light);
             min-height: 100vh;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            -webkit-font-smoothing: antialiased;
-            -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
+            line-height: 1.6;
         }
-        /* Prevent zoom on input focus on iOS */
-        @media screen and (-webkit-min-device-pixel-ratio: 0) {
-            select,
-            textarea,
-            input {
-                font-size: 16px;
-            }
+
+        /* Fuentes */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        /* Scrollbar personalizado */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
         }
-        .container {
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-        .form-container {
-            background: rgba(35, 39, 42, 0.9);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            padding: 30px;
-        }
-        .form-header {
-            text-align: center;
-            margin-bottom: 20px;
-        }
-        .form-header h2 {
-            color: #fff;
-            margin-bottom: 10px;
-            font-size: 1.8rem;
-        }
-        .form-header p {
-            color: var(--gray-color);
-            font-size: 0.95rem;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        .form-group label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: #fff;
-            font-size: 0.95rem;
-        }
-        .form-group input {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #36393F;
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 4px;
-            font-size: 16px;
-            background: #36393F;
-            color: #fff;
         }
-        .btn {
-            width: 100%;
-            padding: 12px;
-            background: var(--primary-color);
-            color: white;
-            border: none;
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
             border-radius: 4px;
-            font-size: 16px;
-            cursor: pointer;
-            transition: background 0.3s;
         }
-        .btn:hover {
-            background: var(--secondary-color);
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
         }
-        .form-footer {
-            text-align: center;
-            margin-top: 15px;
-            color: var(--gray-color);
-            font-size: 0.9rem;
-        }
-        .form-footer a {
-            color: var(--success-color);
-            text-decoration: none;
-        }
-        .form-footer a:hover {
-            text-decoration: underline;
-        }
-        .chat-container {
-            width: 100%;
-            max-width: 1200px;
-            height: 90vh;
-            background: rgba(35, 39, 42, 0.9);
-            border-radius: var(--border-radius);
-            box-shadow: var(--shadow);
-            display: flex;
-            overflow: hidden;
-            position: relative;
-        }
-        /* Sidebar Styles */
-        .sidebar {
-            width: 300px;
-            background: var(--dark-color);
-            color: white;
+
+        /* Contenedor principal */
+        .app-container {
             display: flex;
             flex-direction: column;
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-            transition: transform 0.3s ease;
-            z-index: 10;
+            height: 100vh;
+            overflow: hidden;
         }
-        .user-info {
-            padding: 20px;
+
+        /* Header */
+        .app-header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+        }
+
+        .logo {
             display: flex;
             align-items: center;
+            gap: 0.75rem;
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: var(--light);
+        }
+
+        .logo i {
+            color: var(--primary);
+            font-size: 1.75rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .icon-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .icon-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .icon-button.active {
+            background: var(--primary);
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 280px;
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+            z-index: 50;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            position: relative;
         }
-        .admin-badge {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: var(--admin-color);
-            color: white;
-            padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            font-weight: bold;
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
         }
+
         .user-avatar {
             width: 50px;
             height: 50px;
             border-radius: 50%;
-            background: var(--success-color);
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 20px;
-            margin-right: 15px;
-            color: #000;
-            font-weight: bold;
-        }
-        .user-details h3 {
-            font-size: 18px;
-            margin-bottom: 5px;
-        }
-        .user-details p {
-            font-size: 14px;
-            color: var(--success-color);
-            display: flex;
-            align-items: center;
-        }
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            background: #2ecc71;
-            border-radius: 50%;
-            margin-right: 8px;
-            display: inline-block;
-        }
-        .chat-rooms {
-            padding: 15px;
-            flex-grow: 1;
-            overflow-y: auto;
-        }
-        .chat-rooms h3 {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            font-size: 16px;
-            color: var(--gray-color);
-        }
-        .room-list {
-            list-style: none;
-        }
-        .room-item {
-            padding: 12px 15px;
-            margin-bottom: 8px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-        }
-        .room-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .room-item.active {
-            background: var(--primary-color);
-        }
-        .room-icon {
-            margin-right: 10px;
-            font-size: 16px;
-        }
-        .online-users {
-            padding: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        .online-users h3 {
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            font-size: 16px;
-            color: var(--gray-color);
-        }
-        .user-list {
-            list-style: none;
-        }
-        .user-item {
-            padding: 10px 15px;
-            display: flex;
-            align-items: center;
-            border-radius: 6px;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        .user-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .user-avatar-sm {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            background: var(--success-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            margin-right: 10px;
-            color: #000;
-            font-weight: bold;
-        }
-        .admin-indicator {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: var(--admin-color);
+            font-weight: 700;
+            font-size: 1.25rem;
             color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-        }
-        /* Main Chat Area */
-        .chat-area {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
             position: relative;
         }
-        .chat-header {
-            padding: 15px 20px;
-            background: #2C2F33;
-            border-bottom: 1px solid #23272A;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+
+        .status-indicator {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--success);
+            border: 3px solid var(--darker);
         }
-        .chat-title {
-            font-size: 18px;
+
+        .user-info h3 {
+            font-size: 1.125rem;
             font-weight: 600;
         }
-        .chat-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .admin-button {
-            background: var(--admin-color);
-            color: white;
-            border: none;
-            padding: 8px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 14px;
+
+        .user-status {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            color: var(--gray);
         }
-        .chat-messages {
-            flex-grow: 1;
-            padding: 20px;
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+        }
+
+        .sidebar-section {
+            padding: 1rem;
+            flex: 1;
             overflow-y: auto;
-            background: #36393F;
+        }
+
+        .section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gray);
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .room-list, .user-list {
+            list-style: none;
+        }
+
+        .room-item, .user-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all 0.2s ease;
+            margin-bottom: 0.25rem;
+        }
+
+        .room-item:hover, .user-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .room-item.active {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
+
+        .room-icon, .user-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray);
+        }
+
+        .room-item.active .room-icon {
+            background: var(--primary);
+            color: white;
+        }
+
+        .room-name, .user-name {
+            flex: 1;
+            font-weight: 500;
+        }
+
+        .badge {
+            background: var(--danger);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+        }
+
+        /* Chat Area */
+        .chat-area {
+            flex: 1;
             display: flex;
             flex-direction: column;
-        }
-        .message {
-            max-width: 80%;
-            padding: 12px 15px;
-            margin-bottom: 15px;
-            border-radius: 18px;
+            background: var(--darker);
             position: relative;
-            animation: fadeIn 0.3s ease;
-            background: #40444B;
-            word-wrap: break-word;
+            overflow: hidden;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .received {
-            align-self: flex-start;
-            border-bottom-left-radius: 5px;
-        }
-        .sent {
-            align-self: flex-end;
-            background: var(--primary-color);
-            color: white;
-            border-bottom-right-radius: 5px;
-        }
-        .banned-message {
-            background: rgba(237, 66, 69, 0.2);
-            border: 1px solid var(--danger-color);
-            opacity: 0.7;
-        }
-        .message-info {
+
+        .chat-header {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 1.5rem;
             display: flex;
+            align-items: center;
             justify-content: space-between;
-            margin-top: 5px;
-            font-size: 12px;
-            opacity: 0.8;
         }
-        .message-id {
-            font-size: 10px;
-            opacity: 0.6;
-        }
-        .chat-input-area {
-            padding: 15px;
-            background: #2C2F33;
-            border-top: 1px solid #23272A;
+
+        .chat-title {
             display: flex;
             align-items: center;
+            gap: 0.75rem;
         }
-        .message-input {
-            flex-grow: 1;
-            padding: 12px 15px;
-            border: 1px solid #23272A;
-            border-radius: 30px;
-            outline: none;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            background: #40444B;
-            color: #fff;
+
+        .chat-title h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
         }
-        .message-input:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
+
+        .chat-actions {
+            display: flex;
+            gap: 0.5rem;
         }
-        .send-button {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            color: white;
+
+        .chat-button {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
             border: none;
-            margin-left: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            font-weight: 500;
             cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chat-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .chat-button.primary {
+            background: var(--primary);
+        }
+
+        .chat-button.primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .message {
+            display: flex;
+            gap: 0.75rem;
+            max-width: 70%;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .message.sent {
+            align-self: flex-end;
+            flex-direction: row-reverse;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
-            transition: all 0.3s ease;
-        }
-        .send-button:hover {
-            background: var(--secondary-color);
-            transform: scale(1.05);
-        }
-        .action-buttons {
-            display: flex;
-            align-items: center;
-            margin-left: 10px;
-        }
-        .action-button {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #40444B;
-            color: var(--gray-color);
-            border: none;
-            margin-left: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 16px;
-            transition: all 0.3s ease;
-        }
-        .action-button:hover {
-            background: #4F535C;
-        }
-        .message-time {
-            font-size: 11px;
-        }
-        /* Responsive Design */
-        @media (max-width: 1200px) {
-            .chat-container {
-                max-width: 1000px;
-            }
-        }
-        @media (max-width: 992px) {
-            .chat-container {
-                max-width: 800px;
-            }
-            
-            .sidebar {
-                width: 250px;
-            }
-            
-            .user-avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 18px;
-            }
-            
-            .user-details h3 {
-                font-size: 16px;
-            }
-        }
-        @media (max-width: 768px) {
-            body {
-                padding: 5px;
-                height: 100vh;
-                overflow: hidden;
-            }
-            
-            .container {
-                padding: 5px;
-                max-width: 100%;
-                height: 100vh;
-            }
-            
-            .form-container {
-                padding: 20px;
-                margin: 10px;
-            }
-            
-            .chat-container {
-                height: 100vh;
-                flex-direction: column;
-                border-radius: 0;
-                margin: 0;
-            }
-            
-            .sidebar {
-                width: 100%;
-                height: 50vh;
-                position: absolute;
-                top: 0;
-                left: 0;
-                transform: translateX(-100%);
-                z-index: 1000;
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            }
-            
-            .sidebar.active {
-                transform: translateX(0);
-            }
-            
-            .chat-area {
-                height: 100%;
-                position: relative;
-            }
-            
-            .message {
-                max-width: 85%;
-                padding: 10px 12px;
-                font-size: 14px;
-                margin-bottom: 8px;
-            }
-            
-            .chat-messages {
-                padding: 10px;
-                height: calc(100vh - 120px);
-            }
-            
-            .chat-input-area {
-                padding: 10px;
-                position: fixed;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                background: rgba(35, 39, 42, 0.95);
-                backdrop-filter: blur(10px);
-                border-top: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            
-            .message-input {
-                padding: 12px 15px;
-                font-size: 16px;
-                border-radius: 20px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-            }
-            
-            .send-button, .action-button {
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-            
-            .menu-toggle {
-                display: flex;
-                position: fixed;
-                top: 10px;
-                left: 10px;
-                z-index: 1001;
-                background: rgba(35, 39, 42, 0.9);
-                border-radius: 50%;
-                width: 44px;
-                height: 44px;
-                align-items: center;
-                justify-content: center;
-                border: 1px solid rgba(255, 255, 255, 0.1);
-            }
-            
-            .overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                z-index: 999;
-                opacity: 0;
-                visibility: hidden;
-                transition: all 0.3s ease;
-            }
-            
-            .overlay.active {
-                opacity: 1;
-                visibility: visible;
-            }
-        }
-        @media (max-width: 576px) {
-            .form-container {
-                padding: 15px;
-            }
-            
-            .form-header h2 {
-                font-size: 1.5rem;
-            }
-            
-            .form-group input {
-                padding: 10px;
-                font-size: 14px;
-            }
-            
-            .btn {
-                padding: 10px;
-                font-size: 14px;
-            }
-            
-            .form-footer {
-                font-size: 0.85rem;
-            }
-            
-            .chat-container {
-                height: 100vh;
-                border-radius: 0;
-            }
-            
-            .message {
-                max-width: 90%;
-            }
-            
-            .message-info {
-                font-size: 10px;
-            }
-            
-            .user-info {
-                padding: 15px;
-            }
-            
-            .user-avatar {
-                width: 35px;
-                height: 35px;
-                font-size: 16px;
-            }
-            
-            .user-details h3 {
-                font-size: 15px;
-            }
-            
-            .user-details p {
-                font-size: 12px;
-            }
-            
-            .chat-rooms, .online-users {
-                padding: 10px;
-            }
-            
-            .room-item {
-                padding: 10px;
-                font-size: 14px;
-            }
-            
-            .user-item {
-                padding: 8px 10px;
-                font-size: 14px;
-            }
-            
-            .user-avatar-sm {
-                width: 30px;
-                height: 30px;
-                font-size: 12px;
-            }
-        }
-        @media (max-width: 400px) {
-            .form-container {
-                padding: 12px;
-            }
-            
-            .form-header h2 {
-                font-size: 1.3rem;
-            }
-            
-            .action-buttons {
-                display: none;
-            }
-            
-            .logout-button {
-                font-size: 11px;
-                padding: 4px 8px;
-            }
-            
-            .admin-button {
-                padding: 6px 10px;
-                font-size: 12px;
-            }
-        }
-        .hidden {
-            display: none;
-        }
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: var(--border-radius);
-            background: var(--dark-color);
+            font-weight: 600;
+            font-size: 0.875rem;
             color: white;
-            box-shadow: var(--shadow);
-            z-index: 10000;
-            max-width: 300px;
-            word-wrap: break-word;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            opacity: 0;
-            transform: translateX(100%);
+            flex-shrink: 0;
         }
-        
-        .notification.show {
-            opacity: 1;
-            transform: translateX(0);
+
+        .message-content {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            padding: 0.75rem 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            position: relative;
         }
-        
-        .notification-icon {
-            font-size: 18px;
-            font-weight: bold;
+
+        .message.sent .message-content {
+            background: var(--primary);
+            border-color: var(--primary);
         }
-        
-        .notification.success {
-            background: var(--success-color);
-            color: #000;
-        }
-        
-        .notification.error {
-            background: var(--danger-color);
-        }
-        
-        .notification.warning {
-            background: #f39c12;
-            color: #000;
-        }
-        
-        .notification.info {
-            background: var(--primary-color);
-        }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-            from { opacity: 1; }
-            to { opacity: 0; }
-        }
+
         .message-header {
             display: flex;
             align-items: center;
-            margin-bottom: 5px;
+            gap: 0.5rem;
+            margin-bottom: 0.25rem;
         }
+
         .message-sender {
             font-weight: 600;
-            margin-right: 8px;
+            font-size: 0.875rem;
         }
-        .user-id {
-            font-size: 10px;
+
+        .message-time {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+        }
+
+        .message.sent .message-time {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .message-text {
+            line-height: 1.5;
+        }
+
+        .message-banned {
             opacity: 0.7;
-            background: rgba(0,0,0,0.2);
-            padding: 2px 5px;
-            border-radius: 4px;
-            margin-right: 8px;
+            font-style: italic;
         }
-        .logout-button {
-            margin-left: auto;
-            padding: 5px 10px;
-            background: var(--danger-color);
-            color: white;
-            border: none;
-            border-radius: 4px;
+
+        .message-file {
+            margin-top: 0.75rem;
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .message-image {
+            max-width: 100%;
+            border-radius: var(--radius-sm);
             cursor: pointer;
-            font-size: 12px;
+            transition: transform 0.2s ease;
         }
-        /* Admin Panel Styles */
-        .admin-panel {
+
+        .message-image:hover {
+            transform: scale(1.02);
+        }
+
+        .message-audio, .message-video {
+            width: 100%;
+            border-radius: var(--radius-sm);
+        }
+
+        .message-document {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+            text-decoration: none;
+            color: var(--light);
+        }
+
+        .message-document:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .document-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .document-info {
+            flex: 1;
+        }
+
+        .document-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .document-size {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        /* Chat Input */
+        .chat-input-container {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem;
+        }
+
+        .chat-input-wrapper {
+            display: flex;
+            align-items: flex-end;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-lg);
+            padding: 0.75rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .chat-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--light);
+            font-size: 1rem;
+            resize: none;
+            max-height: 120px;
+            outline: none;
+        }
+
+        .chat-input::placeholder {
+            color: var(--gray);
+        }
+
+        .input-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .input-button {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .input-button:hover {
+            color: var(--light);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .send-button {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--primary);
+            border: none;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .send-button:hover {
+            background: var(--primary-dark);
+            transform: scale(1.05);
+        }
+
+        /* File Upload */
+        .file-upload-area {
             position: absolute;
+            bottom: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border: 2px dashed var(--primary);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            z-index: 10;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .file-upload-area.active {
+            display: flex;
+        }
+
+        .file-upload-icon {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .file-upload-text {
+            text-align: center;
+            color: var(--gray);
+        }
+
+        .file-upload-actions {
+            display: flex;
+            gap: 0.75rem;
+        }
+
+        .file-button {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .file-button.secondary {
+            background: transparent;
+            border: 1px solid var(--gray);
+            color: var(--light);
+        }
+
+        .file-button.secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .file-preview {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius-sm);
+            padding: 0.75rem;
+        }
+
+        .file-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary);
+        }
+
+        .file-info {
+            flex: 1;
+        }
+
+        .file-name {
+            font-weight: 500;
+            margin-bottom: 0.25rem;
+        }
+
+        .file-size {
+            font-size: 0.75rem;
+            color: var(--gray);
+        }
+
+        .file-remove {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--danger);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .file-remove:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        /* Login/Register Forms */
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 1rem;
+        }
+
+        .auth-card {
+            background: rgba(30, 41, 59, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-lg);
+            width: 100%;
+            max-width: 400px;
+            padding: 2rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .auth-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 2rem;
+            color: white;
+        }
+
+        .auth-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .auth-subtitle {
+            color: var(--gray);
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: var(--radius-sm);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            font-size: 1rem;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+        }
+
+        .form-input::placeholder {
+            color: var(--gray);
+        }
+
+        .form-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-checkbox input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary);
+        }
+
+        .form-button {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: var(--radius-sm);
+            border: none;
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .form-button:hover {
+            background: var(--primary-dark);
+        }
+
+        .auth-footer {
+            text-align: center;
+            margin-top: 1.5rem;
+            color: var(--gray);
+            font-size: 0.875rem;
+        }
+
+        .auth-link {
+            color: var(--primary);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .auth-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 100;
-            padding: 20px;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            padding: 1.5rem;
             overflow-y: auto;
             display: none;
         }
+
         .admin-panel.active {
             display: block;
         }
+
         .admin-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 1px solid var(--gray-color);
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+
+        .admin-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
         .admin-close {
-            background: var(--danger-color);
-            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
             border: none;
-            padding: 5px 10px;
-            border-radius: 4px;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
+            transition: all 0.2s ease;
         }
+
+        .admin-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
         .admin-section {
-            background: var(--dark-gray);
-            border-radius: var(--border-radius);
-            padding: 15px;
-            margin-bottom: 20px;
+            background: rgba(30, 41, 59, 0.6);
+            border-radius: var(--radius);
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
-        .admin-section h3 {
-            margin-bottom: 15px;
-            color: var(--primary-color);
+
+        .admin-section-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--primary);
         }
+
         .admin-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 0.9rem;
+            margin-bottom: 1rem;
         }
+
         .admin-table th, .admin-table td {
-            padding: 10px;
+            padding: 0.75rem;
             text-align: left;
-            border-bottom: 1px solid #36393F;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .admin-table th {
-            background: var(--dark-color);
+            font-weight: 600;
+            color: var(--gray);
+            font-size: 0.875rem;
         }
-        .admin-table tr:hover {
-            background: rgba(255, 255, 255, 0.05);
+
+        .admin-table tr:last-child td {
+            border-bottom: none;
         }
+
         .admin-action {
-            padding: 5px 10px;
+            padding: 0.375rem 0.75rem;
+            border-radius: var(--radius-sm);
             border: none;
-            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
             cursor: pointer;
-            font-size: 12px;
-            margin-right: 5px;
-            display: none; /* Ocultar por defecto */
+            transition: all 0.2s ease;
+            margin-right: 0.5rem;
         }
-        /* Solo mostrar botones admin en el panel de administración */
-        .admin-panel .admin-action {
-            display: inline-block;
+
+        .admin-action.ban {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
         }
-        /* Nota: Los botones de administración (eliminar, banear) solo están disponibles 
-           a través del menú contextual (clic derecho/largo) para mantener la interfaz limpia */
-        
-        /* Nota: Los IDs de usuario y mensaje están completamente ocultos por defecto.
-           Solo son accesibles a través del menú contextual (clic derecho) para mantener 
-           la interfaz limpia y profesional */
-        .ban-button {
-            background: var(--danger-color);
-            color: white;
+
+        .admin-action.ban:hover {
+            background: rgba(239, 68, 68, 0.3);
         }
-        .delete-button {
-            background: var(--admin-color);
-            color: white;
+
+        .admin-action.unban {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
         }
-        .ip-ban-button {
-            background: #f1c40f;
-            color: #000;
+
+        .admin-action.unban:hover {
+            background: rgba(16, 185, 129, 0.3);
         }
-        .admin-input-group {
+
+        .admin-action.delete {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .admin-action.delete:hover {
+            background: rgba(245, 158, 11, 0.3);
+        }
+
+        .admin-form {
             display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
             flex-wrap: wrap;
         }
+
         .admin-input {
             flex: 1;
-            padding: 10px;
-            background: #36393F;
-            border: 1px solid #23272A;
-            border-radius: 4px;
-            color: white;
-            min-width: 150px;
-        }
-        .admin-submit {
-            background: var(--success-color);
-            color: #000;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-        /* Botón de menú para móviles */
-        .menu-toggle {
-            display: none;
-            background: none;
-            border: none;
-            color: white;
-            font-size: 1.5rem;
-            cursor: pointer;
-            margin-right: 15px;
-        }
-        @media (max-width: 768px) {
-            .menu-toggle {
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-        }
-        /* Overlay para móviles */
-        .sidebar-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 5;
-            display: none;
-        }
-        .sidebar-overlay.active {
-            display: block;
-        }
-        /* Nuevos estilos para el campo SSO */
-        .admin-token-group {
-            margin-top: 10px;
-            display: none;
-        }
-        .form-help {
-            font-size: 12px;
-            color: var(--text-muted);
-            margin-top: 5px;
-            display: block;
-        }
-        #token-result {
-            margin-top: 15px;
-            padding: 15px;
-            background: var(--dark-gray);
-            border-radius: var(--border-radius);
-            display: none;
-        }
-        /* Nuevos estilos para copiar IDs */
-        .copyable {
-            cursor: pointer;
-            position: relative;
-            display: inline-block;
-        }
-        .copyable::after {
-            content: "Copiar";
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--dark-color);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
-            white-space: nowrap;
-        }
-        .copyable:hover::after {
-            opacity: 1;
-        }
-        /* Indicador de que los mensajes son clickeables */
-        .message {
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        .message:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-        /* Ocultar TODOS los IDs por defecto */
-        .user-id,
-        .user-id.copyable,
-        .message-id.copyable {
-            display: none !important;
-        }
-        /* Mostrar IDs solo cuando se solicite explícitamente */
-        .show-ids .user-id,
-        .show-ids .user-id.copyable,
-        .show-ids .message-id.copyable {
-            display: inline-block !important;
-        }
-        
-        /* ===== ESTILOS ESPECÍFICOS POR DISPOSITIVO ===== */
-        
-        /* Estilos para móviles */
-        .mobile .chat-container {
-            padding: 10px;
-            margin: 0;
-        }
-        
-        .mobile .message {
-            margin-bottom: 12px;
-            padding: 12px;
-            font-size: 14px;
-        }
-        
-        .mobile .message-input {
-            padding: 12px;
-            font-size: 16px; /* Evitar zoom en iOS */
-        }
-        
-        .mobile .btn {
-            padding: 12px 16px;
-            font-size: 16px;
-            min-height: 44px; /* Tamaño mínimo para toque */
-        }
-        
-        .mobile .admin-action-button {
-            padding: 12px 16px;
-            font-size: 14px;
-            margin: 4px;
-        }
-        
-        .mobile .notification {
-            font-size: 14px;
-            padding: 12px 16px;
-            max-width: 90%;
-            left: 5%;
-            right: 5%;
-        }
-        
-        .mobile .context-menu {
-            font-size: 14px;
-            padding: 8px 0;
-        }
-        
-        .mobile .context-menu button {
-            padding: 12px 16px;
-            font-size: 14px;
-        }
-        
-        /* Estilos para tablets */
-        .tablet .chat-container {
-            padding: 15px;
-        }
-        
-        .tablet .message {
-            margin-bottom: 10px;
-            padding: 10px;
-            font-size: 13px;
-        }
-        
-        .tablet .message-input {
-            padding: 10px;
-            font-size: 14px;
-        }
-        
-        .tablet .btn {
-            padding: 10px 14px;
-            font-size: 14px;
-        }
-        
-        .tablet .admin-action-button {
-            padding: 10px 14px;
-            font-size: 13px;
-            margin: 3px;
-        }
-        
-        .tablet .notification {
-            font-size: 13px;
-            padding: 10px 14px;
-            max-width: 80%;
-            left: 10%;
-            right: 10%;
-        }
-        
-        .tablet .context-menu {
-            font-size: 13px;
-            padding: 6px 0;
-        }
-        
-        .tablet .context-menu button {
-            padding: 10px 14px;
-            font-size: 13px;
-        }
-        
-        /* Estilos para desktop */
-        .desktop .chat-container {
-            padding: 20px;
-        }
-        
-        .desktop .message {
-            margin-bottom: 8px;
-            padding: 8px;
-            font-size: 12px;
-        }
-        
-        .desktop .message-input {
-            padding: 8px;
-            font-size: 12px;
-        }
-        
-        .desktop .btn {
-            padding: 8px 12px;
-            font-size: 12px;
-        }
-        
-        .desktop .admin-action-button {
-            padding: 8px 12px;
-            font-size: 12px;
-            margin: 2px;
-        }
-        
-        .desktop .notification {
-            font-size: 12px;
-            padding: 8px 12px;
-            max-width: 400px;
-            left: auto;
-            right: 20px;
-        }
-        
-        .desktop .context-menu {
-            font-size: 12px;
-            padding: 4px 0;
-        }
-        
-        .desktop .context-menu button {
-            padding: 8px 12px;
-            font-size: 12px;
-        }
-        
-        /* Sidebar responsive */
-        .mobile .sidebar {
-            position: fixed;
-            left: -100%;
-            top: 0;
-            height: 100vh;
-            width: 280px;
-            z-index: 1000;
-            transition: left 0.3s ease;
-            background: var(--dark-color);
-        }
-        
-        .mobile .sidebar.open {
-            left: 0;
-        }
-        
-        .tablet .sidebar {
-            width: 250px;
-        }
-        
-        .desktop .sidebar {
-            width: 300px;
-        }
-        
-        /* Botón de toggle para sidebar en móviles */
-        .sidebar-toggle-btn {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1001;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 50%;
-            width: 50px;
-            height: 50px;
-            font-size: 18px;
-            cursor: pointer;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-            display: none;
-        }
-        
-        .mobile .sidebar-toggle-btn {
-            display: block;
-        }
-        
-        /* Overlay para cerrar sidebar en móviles */
-        .sidebar-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            z-index: 999;
-            display: none;
-        }
-        
-        .mobile .sidebar.open + .sidebar-overlay {
-            display: block;
-        }
-        
-        /* Mostrar/ocultar elementos según dispositivo */
-        .desktop-only {
-            display: inline;
-        }
-        
-        .mobile-only {
-            display: none;
-        }
-        
-        .mobile .desktop-only {
-            display: none;
-        }
-        
-        .mobile .mobile-only {
-            display: inline;
-        }
-        
-        .tablet .desktop-only {
-            display: none;
-        }
-        
-        .tablet .mobile-only {
-            display: inline;
-        }
-        .user-item {
-            cursor: pointer;
-            transition: background-color 0.2s ease;
-        }
-        .user-item:hover {
-            background-color: rgba(255, 255, 255, 0.05);
-        }
-        /* Menú contextual */
-        .context-menu {
-            position: fixed;
-            background: var(--dark-gray);
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            z-index: 1000;
             min-width: 200px;
-            display: none;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .context-menu-item {
-            padding: 12px 16px;
-            font-size: 14px;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            transition: background 0.2s;
-        }
-        .context-menu-item:hover {
-            background: rgba(255,255,255,0.1);
-        }
-        .context-menu-item.admin-only {
-            display: none;
-        }
-        .context-menu-item.admin-only.show {
-            display: flex;
-        }
-        .context-menu-divider {
-            height: 1px;
-            background: rgba(255,255,255,0.1);
-            margin: 4px 0;
-        }
-        /* Animación para el menú contextual */
-        .context-menu.show {
-            display: block;
-            animation: fadeInScale 0.2s ease forwards;
-        }
-        @keyframes fadeInScale {
-            0% {
-                opacity: 0;
-                transform: scale(0.95) translateY(-10px);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1) translateY(0);
-            }
-        }
-        /* Indicador de copia */
-        .copied-indicator {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 16px;
-            z-index: 2000;
-            display: none;
-            animation: fadeInOut 1.5s ease;
-        }
-        @keyframes fadeInOut {
-            0%, 100% { opacity: 0; }
-            20%, 80% { opacity: 1; }
-        }
-        /* Estilos para archivos e imágenes */
-        .file-upload-area {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 500px;
-            padding: 30px;
-            background: rgba(44, 47, 51, 0.98);
-            border: 2px dashed var(--primary-color);
-            border-radius: 16px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            text-align: center;
-            z-index: 1000;
-            display: none;
-            opacity: 0;
-            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            backdrop-filter: blur(10px);
-            /* Asegurar que esté por encima de todo */
-            margin: 0;
-            /* Forzar el centrado correcto */
-            max-height: 90vh;
-            overflow-y: auto;
-        }
-        
-        .file-upload-area.active {
-            display: flex;
-            flex-direction: column;
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1);
-        }
-        
-        .file-upload-area.dragover {
-            background: rgba(88, 101, 242, 0.15);
-            border-color: var(--success-color);
-            transform: translate(-50%, -50%) scale(1.02);
-        }
-        
-        .file-upload-text {
-            color: var(--gray-color);
-            margin-bottom: 25px;
-            font-size: 18px;
-            flex-shrink: 0;
-        }
-        
-        .file-upload-text i {
-            font-size: 48px;
-            color: var(--primary-color);
-            margin-bottom: 20px;
-            display: block;
-            transition: transform 0.3s ease;
-        }
-        
-        .file-upload-area.dragover .file-upload-text i {
-            transform: scale(1.2);
-            color: var(--success-color);
-        }
-        
-        .file-upload-text p {
-            margin: 8px 0;
-            font-size: 16px;
-        }
-        
-        .file-upload-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-            flex-shrink: 0;
-        }
-        
-        .file-upload-button {
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 30px;
-            cursor: pointer;
-            font-size: 16px;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            box-shadow: 0 4px 10px rgba(88, 101, 242, 0.3);
-        }
-        
-        .file-upload-button:hover {
-            background: var(--secondary-color);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 12px rgba(88, 101, 242, 0.4);
-        }
-        
-        .file-upload-button:active {
-            transform: translateY(0);
-        }
-        
-        .file-preview {
-            max-height: 250px;
-            margin-top: 25px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 12px;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            flex-grow: 1;
-            min-height: 0;
-        }
-        
-        .file-item {
-            display: flex;
-            align-items: center;
+            padding: 0.5rem 0.75rem;
+            border-radius: var(--radius-sm);
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 12px;
-            margin-bottom: 12px;
-            transition: all 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--light);
         }
-        
-        .file-item:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
-        }
-        
-        .file-icon {
-            font-size: 28px;
-            margin-right: 15px;
-            color: var(--primary-color);
-            min-width: 28px;
-        }
-        
-        .file-info {
-            flex-grow: 1;
-            text-align: left;
-        }
-        
-        .file-name {
-            font-weight: 600;
-            color: white;
-            margin-bottom: 4px;
-            font-size: 16px;
-            word-break: break-word;
-        }
-        
-        .file-size {
-            font-size: 14px;
-            color: var(--gray-color);
-        }
-        
-        .file-remove {
-            background: var(--danger-color);
-            color: white;
+
+        .admin-submit {
+            padding: 0.5rem 1rem;
+            border-radius: var(--radius-sm);
             border: none;
-            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .admin-submit:hover {
+            background: var(--primary-dark);
+        }
+
+        /* Voice Call */
+        .voice-call {
+            position: fixed;
+            bottom: 1rem;
+            right: 1rem;
+            background: rgba(30, 41, 59, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            width: 320px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 100;
+            display: none;
+        }
+
+        .voice-call.active {
+            display: block;
+        }
+
+        .voice-header {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .voice-title {
+            font-weight: 600;
+        }
+
+        .voice-close {
             width: 32px;
             height: 32px;
-            cursor: pointer;
-            font-size: 14px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--gray);
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
-            margin-left: 10px;
-            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        
-        .file-remove:hover {
-            background: #c0392b;
-            transform: scale(1.1);
-        }
-        
-        .upload-progress {
-            width: 100%;
-            height: 6px;
+
+        .voice-close:hover {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-            margin-top: 8px;
-            overflow: hidden;
+            color: var(--light);
         }
-        
-        .upload-progress-bar {
-            height: 100%;
-            background: var(--success-color);
-            width: 0%;
-            transition: width 0.5s ease;
-            border-radius: 3px;
+
+        .voice-participants {
+            padding: 1rem;
+            max-height: 200px;
+            overflow-y: auto;
         }
-        
-        /* Mejoras para dispositivos móviles */
-        @media (max-width: 768px) {
-            .file-upload-area {
-                width: 95%;
-                padding: 25px 20px;
-                border-radius: 12px;
-                max-height: 85vh;
-            }
-            
-            .file-upload-text {
-                font-size: 16px;
-                margin-bottom: 20px;
-            }
-            
-            .file-upload-text i {
-                font-size: 36px;
-                margin-bottom: 15px;
-            }
-            
-            .file-upload-text p {
-                font-size: 14px;
-            }
-            
-            .file-upload-button {
-                padding: 10px 18px;
-                font-size: 14px;
-            }
-            
-            .file-preview {
-                margin-top: 20px;
-                padding: 12px;
-                max-height: 200px;
-            }
-            
-            .file-item {
-                padding: 10px;
-            }
-            
-            .file-icon {
-                font-size: 24px;
-                margin-right: 12px;
-            }
-            
-            .file-name {
-                font-size: 14px;
-            }
-            
-            .file-size {
-                font-size: 12px;
-            }
-            
-            .file-remove {
-                width: 28px;
-                height: 28px;
-                font-size: 12px;
-            }
+
+        .voice-participant {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.5rem 0;
         }
-        
-        /* Para pantallas muy pequeñas */
-        @media (max-width: 480px) {
-            .file-upload-area {
-                width: 98%;
-                padding: 20px 15px;
-                border-radius: 10px;
-            }
-            
-            .file-upload-text {
-                font-size: 14px;
-                margin-bottom: 15px;
-            }
-            
-            .file-upload-text i {
-                font-size: 32px;
-                margin-bottom: 12px;
-            }
-            
-            .file-upload-text p {
-                font-size: 12px;
-            }
-            
-            .file-upload-button {
-                padding: 8px 16px;
-                font-size: 12px;
-                gap: 6px;
-            }
-            
-            .file-preview {
-                margin-top: 15px;
-                padding: 10px;
-                max-height: 150px;
-            }
-            
-            .file-item {
-                padding: 8px;
-            }
-            
-            .file-icon {
-                font-size: 20px;
-                margin-right: 10px;
-            }
-            
-            .file-name {
-                font-size: 12px;
-            }
-            
-            .file-size {
-                font-size: 11px;
-            }
-            
-            .file-remove {
-                width: 24px;
-                height: 24px;
-                font-size: 10px;
-            }
-        }
-        
-        /* Animación de entrada mejorada */
-        @keyframes slideUpScale {
-            0% {
-                opacity: 0;
-                transform: translate(-50%, -40%) scale(0.9);
-            }
-            100% {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-        }
-        
-        .file-upload-area.active {
-            animation: slideUpScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-        }
-        
-        /* Overlay de fondo para el modal de subida */
-        .file-upload-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 999;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            /* Asegurar que esté por debajo del modal pero por encima del resto */
-            pointer-events: none;
-        }
-        
-        .file-upload-overlay.active {
-            display: block;
-            opacity: 1;
-            pointer-events: auto;
-        }
-        
-        /* Botón de cerrar para el modal de subida */
-        .file-upload-close {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: none;
-            border-radius: 50%;
+
+        .voice-participant-avatar {
             width: 36px;
             height: 36px;
-            cursor: pointer;
-            font-size: 18px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.3s ease;
-            z-index: 1001;
-            flex-shrink: 0;
+            font-weight: 600;
+            color: white;
         }
-        
-        .file-upload-close:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: rotate(90deg);
+
+        .voice-participant-info {
+            flex: 1;
         }
-        
-        /* Para asegurar el centrado en navegadores antiguos */
-        @supports not (backdrop-filter: blur(10px)) {
-            .file-upload-area {
-                background: rgba(44, 47, 51, 0.95);
-            }
+
+        .voice-participant-name {
+            font-weight: 500;
         }
-        
-        /* Estilos para mensajes con archivos */
-        .message-file {
-            margin-top: 10px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 8px;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .message-image {
-            max-width: 100%;
-            max-height: 300px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.3s;
-        }
-        
-        .message-image:hover {
-            transform: scale(1.02);
-        }
-        
-        /* Estilos para controles de audio y video */
-        .message-file audio,
-        .message-file video {
-            border-radius: 8px;
-            background: rgba(0, 0, 0, 0.1);
-        }
-        
-        .message-file audio::-webkit-media-controls-panel,
-        .message-file video::-webkit-media-controls-panel {
-            background: rgba(0, 0, 0, 0.2);
-        }
-        
-        .message-file audio::-webkit-media-controls-play-button,
-        .message-file video::-webkit-media-controls-play-button {
-            background: var(--primary-color);
-            border-radius: 50%;
-        }
-        
-        .message-file-link {
+
+        .voice-participant-status {
+            font-size: 0.75rem;
+            color: var(--gray);
             display: flex;
             align-items: center;
-            color: var(--primary-color);
-            text-decoration: none;
-            padding: 8px;
-            border-radius: 6px;
-            transition: background 0.3s;
+            gap: 0.25rem;
         }
-        
-        .message-file-link:hover {
-            background: rgba(88, 101, 242, 0.1);
+
+        .voice-status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
         }
-        
-        .file-download-icon {
-            margin-right: 8px;
-            font-size: 16px;
+
+        .voice-status-indicator.muted {
+            background: var(--danger);
         }
-        
-        /* Modal para vista previa de imágenes */
+
+        .voice-controls {
+            padding: 1rem;
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .voice-button {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .voice-button:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .voice-button.active {
+            background: var(--danger);
+        }
+
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            min-width: 200px;
+            z-index: 300;
+            display: none;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+        }
+
+        .context-menu.active {
+            display: block;
+        }
+
+        .context-menu-item {
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--light);
+        }
+
+        .context-menu-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .context-menu-item.danger {
+            color: var(--danger);
+        }
+
+        .context-menu-item.danger:hover {
+            background: rgba(239, 68, 68, 0.2);
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: rgba(255, 255, 255, 0.1);
+            margin: 0.25rem 0;
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(30, 41, 59, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            padding: 1rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            z-index: 500;
+            max-width: 400px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transform: translateX(120%);
+            transition: transform 0.3s ease;
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .notification.success .notification-icon {
+            background: rgba(16, 185, 129, 0.2);
+            color: var(--success);
+        }
+
+        .notification.error .notification-icon {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--danger);
+        }
+
+        .notification.warning .notification-icon {
+            background: rgba(245, 158, 11, 0.2);
+            color: var(--warning);
+        }
+
+        .notification.info .notification-icon {
+            background: rgba(99, 102, 241, 0.2);
+            color: var(--primary);
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-message {
+            font-size: 0.875rem;
+            color: var(--gray);
+        }
+
+        .notification-close {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--gray);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .notification-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+        }
+
+        /* Image Modal */
         .image-modal {
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            z-index: 2000;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 400;
             display: none;
             align-items: center;
             justify-content: center;
+            padding: 1rem;
         }
-        
+
         .image-modal.active {
             display: flex;
         }
-        
+
         .image-modal-content {
+            position: relative;
             max-width: 90%;
             max-height: 90%;
-            position: relative;
         }
-        
+
         .image-modal-img {
             max-width: 100%;
-            max-height: 100%;
-            border-radius: 8px;
+            max-height: 90vh;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
         }
-        
+
         .image-modal-close {
             position: absolute;
-            top: -40px;
-            right: 0;
-            background: var(--danger-color);
-            color: white;
-            border: none;
+            top: 1rem;
+            right: 1rem;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            width: 32px;
-            height: 32px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
             cursor: pointer;
-            font-size: 16px;
+            transition: all 0.2s ease;
+            z-index: 10;
         }
-        
-        /* Botón de archivo solo visible en sala multimedia */
-        .file-button {
-            display: none;
+
+        .image-modal-close:hover {
+            background: rgba(255, 255, 255, 0.2);
         }
-        
-        .file-button.show {
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        @keyframes scaleIn {
+            from { transform: scale(0.95); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                top: 0;
+                left: 0;
+                height: 100%;
+                width: 280px;
+                transform: translateX(-100%);
+                z-index: 150;
+                box-shadow: var(--shadow-lg);
+            }
+
+            .sidebar.active {
+                transform: translateX(0);
+            }
+
+            .sidebar-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(15, 23, 42, 0.7);
+                backdrop-filter: blur(4px);
+                z-index: 140;
+                display: none;
+            }
+
+            .sidebar-overlay.active {
+                display: block;
+            }
+
+            .chat-area {
+                width: 100%;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+
+            .voice-call {
+                width: calc(100% - 2rem);
+                right: 1rem;
+                left: 1rem;
+            }
+
+            .notification {
+                right: 0.5rem;
+                left: 0.5rem;
+                max-width: none;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-card {
+                padding: 1.5rem;
+            }
+
+            .auth-title {
+                font-size: 1.5rem;
+            }
+
+            .message {
+                max-width: 90%;
+            }
+
+            .chat-input-wrapper {
+                padding: 0.5rem;
+            }
+        }
+
+        /* Utility Classes */
+        .hidden {
+            display: none !important;
+        }
+
+        .flex {
             display: flex;
         }
-        
-        /* Botones de administración */
-        .admin-action-button {
-            background: var(--danger-color);
+
+        .flex-col {
+            flex-direction: column;
+        }
+
+        .items-center {
+            align-items: center;
+        }
+
+        .justify-center {
+            justify-content: center;
+        }
+
+        .justify-between {
+            justify-content: space-between;
+        }
+
+        .gap-1 {
+            gap: 0.25rem;
+        }
+
+        .gap-2 {
+            gap: 0.5rem;
+        }
+
+        .gap-3 {
+            gap: 0.75rem;
+        }
+
+        .gap-4 {
+            gap: 1rem;
+        }
+
+        .p-1 {
+            padding: 0.25rem;
+        }
+
+        .p-2 {
+            padding: 0.5rem;
+        }
+
+        .p-3 {
+            padding: 0.75rem;
+        }
+
+        .p-4 {
+            padding: 1rem;
+        }
+
+        .p-5 {
+            padding: 1.25rem;
+        }
+
+        .m-1 {
+            margin: 0.25rem;
+        }
+
+        .m-2 {
+            margin: 0.5rem;
+        }
+
+        .m-3 {
+            margin: 0.75rem;
+        }
+
+        .m-4 {
+            margin: 1rem;
+        }
+
+        .m-5 {
+            margin: 1.25rem;
+        }
+
+        .mt-1 {
+            margin-top: 0.25rem;
+        }
+
+        .mt-2 {
+            margin-top: 0.5rem;
+        }
+
+        .mt-3 {
+            margin-top: 0.75rem;
+        }
+
+        .mt-4 {
+            margin-top: 1rem;
+        }
+
+        .mt-5 {
+            margin-top: 1.25rem;
+        }
+
+        .mb-1 {
+            margin-bottom: 0.25rem;
+        }
+
+        .mb-2 {
+            margin-bottom: 0.5rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 0.75rem;
+        }
+
+        .mb-4 {
+            margin-bottom: 1rem;
+        }
+
+        .mb-5 {
+            margin-bottom: 1.25rem;
+        }
+
+        .text-sm {
+            font-size: 0.875rem;
+        }
+
+        .text-base {
+            font-size: 1rem;
+        }
+
+        .text-lg {
+            font-size: 1.125rem;
+        }
+
+        .text-xl {
+            font-size: 1.25rem;
+        }
+
+        .text-2xl {
+            font-size: 1.5rem;
+        }
+
+        .font-light {
+            font-weight: 300;
+        }
+
+        .font-normal {
+            font-weight: 400;
+        }
+
+        .font-medium {
+            font-weight: 500;
+        }
+
+        .font-semibold {
+            font-weight: 600;
+        }
+
+        .font-bold {
+            font-weight: 700;
+        }
+
+        .text-white {
             color: white;
-            transition: all 0.3s ease;
         }
-        
-        .admin-action-button:hover {
-            background: #c0392b;
-            transform: scale(1.05);
+
+        .text-gray {
+            color: var(--gray);
         }
-        
-        .admin-action-button.show {
-            display: flex;
+
+        .text-primary {
+            color: var(--primary);
         }
-        
-        /* Tooltip para botones de admin */
-        .admin-action-button[title]:hover::after {
-            content: attr(title);
-            position: absolute;
-            top: -25px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--dark-color);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            pointer-events: none;
+
+        .text-success {
+            color: var(--success);
+        }
+
+        .text-danger {
+            color: var(--danger);
+        }
+
+        .text-warning {
+            color: var(--warning);
+        }
+
+        .bg-primary {
+            background: var(--primary);
+        }
+
+        .bg-success {
+            background: var(--success);
+        }
+
+        .bg-danger {
+            background: var(--danger);
+        }
+
+        .bg-warning {
+            background: var(--warning);
+        }
+
+        .rounded {
+            border-radius: var(--radius);
+        }
+
+        .rounded-sm {
+            border-radius: var(--radius-sm);
+        }
+
+        .rounded-lg {
+            border-radius: var(--radius-lg);
+        }
+
+        .rounded-full {
+            border-radius: 9999px;
+        }
+
+        .shadow {
+            box-shadow: var(--shadow);
+        }
+
+        .shadow-lg {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
             white-space: nowrap;
-        }
-        
-        /* Fallback responsivo si JS falla */
-        @media (max-width: 600px) {
-          .container, .form-container, .chat-container {
-            max-width: 100vw !important;
-            padding: 8px !important;
-          }
-          .chat-messages {
-            max-height: 50vh !important;
-          }
-        }
-        
-        /* Mejorar contraste de textos secundarios */
-        .form-header p, .file-upload-text {
-          color: #d1d5db;
-        }
-        
-        /* Asegurar área de mensajes visible */
-        .chat-messages {
-          max-height: 60vh;
-          min-height: 200px;
-        }
-        
-        /* Accesibilidad: foco visible */
-        button:focus, input:focus, .message-input:focus {
-          outline: 2px solid var(--primary-color);
-          outline-offset: 2px;
-        }
-        
-        /* Reduce motion para usuarios que lo prefieran */
-        @media (prefers-reduced-motion: reduce) {
-          * {
-            transition: none !important;
-            animation: none !important;
-          }
-        }
-        
-        /* Canal de Voz/Video */
-        .voice-call-container {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: var(--dark-color);
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            padding: 16px;
-            z-index: 2000;
-            min-width: 320px;
-            display: none;
-        }
-        
-        .voice-controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        
-        .voice-control-btn {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-        
-        .voice-control-btn.active {
-            background: var(--danger-color);
-        }
-        
-        .voice-control-btn:hover {
-            transform: scale(1.1);
-        }
-        
-        .participants-list {
-            max-height: 200px;
-            overflow-y: auto;
-        }
-        
-        .participant-item {
-            padding: 8px 12px;
-            background: rgba(255,255,255,0.05);
-            border-radius: 6px;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-        }
-        
-        .participant-avatar {
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            background: var(--success-color);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 10px;
-            font-weight: bold;
-            color: #000;
-        }
-        
-        .mic-indicator {
-            margin-left: auto;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: var(--danger-color);
-        }
-        
-        .mic-indicator.active {
-            background: var(--success-color);
         }
     </style>
 </head>
 <body>
-    <!-- Pantalla de Login -->
-    <div class="container" id="login-container">
-        <div class="form-container">
-            <div class="form-header">
-                <h2>YChat v2.0</h2>
-                <p>Ingresa para comenzar a chatear</p>
-            </div>
-            <form id="login-form">
-                <div class="form-group">
-                    <label for="username">Usuario:</label>
-                    <input type="text" id="username" required>
+    <!-- Login/Register Container -->
+    <div class="auth-container" id="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <div class="auth-logo">
+                    <i class="fas fa-comments"></i>
                 </div>
-                <div class="form-group">
-                    <label for="password">Contraseña:</label>
-                    <input type="password" id="password" required>
-                </div>
-                
-                <!-- Campo SSO para administradores -->
-                <div class="form-group admin-token-group" id="admin-token-group">
-                    <label for="admin-token">Token de Administrador:</label>
-                    <input type="password" 
-                           id="admin-token" 
-                           placeholder="Ingresa tu token SSO"
-                           autocomplete="off"
-                           spellcheck="false"
-                           maxlength="100"
-                           pattern="[A-Za-z0-9\-_]{10,}"
-                           title="El token debe tener al menos 10 caracteres alfanuméricos">
-                    <small class="form-help">El token debe tener al menos 10 caracteres</small>
-                </div>
-                <div class="form-group">
-                    <input type="checkbox" id="admin-login">
-                    <label for="admin-login" style="display: inline; margin-left: 5px;">Acceso Administrador</label>
-                </div>
-                
-                <div class="form-group">
-                    <input type="checkbox" id="remember-me">
-                    <label for="remember-me" style="display: inline; margin-left: 5px;">Recordarme</label>
-                </div>
-                <button type="submit" class="btn">Iniciar Sesión</button>
-            </form>
-            <div class="form-footer">
-                <p>¿No tienes cuenta? <a href="#" id="show-register">Regístrate</a></p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Pantalla de Registro -->
-    <div class="container hidden" id="register-container">
-        <div class="form-container">
-            <div class="form-header">
-                <h2>Crear Cuenta</h2>
-                <p>Completa el formulario para registrarte</p>
-            </div>
-            <form id="register-form">
-                <div class="form-group">
-                    <label for="reg-nickname">Apodo:</label>
-                    <input type="text" id="reg-nickname" required>
-                </div>
-                <div class="form-group">
-                    <label for="reg-username">Usuario:</label>
-                    <input type="text" id="reg-username" required>
-                </div>
-                <div class="form-group">
-                    <label for="reg-password">Contraseña:</label>
-                    <input type="password" id="reg-password" required>
-                </div>
-                <div class="form-group">
-                    <label for="reg-confirm">Confirmar Contraseña:</label>
-                    <input type="password" id="reg-confirm" required>
-                </div>
-                <button type="submit" class="btn">Registrarse</button>
-            </form>
-            <div class="form-footer">
-                <p>¿Ya tienes cuenta? <a href="#" id="show-login">Inicia Sesión</a></p>
-            </div>
-        </div>
-    </div>
-    
-    <!-- Pantalla Principal del Chat -->
-    <div class="chat-container hidden" id="chat-container">
-        <!-- Mobile Overlay -->
-        <div class="overlay" id="overlay"></div>
-        <!-- Admin Panel -->
-        <div class="admin-panel" id="admin-panel">
-            <div class="admin-header">
-                <h2>Panel de Administración</h2>
-                <button class="admin-close" id="admin-close">Cerrar Panel</button>
+                <h1 class="auth-title">YChat v2.0</h1>
+                <p class="auth-subtitle">Conecta y conversa con el mundo</p>
             </div>
             
-            <div class="admin-section">
-                <h3>Usuarios Registrados</h3>
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form">
+                <div class="form-group">
+                    <label class="form-label" for="login-username">Usuario</label>
+                    <input type="text" id="login-username" class="form-input" placeholder="Ingresa tu usuario" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="login-password">Contraseña</label>
+                    <input type="password" id="login-password" class="form-input" placeholder="Ingresa tu contraseña" required>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="admin-login">
+                        <label for="admin-login">Acceso Administrador</label>
+                    </div>
+                </div>
+                
+                <div class="form-group admin-token-group hidden" id="admin-token-group">
+                    <label class="form-label" for="admin-token">Token de Administrador</label>
+                    <input type="password" id="admin-token" class="form-input" placeholder="Ingresa tu token SSO">
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-checkbox">
+                        <input type="checkbox" id="remember-me">
+                        <label for="remember-me">Recordarme</label>
+                    </div>
+                </div>
+                
+                <button type="submit" class="form-button">Iniciar Sesión</button>
+            </form>
+            
+            <!-- Register Form -->
+            <form id="register-form" class="auth-form hidden">
+                <div class="form-group">
+                    <label class="form-label" for="register-nickname">Apodo</label>
+                    <input type="text" id="register-nickname" class="form-input" placeholder="Ingresa tu apodo" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-username">Usuario</label>
+                    <input type="text" id="register-username" class="form-input" placeholder="Crea un nombre de usuario" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-password">Contraseña</label>
+                    <input type="password" id="register-password" class="form-input" placeholder="Crea una contraseña" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label" for="register-confirm">Confirmar Contraseña</label>
+                    <input type="password" id="register-confirm" class="form-input" placeholder="Confirma tu contraseña" required>
+                </div>
+                
+                <button type="submit" class="form-button">Registrarse</button>
+            </form>
+            
+            <div class="auth-footer">
+                <p>¿No tienes cuenta? <a href="#" id="show-register" class="auth-link">Regístrate</a></p>
+                <p>¿Ya tienes cuenta? <a href="#" id="show-login" class="auth-link">Inicia Sesión</a></p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main App Container -->
+    <div class="app-container hidden" id="app-container">
+        <!-- App Header -->
+        <header class="app-header">
+            <div class="logo">
+                <i class="fas fa-comments"></i>
+                <span>YChat v2.0</span>
+            </div>
+            <div class="header-actions">
+                <button class="icon-button" id="menu-toggle" title="Menú">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <button class="icon-button hidden" id="admin-button" title="Panel de Administración">
+                    <i class="fas fa-shield-alt"></i>
+                </button>
+                <button class="icon-button" id="logout-button" title="Cerrar Sesión">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Sidebar Overlay -->
+            <div class="sidebar-overlay" id="sidebar-overlay"></div>
+            
+            <!-- Sidebar -->
+            <aside class="sidebar" id="sidebar">
+                <div class="sidebar-header">
+                    <div class="user-profile">
+                        <div class="user-avatar" id="user-avatar">
+                            <span>U</span>
+                            <div class="status-indicator"></div>
+                        </div>
+                        <div class="user-info">
+                            <h3 id="current-user">Usuario</h3>
+                            <div class="user-status">
+                                <span class="status-dot"></span>
+                                <span>En línea</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-hashtag"></i>
+                        <span>Salas de Chat</span>
+                    </h3>
+                    <ul class="room-list">
+                        <li class="room-item active" data-room="general">
+                            <div class="room-icon">
+                                <i class="fas fa-globe"></i>
+                            </div>
+                            <span class="room-name">General</span>
+                        </li>
+                        <li class="room-item" data-room="develop">
+                            <div class="room-icon">
+                                <i class="fas fa-code"></i>
+                            </div>
+                            <span class="room-name">Desarrollo</span>
+                        </li>
+                        <li class="room-item" data-room="business">
+                            <div class="room-icon">
+                                <i class="fas fa-briefcase"></i>
+                            </div>
+                            <span class="room-name">Negocios</span>
+                        </li>
+                        <li class="room-item" data-room="gaming">
+                            <div class="room-icon">
+                                <i class="fas fa-gamepad"></i>
+                            </div>
+                            <span class="room-name">Gaming</span>
+                        </li>
+                        <li class="room-item" data-room="music">
+                            <div class="room-icon">
+                                <i class="fas fa-music"></i>
+                            </div>
+                            <span class="room-name">Música</span>
+                        </li>
+                        <li class="room-item" data-room="multimedia">
+                            <div class="room-icon">
+                                <i class="fas fa-photo-video"></i>
+                            </div>
+                            <span class="room-name">Multimedia</span>
+                        </li>
+                        <li class="room-item" data-room="voice">
+                            <div class="room-icon">
+                                <i class="fas fa-microphone"></i>
+                            </div>
+                            <span class="room-name">Voz</span>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="sidebar-section">
+                    <h3 class="section-title">
+                        <i class="fas fa-users"></i>
+                        <span>Usuarios en Línea</span>
+                    </h3>
+                    <ul class="user-list" id="online-users">
+                        <!-- Users will be loaded dynamically -->
+                    </ul>
+                </div>
+            </aside>
+            
+            <!-- Chat Area -->
+            <main class="chat-area">
+                <div class="chat-header">
+                    <div class="chat-title">
+                        <i class="fas fa-hashtag"></i>
+                        <h2 id="current-room">General</h2>
+                    </div>
+                    <div class="chat-actions">
+                        <button class="chat-button hidden" id="voice-call-button">
+                            <i class="fas fa-phone"></i>
+                            <span>Unirse a Voz</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="chat-messages" id="chat-messages">
+                    <!-- Messages will be loaded dynamically -->
+                </div>
+                
+                <div class="chat-input-container">
+                    <div class="file-upload-area" id="file-upload-area">
+                        <div class="file-upload-icon">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                        </div>
+                        <div class="file-upload-text">
+                            <p>Arrastra archivos aquí o haz clic para seleccionar</p>
+                            <p>Formatos permitidos: Imágenes, Audio, Video, Documentos</p>
+                            <p>Tamaño máximo: 10MB</p>
+                        </div>
+                        <div class="file-upload-actions">
+                            <button class="file-button" id="select-files-button">
+                                <i class="fas fa-folder-open"></i>
+                                <span>Seleccionar Archivos</span>
+                            </button>
+                            <button class="file-button secondary" id="cancel-upload-button">
+                                <i class="fas fa-times"></i>
+                                <span>Cancelar</span>
+                            </button>
+                        </div>
+                        <div class="file-preview" id="file-preview"></div>
+                    </div>
+                    
+                    <div class="chat-input-wrapper">
+                        <textarea class="chat-input" id="message-input" placeholder="Escribe un mensaje..." rows="1"></textarea>
+                        <div class="input-actions">
+                            <button class="input-button" id="emoji-button" title="Emoji">
+                                <i class="far fa-smile"></i>
+                            </button>
+                            <button class="input-button" id="file-button" title="Adjuntar Archivo">
+                                <i class="fas fa-paperclip"></i>
+                            </button>
+                            <button class="send-button" id="send-button" title="Enviar Mensaje">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+    
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="admin-panel">
+        <div class="admin-header">
+            <h2 class="admin-title">Panel de Administración</h2>
+            <button class="admin-close" id="admin-close">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <div class="admin-section">
+            <h3 class="admin-section-title">Usuarios Registrados</h3>
+            <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -2020,13 +1875,15 @@
                         </tr>
                     </thead>
                     <tbody id="admin-user-list">
-                        <!-- Usuarios se cargarán aquí -->
+                        <!-- Users will be loaded dynamically -->
                     </tbody>
                 </table>
             </div>
-            
-            <div class="admin-section">
-                <h3>Mensajes Reportados</h3>
+        </div>
+        
+        <div class="admin-section">
+            <h3 class="admin-section-title">Mensajes Reportados</h3>
+            <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -2038,20 +1895,22 @@
                         </tr>
                     </thead>
                     <tbody id="admin-message-list">
-                        <!-- Mensajes se cargarán aquí -->
+                        <!-- Messages will be loaded dynamically -->
                     </tbody>
                 </table>
             </div>
+        </div>
+        
+        <div class="admin-section">
+            <h3 class="admin-section-title">Banear por IP</h3>
+            <div class="admin-form">
+                <input type="text" class="admin-input" id="ban-ip-input" placeholder="Dirección IP">
+                <input type="text" class="admin-input" id="ban-reason-input" placeholder="Razón">
+                <button class="admin-submit" id="ban-ip-button">Banear IP</button>
+            </div>
             
-            <div class="admin-section">
-                <h3>Banear por IP</h3>
-                <div class="admin-input-group">
-                    <input type="text" class="admin-input" id="ban-ip-input" placeholder="Dirección IP">
-                    <input type="text" class="admin-input" id="ban-reason-input" placeholder="Razón">
-                    <button class="admin-submit" id="ban-ip-button">Banear IP</button>
-                </div>
-                
-                <h4>IPs Baneadas</h4>
+            <h4 class="admin-section-title">IPs Baneadas</h4>
+            <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -2062,20 +1921,22 @@
                         </tr>
                     </thead>
                     <tbody id="banned-ip-list">
-                        <!-- IPs baneadas se cargarán aquí -->
+                        <!-- Banned IPs will be loaded dynamically -->
                     </tbody>
                 </table>
             </div>
+        </div>
+        
+        <div class="admin-section">
+            <h3 class="admin-section-title">Tokens SSO de Administrador</h3>
+            <button class="admin-submit" id="generate-token-button">Generar Nuevo Token</button>
+            <div id="token-result" class="hidden">
+                <p>Tu token SSO: <strong id="generated-token"></strong></p>
+                <p style="color: var(--danger); font-size: 0.9rem;">¡Guarda este token en un lugar seguro!</p>
+            </div>
             
-            <div class="admin-section">
-                <h3>Tokens SSO de Administrador</h3>
-                <button class="admin-submit" id="generate-token-button">Generar Nuevo Token</button>
-                <div id="token-result">
-                    <p>Tu token SSO: <strong id="generated-token"></strong></p>
-                    <p style="color: var(--danger-color); font-size: 0.9rem;">¡Guarda este token en un lugar seguro!</p>
-                </div>
-                
-                <h4>Tokens Activos</h4>
+            <h4 class="admin-section-title">Tokens Activos</h4>
+            <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -2084,13 +1945,15 @@
                         </tr>
                     </thead>
                     <tbody id="sso-token-list">
-                        <!-- Tokens se cargarán aquí -->
+                        <!-- Tokens will be loaded dynamically -->
                     </tbody>
                 </table>
             </div>
-            
-            <div class="admin-section">
-                <h3>Registro de Moderación</h3>
+        </div>
+        
+        <div class="admin-section">
+            <h3 class="admin-section-title">Registro de Moderación</h3>
+            <div class="admin-table-container">
                 <table class="admin-table">
                     <thead>
                         <tr>
@@ -2101,169 +1964,70 @@
                         </tr>
                     </thead>
                     <tbody id="moderation-log">
-                        <!-- Registros se cargarán aquí -->
+                        <!-- Logs will be loaded dynamically -->
                     </tbody>
                 </table>
             </div>
         </div>
-        
-        <!-- Sidebar Overlay (para móviles) -->
-        <div class="sidebar-overlay" id="sidebar-overlay"></div>
-        
-        <!-- Sidebar -->
-        <div class="sidebar" id="sidebar">
-            <div class="user-info">
-                <div class="user-avatar" id="user-avatar">
-                    <i class="fas fa-user"></i>
-                </div>
-                <div class="user-details">
-                    <h3 id="current-user">Usuario</h3>
-                    <p><span class="status-dot"></span> En línea</p>
-                    <p class="user-id hidden" id="current-user-id">ID: #0000</p>
-                    <button class="logout-button" id="logout-button">Cerrar Sesión</button>
-                </div>
-                <div class="admin-badge hidden" id="admin-badge">ADMIN</div>
-            </div>
-            
-            <div class="chat-rooms">
-                <h3><i class="fas fa-comments room-icon"></i> Salas de Chat</h3>
-                <ul class="room-list">
-                    <li class="room-item active" data-room="general">
-                        <i class="fas fa-globe-americas room-icon"></i> General
-                    </li>
-                    <li class="room-item" data-room="develop">
-                        <i class="fas fa-code room-icon"></i> Desarrollo
-                    </li>
-                    <li class="room-item" data-room="business">
-                        <i class="fas fa-chart-line room-icon"></i> Negocios
-                    </li>
-                    <li class="room-item" data-room="gaming">
-                        <i class="fas fa-gamepad room-icon"></i> Gaming
-                    </li>
-                    <li class="room-item" data-room="music">
-                        <i class="fas fa-music room-icon"></i> Música
-                    </li>
-                    <li class="room-item" data-room="multimedia">
-                        <i class="fas fa-photo-video room-icon"></i> Multimedia
-                    </li>
-                    <!-- Nuevo canal de voz -->
-                    <li class="room-item" data-room="voice">
-                        <i class="fas fa-phone-alt room-icon"></i> Voz
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="online-users">
-                <h3><i class="fas fa-users room-icon"></i> Usuarios en Línea</h3>
-                <ul class="user-list" id="online-users">
-                    <!-- Usuarios se cargarán dinámicamente -->
-                </ul>
-            </div>
+    </div>
+    
+    <!-- Voice Call -->
+    <div class="voice-call" id="voice-call">
+        <div class="voice-header">
+            <h3 class="voice-title">Canal de Voz</h3>
+            <button class="voice-close" id="voice-close">
+                <i class="fas fa-times"></i>
+            </button>
         </div>
         
-        <!-- Main Chat Area -->
-        <div class="chat-area">
-            <div class="chat-header">
-                <button class="menu-toggle" id="menu-toggle">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <div class="chat-title">
-                    <i class="fas fa-globe-americas"></i> <span id="current-room">Sala General</span>
-                </div>
-                <div class="chat-actions">
-                    <button class="admin-button hidden" id="admin-button">
-                        <i class="fas fa-cog"></i> Panel Admin
-                    </button>
-                </div>
-            </div>
-            
-            <div class="chat-messages" id="chat-messages">
-                <!-- Messages will be inserted here dynamically -->
-            </div>
-            
-            <div class="chat-input-area">
-                <!-- Área de subida de archivos -->
-                <div class="file-upload-overlay" id="file-upload-overlay"></div>
-                <div class="file-upload-area" id="file-upload-area">
-                    <button class="file-upload-close" id="file-upload-close">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <div class="file-upload-text">
-                        <i class="fas fa-cloud-upload-alt"></i>
-                        <p>Arrastra archivos aquí o haz clic para seleccionar</p>
-                        <p>Formatos permitidos: Imágenes, Audio, Video, Documentos</p>
-                        <p>Tamaño máximo: 10MB</p>
-                    </div>
-                    <div class="file-upload-buttons">
-                        <button class="file-upload-button" id="select-files-btn">
-                            <i class="fas fa-folder-open"></i> Seleccionar Archivos
-                        </button>
-                        <button class="file-upload-button" id="upload-files-btn" style="display: none;">
-                            <i class="fas fa-upload"></i> Subir Archivos
-                        </button>
-                    </div>
-                    <div class="file-preview" id="file-preview"></div>
-                </div>
-                
-                <input type="text" class="message-input" id="message-input" placeholder="Escribe un mensaje...">
-                <div class="action-buttons">
-                    <button class="action-button file-button show" id="file-button">
-                        <i class="fas fa-paperclip"></i>
-                    </button>
-                    <button class="action-button">
-                        <i class="fas fa-smile"></i>
-                    </button>
-                    <!-- Botón para mostrar/ocultar IDs -->
-                    <button class="action-button" id="toggle-ids-btn" title="Mostrar/Ocultar IDs">
-                        <i class="fas fa-eye"></i>
-                    </button>
-                    <!-- Botones de administración -->
-                    <button class="action-button admin-action-button hidden" id="delete-message-btn" title="Eliminar último mensaje">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                    <button class="action-button admin-action-button hidden" id="ban-user-btn" title="Banear usuario seleccionado">
-                        <i class="fas fa-ban"></i>
-                    </button>
-                    <button class="action-button admin-action-button hidden" id="admin-panel-btn" title="Panel de Administración">
-                        <i class="fas fa-cog"></i>
-                    </button>
-                </div>
-                <button class="send-button" id="send-button">
-                    <i class="fas fa-paper-plane"></i>
-                </button>
-            </div>
+        <div class="voice-participants" id="voice-participants">
+            <!-- Participants will be loaded dynamically -->
+        </div>
+        
+        <div class="voice-controls">
+            <button class="voice-button" id="voice-mute" title="Silenciar">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="voice-button" id="voice-headphones" title="Auriculares">
+                <i class="fas fa-headphones"></i>
+            </button>
+            <button class="voice-button" id="voice-leave" title="Abandonar Llamada">
+                <i class="fas fa-phone-slash"></i>
+            </button>
         </div>
     </div>
-    <!-- Menú contextual -->
+    
+    <!-- Context Menu -->
     <div class="context-menu" id="context-menu">
         <div class="context-menu-item" id="copy-user-id">
-            <i class="fas fa-user-circle"></i> Copiar ID de Usuario
+            <i class="fas fa-user"></i>
+            <span>Copiar ID de Usuario</span>
         </div>
         <div class="context-menu-item" id="copy-message-id">
-            <i class="fas fa-comment-alt"></i> Copiar ID de Mensaje
+            <i class="fas fa-comment"></i>
+            <span>Copiar ID de Mensaje</span>
         </div>
         <div class="context-menu-divider"></div>
         <div class="context-menu-item" id="report-message">
-            <i class="fas fa-flag"></i> Reportar Mensaje
+            <i class="fas fa-flag"></i>
+            <span>Reportar Mensaje</span>
         </div>
-        <div class="context-menu-item admin-only" id="delete-message">
-            <i class="fas fa-trash"></i> Eliminar Mensaje
+        <div class="context-menu-item admin-only hidden" id="delete-message">
+            <i class="fas fa-trash"></i>
+            <span>Eliminar Mensaje</span>
         </div>
-        <div class="context-menu-item admin-only" id="ban-user">
-            <i class="fas fa-ban"></i> Banear Usuario
+        <div class="context-menu-item admin-only hidden" id="ban-user">
+            <i class="fas fa-ban"></i>
+            <span>Banear Usuario</span>
         </div>
         <div class="context-menu-divider"></div>
-        <div class="context-menu-item admin-only" id="open-admin-panel">
-            <i class="fas fa-cog"></i> Panel de Administración
-        </div>
-        <div class="context-menu-divider"></div>
-        <div class="context-menu-item" id="close-context-menu">
-            <i class="fas fa-times"></i> Cerrar
+        <div class="context-menu-item admin-only hidden" id="open-admin-panel">
+            <i class="fas fa-cog"></i>
+            <span>Panel de Administración</span>
         </div>
     </div>
-    <!-- Indicador de copia -->
-    <div class="copied-indicator" id="copied-indicator">¡Copiado al portapapeles!</div>
-    <!-- Modal para vista previa de imágenes -->
+    
+    <!-- Image Modal -->
     <div class="image-modal" id="image-modal">
         <div class="image-modal-content">
             <button class="image-modal-close" id="image-modal-close">
@@ -2272,58 +2036,42 @@
             <img class="image-modal-img" id="image-modal-img" src="" alt="Vista previa">
         </div>
     </div>
-    <!-- Canal de Voz -->
-    <div class="voice-call-container" id="voice-call-container">
-        <div class="voice-controls">
-            <button class="voice-control-btn" id="toggle-mic">
-                <i class="fas fa-microphone"></i>
-            </button>
-            <button class="voice-control-btn" id="toggle-headphones">
-                <i class="fas fa-headphones"></i>
-            </button>
-            <button class="voice-control-btn" id="leave-voice-call">
-                <i class="fas fa-phone-slash"></i>
-            </button>
-        </div>
-        
-        <div class="participants-list" id="participants-list">
-            <div class="participant-item">
-                <div class="participant-avatar">U</div>
-                <span>Tú</span>
-                <div class="mic-indicator active" id="user-mic-indicator"></div>
-            </div>
-        </div>
-    </div>
+    
+    <!-- Notification Container -->
+    <div id="notification-container"></div>
+    
+    <!-- File Input (Hidden) -->
+    <input type="file" id="file-input" multiple style="display: none;">
+    
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
         // URL del servidor WebSocket
         const socket = io('https://chat-app-bymp.onrender.com/');
+        
         // Variables globales
         let currentUser = null;
         let currentRoom = 'general';
         let onlineUsers = [];
         let isAdminPanelOpen = false;
         let contextMenuTarget = null;
-        let contextMenuHelpShown = false;
+        let selectedFiles = [];
+        let isFileUploadActive = false;
         let inVoiceCall = false;
         let isMuted = false;
         
-        // Detección de dispositivos
-        let isMobile = false;
-        let isTablet = false;
-        let isDesktop = false;
-        let deviceType = 'desktop';
-        
         // Elementos DOM
-        const loginContainer = document.getElementById('login-container');
-        const registerContainer = document.getElementById('register-container');
-        const chatContainer = document.getElementById('chat-container');
+        const authContainer = document.getElementById('auth-container');
+        const appContainer = document.getElementById('app-container');
         const loginForm = document.getElementById('login-form');
         const registerForm = document.getElementById('register-form');
         const showRegister = document.getElementById('show-register');
         const showLogin = document.getElementById('show-login');
+        const adminTokenGroup = document.getElementById('admin-token-group');
+        const adminLoginCheckbox = document.getElementById('admin-login');
+        const menuToggle = document.getElementById('menu-toggle');
+        const sidebar = document.getElementById('sidebar');
+        const sidebarOverlay = document.getElementById('sidebar-overlay');
         const currentUserElement = document.getElementById('current-user');
-        const currentUserIdElement = document.getElementById('current-user-id');
         const userAvatar = document.getElementById('user-avatar');
         const chatMessages = document.getElementById('chat-messages');
         const messageInput = document.getElementById('message-input');
@@ -2331,7 +2079,1377 @@
         const onlineUsersList = document.getElementById('online-users');
         const currentRoomElement = document.getElementById('current-room');
         const logoutButton = document.getElementById('logout-button');
-        const rememberMe = document.getElementById('remember-me');
         const adminButton = document.getElementById('admin-button');
         const adminPanel = document.getElementById('admin-panel');
-        const adminClose =
+        const adminClose = document.getElementById('admin-close');
+        const fileUploadArea = document.getElementById('file-upload-area');
+        const fileInput = document.getElementById('file-input');
+        const selectFilesButton = document.getElementById('select-files-button');
+        const cancelUploadButton = document.getElementById('cancel-upload-button');
+        const fileButton = document.getElementById('file-button');
+        const filePreview = document.getElementById('file-preview');
+        const voiceCall = document.getElementById('voice-call');
+        const voiceCallButton = document.getElementById('voice-call-button');
+        const voiceClose = document.getElementById('voice-close');
+        const voiceMute = document.getElementById('voice-mute');
+        const voiceLeave = document.getElementById('voice-leave');
+        const voiceParticipants = document.getElementById('voice-participants');
+        const contextMenu = document.getElementById('context-menu');
+        const imageModal = document.getElementById('image-modal');
+        const imageModalImg = document.getElementById('image-modal-img');
+        const imageModalClose = document.getElementById('image-modal-close');
+        const notificationContainer = document.getElementById('notification-container');
+        
+        // Funciones para manejar cookies
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + value + ";" + expires + ";path=/";
+        }
+        
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+        
+        function deleteCookie(name) {
+            document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+        }
+        
+        // Función para mostrar notificaciones
+        function showNotification(message, type = 'info', title = '') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            
+            const iconClass = type === 'success' ? 'check-circle' : 
+                             type === 'error' ? 'exclamation-circle' : 
+                             type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+            
+            notification.innerHTML = `
+                <div class="notification-icon">
+                    <i class="fas fa-${iconClass}"></i>
+                </div>
+                <div class="notification-content">
+                    ${title ? `<div class="notification-title">${title}</div>` : ''}
+                    <div class="notification-message">${message}</div>
+                </div>
+                <button class="notification-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            notificationContainer.appendChild(notification);
+            
+            // Mostrar notificación
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            // Auto-ocultar después de 5 segundos
+            const hideTimeout = setTimeout(() => {
+                hideNotification(notification);
+            }, 5000);
+            
+            // Cerrar manualmente
+            notification.querySelector('.notification-close').addEventListener('click', () => {
+                clearTimeout(hideTimeout);
+                hideNotification(notification);
+            });
+        }
+        
+        function hideNotification(notification) {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 300);
+        }
+        
+        // Formatear fecha/hora
+        function formatDateTime(date) {
+            return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+        }
+        
+        // Copiar texto al portapapeles
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    showNotification('Copiado al portapapeles', 'success');
+                })
+                .catch(err => {
+                    console.error('Error al copiar:', err);
+                    showNotification('Error al copiar al portapapeles', 'error');
+                });
+        }
+        
+        // Toggle sidebar
+        function toggleSidebar() {
+            sidebar.classList.toggle('active');
+            sidebarOverlay.classList.toggle('active');
+        }
+        
+        // Cerrar sidebar al hacer clic en overlay
+        sidebarOverlay.addEventListener('click', toggleSidebar);
+        
+        // Mostrar menú contextual
+        function showContextMenu(event, target, type) {
+            event.preventDefault();
+            contextMenuTarget = target;
+            
+            // Posicionar el menú contextual
+            const x = event.clientX || (event.touches && event.touches[0].clientX);
+            const y = event.clientY || (event.touches && event.touches[0].clientY);
+            
+            contextMenu.style.left = `${x}px`;
+            contextMenu.style.top = `${y}px`;
+            contextMenu.classList.add('active');
+            
+            // Mostrar/ocultar opciones según el tipo
+            document.getElementById('copy-user-id').style.display = type === 'user' ? 'flex' : 'none';
+            document.getElementById('copy-message-id').style.display = type === 'message' ? 'flex' : 'none';
+            document.getElementById('report-message').style.display = type === 'message' ? 'flex' : 'none';
+            
+            // Mostrar opciones de administrador si el usuario es admin
+            const adminOptions = document.querySelectorAll('.context-menu-item.admin-only');
+            adminOptions.forEach(option => {
+                if (currentUser?.role === 'admin') {
+                    option.classList.remove('hidden');
+                } else {
+                    option.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Ocultar menú contextual
+        function hideContextMenu() {
+            contextMenu.classList.remove('active');
+        }
+        
+        // Funciones para manejar archivos
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+        
+        function getFileIcon(fileType) {
+            if (fileType.startsWith('image/')) {
+                return 'fa-image';
+            } else if (fileType.startsWith('audio/')) {
+                return 'fa-music';
+            } else if (fileType.startsWith('video/')) {
+                return 'fa-video';
+            } else if (fileType.includes('pdf')) {
+                return 'fa-file-pdf';
+            } else if (fileType.includes('doc')) {
+                return 'fa-file-word';
+            } else if (fileType.includes('xls') || fileType.includes('excel')) {
+                return 'fa-file-excel';
+            } else if (fileType.includes('txt')) {
+                return 'fa-file-alt';
+            } else {
+                return 'fa-file';
+            }
+        }
+        
+        function validateFile(file) {
+            const maxSize = 10 * 1024 * 1024; // 10MB
+            const allowedTypes = [
+                // Imágenes
+                'image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp',
+                // Audio
+                'audio/mpeg', 'audio/mp3', 'audio/wav', 'audio/ogg', 'audio/m4a',
+                // Documentos
+                'application/pdf', 'application/msword', 
+                'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+                'text/plain', 'application/vnd.ms-excel',
+                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                // Video
+                'video/mp4', 'video/webm', 'video/ogg', 'video/avi'
+            ];
+            
+            if (file.size > maxSize) {
+                showNotification(`El archivo ${file.name} es demasiado grande. Máximo 10MB.`, 'error');
+                return false;
+            }
+            
+            if (!allowedTypes.includes(file.type)) {
+                showNotification(`El tipo de archivo ${file.name} no está permitido.`, 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function toggleFileUpload() {
+            if (currentRoom === 'multimedia') {
+                isFileUploadActive = !isFileUploadActive;
+                fileUploadArea.classList.toggle('active', isFileUploadActive);
+                
+                if (!isFileUploadActive) {
+                    selectedFiles = [];
+                    filePreview.innerHTML = '';
+                }
+            } else {
+                showNotification('La subida de archivos solo está disponible en la sala Multimedia', 'warning');
+            }
+        }
+        
+        function handleFileSelect(files) {
+            if (!files || files.length === 0) return;
+            
+            selectedFiles = [];
+            filePreview.innerHTML = '';
+            
+            Array.from(files).forEach(file => {
+                if (validateFile(file)) {
+                    selectedFiles.push(file);
+                    addFilePreview(file);
+                }
+            });
+        }
+        
+        function addFilePreview(file) {
+            const fileItem = document.createElement('div');
+            fileItem.className = 'file-item';
+            
+            const icon = getFileIcon(file.type);
+            const size = formatFileSize(file.size);
+            
+            fileItem.innerHTML = `
+                <div class="file-icon">
+                    <i class="fas ${icon}"></i>
+                </div>
+                <div class="file-info">
+                    <div class="file-name">${file.name}</div>
+                    <div class="file-size">${size}</div>
+                </div>
+                <button class="file-remove" data-file="${file.name}">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            filePreview.appendChild(fileItem);
+            
+            // Event listener para eliminar archivo
+            fileItem.querySelector('.file-remove').addEventListener('click', () => {
+                removeFile(file.name);
+            });
+        }
+        
+        function removeFile(fileName) {
+            selectedFiles = selectedFiles.filter(file => file.name !== fileName);
+            const fileItem = filePreview.querySelector(`[data-file="${fileName}"]`).closest('.file-item');
+            if (fileItem) {
+                fileItem.remove();
+            }
+        }
+        
+        function uploadFiles() {
+            if (selectedFiles.length === 0) return;
+            
+            selectedFiles.forEach(file => {
+                uploadFile(file);
+            });
+        }
+        
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('room', currentRoom);
+            
+            const xhr = new XMLHttpRequest();
+            
+            // Agregar token de autorización
+            const sessionToken = getCookie('sessionToken');
+            if (sessionToken) {
+                xhr.setRequestHeader('Authorization', `Bearer ${sessionToken}`);
+            }
+            
+            xhr.addEventListener('load', () => {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success && response.files && response.files.length > 0) {
+                        const uploadedFile = response.files.find(f => f.name === file.name);
+                        if (uploadedFile) {
+                            // Enviar mensaje con archivo
+                            const message = {
+                                text: `Archivo compartido: ${file.name}`,
+                                sender: currentUser.nickname,
+                                senderId: currentUser.id,
+                                room: currentRoom,
+                                timestamp: Date.now(),
+                                file: {
+                                    name: uploadedFile.name,
+                                    url: uploadedFile.url,
+                                    type: uploadedFile.type,
+                                    size: uploadedFile.size
+                                }
+                            };
+                            
+                            socket.emit('message', message);
+                            showNotification(`Archivo ${file.name} subido exitosamente`, 'success');
+                        }
+                    } else {
+                        showNotification(`Error al subir ${file.name}: ${response.error || 'Error desconocido'}`, 'error');
+                    }
+                } else if (xhr.status === 401) {
+                    showNotification('Sesión expirada. Por favor, inicia sesión nuevamente.', 'error');
+                    logout();
+                } else {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        showNotification(`Error al subir ${file.name}: ${response.error || 'Error del servidor'}`, 'error');
+                    } catch (e) {
+                        showNotification(`Error al subir ${file.name}`, 'error');
+                    }
+                }
+            });
+            
+            xhr.addEventListener('error', () => {
+                showNotification(`Error de red al subir ${file.name}`, 'error');
+            });
+            
+            xhr.open('POST', '/upload');
+            xhr.send(formData);
+        }
+        
+        function showImageModal(imageSrc) {
+            imageModalImg.src = imageSrc;
+            imageModal.classList.add('active');
+        }
+        
+        function hideImageModal() {
+            imageModal.classList.remove('active');
+        }
+        
+        // Añadir mensaje al chat
+        function addMessage(message, isCurrentUser = false) {
+            // Verificar si el mensaje ya existe
+            if (document.querySelector(`[data-message-id="${message.id}"]`)) {
+                return;
+            }
+            
+            const messageElement = document.createElement('div');
+            messageElement.className = `message ${isCurrentUser ? 'sent' : ''}`;
+            messageElement.setAttribute('data-message-id', message.id);
+            messageElement.setAttribute('data-user-id', message.senderId);
+            
+            let fileContent = '';
+            if (message.file && !message.banned) {
+                if (message.file.type.startsWith('image/')) {
+                    fileContent = `
+                        <div class="message-file">
+                            <img src="${message.file.url}" alt="${message.file.name}" class="message-image" onclick="showImageModal('${message.file.url}')">
+                            <div style="margin-top: 8px; font-size: 12px; color: var(--gray);">
+                                ${message.file.name} (${formatFileSize(message.file.size)})
+                            </div>
+                        </div>
+                    `;
+                } else if (message.file.type.startsWith('audio/')) {
+                    fileContent = `
+                        <div class="message-file">
+                            <audio controls class="message-audio">
+                                <source src="${message.file.url}" type="${message.file.type}">
+                                Tu navegador no soporta el elemento de audio.
+                            </audio>
+                            <a href="${message.file.url}" class="message-document" target="_blank" download="${message.file.name}">
+                                <div class="document-icon">
+                                    <i class="fas ${getFileIcon(message.file.type)}"></i>
+                                </div>
+                                <div class="document-info">
+                                    <div class="document-name">${message.file.name}</div>
+                                    <div class="document-size">${formatFileSize(message.file.size)}</div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                } else if (message.file.type.startsWith('video/')) {
+                    fileContent = `
+                        <div class="message-file">
+                            <video controls class="message-video">
+                                <source src="${message.file.url}" type="${message.file.type}">
+                                Tu navegador no soporta el elemento de video.
+                            </video>
+                            <a href="${message.file.url}" class="message-document" target="_blank" download="${message.file.name}">
+                                <div class="document-icon">
+                                    <i class="fas ${getFileIcon(message.file.type)}"></i>
+                                </div>
+                                <div class="document-info">
+                                    <div class="document-name">${message.file.name}</div>
+                                    <div class="document-size">${formatFileSize(message.file.size)}</div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                } else {
+                    fileContent = `
+                        <div class="message-file">
+                            <a href="${message.file.url}" class="message-document" target="_blank" download="${message.file.name}">
+                                <div class="document-icon">
+                                    <i class="fas ${getFileIcon(message.file.type)}"></i>
+                                </div>
+                                <div class="document-info">
+                                    <div class="document-name">${message.file.name}</div>
+                                    <div class="document-size">${formatFileSize(message.file.size)}</div>
+                                </div>
+                            </a>
+                        </div>
+                    `;
+                }
+            }
+            
+            messageElement.innerHTML = `
+                <div class="message-avatar">${message.sender ? message.sender.charAt(0) : 'S'}</div>
+                <div class="message-content">
+                    <div class="message-header">
+                        <span class="message-sender">${isCurrentUser ? 'Tú' : message.sender}</span>
+                        <span class="message-time">${formatDateTime(new Date(message.timestamp))}</span>
+                    </div>
+                    <div class="message-text ${message.banned ? 'message-banned' : ''}">${message.banned ? '[MENSAJE ELIMINADO POR ADMINISTRADOR]' : message.text}</div>
+                    ${fileContent}
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageElement);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+            
+            // Agregar event listeners para menú contextual
+            messageElement.addEventListener('contextmenu', (e) => {
+                showContextMenu(e, messageElement, 'message');
+            });
+            
+            // Para dispositivos móviles (long press)
+            let pressTimer;
+            messageElement.addEventListener('touchstart', () => {
+                pressTimer = setTimeout(() => {
+                    showContextMenu(event, messageElement, 'message');
+                }, 500);
+            });
+            
+            messageElement.addEventListener('touchend', () => {
+                clearTimeout(pressTimer);
+            });
+        }
+        
+        // Actualizar lista de usuarios en línea
+        function updateOnlineUsers(users) {
+            onlineUsers = users;
+            onlineUsersList.innerHTML = '';
+            
+            users.forEach(user => {
+                if (user.id === currentUser?.id) return;
+                
+                const userItem = document.createElement('li');
+                userItem.className = 'user-item';
+                userItem.setAttribute('data-user-id', user.id);
+                
+                userItem.innerHTML = `
+                    <div class="user-icon">
+                        ${user.role === 'admin' ? '<i class="fas fa-shield-alt"></i>' : '<i class="fas fa-user"></i>'}
+                    </div>
+                    <span class="user-name">${user.nickname}</span>
+                    ${user.role === 'admin' ? '<span class="badge">ADMIN</span>' : ''}
+                `;
+                
+                onlineUsersList.appendChild(userItem);
+                
+                // Agregar event listeners para menú contextual
+                userItem.addEventListener('contextmenu', (e) => {
+                    showContextMenu(e, userItem, 'user');
+                });
+                
+                // Para dispositivos móviles (long press)
+                let pressTimer;
+                userItem.addEventListener('touchstart', () => {
+                    pressTimer = setTimeout(() => {
+                        showContextMenu(event, userItem, 'user');
+                    }, 500);
+                });
+                
+                userItem.addEventListener('touchend', () => {
+                    clearTimeout(pressTimer);
+                });
+            });
+        }
+        
+        // Cerrar sesión
+        function logout() {
+            // Eliminar cookies de sesión
+            deleteCookie('sessionToken');
+            deleteCookie('rememberMe');
+            
+            // Notificar al servidor
+            if (currentUser) {
+                socket.emit('logout', { userId: currentUser.id });
+            }
+            
+            // Resetear estado
+            currentUser = null;
+            
+            // Mostrar pantalla de login
+            appContainer.classList.add('hidden');
+            authContainer.classList.remove('hidden');
+            
+            // Desconectar el socket
+            socket.disconnect();
+        }
+        
+        // Toggle panel de administración
+        function toggleAdminPanel() {
+            isAdminPanelOpen = !isAdminPanelOpen;
+            adminPanel.classList.toggle('active', isAdminPanelOpen);
+            
+            if (isAdminPanelOpen) {
+                // Cargar datos de administración
+                socket.emit('admin:getData', (data) => {
+                    if (data.error) {
+                        showNotification(data.error, 'error');
+                        return;
+                    }
+                    
+                    // Cargar usuarios
+                    const adminUserList = document.getElementById('admin-user-list');
+                    adminUserList.innerHTML = '';
+                    data.users.forEach(user => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${user.id}</td>
+                            <td>${user.nickname}</td>
+                            <td>${user.username}</td>
+                            <td>${user.role}</td>
+                            <td>${user.banned ? 'Baneado' : 'Activo'}</td>
+                            <td>
+                                ${user.banned ? 
+                                    `<button class="admin-action unban" data-user-id="${user.id}">Desbanear</button>` : 
+                                    `<button class="admin-action ban" data-user-id="${user.id}">Banear</button>`
+                                }
+                            </td>
+                        `;
+                        adminUserList.appendChild(row);
+                    });
+                    
+                    // Cargar mensajes reportados
+                    const adminMessageList = document.getElementById('admin-message-list');
+                    adminMessageList.innerHTML = '';
+                    data.reportedMessages.forEach(message => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${message.id}</td>
+                            <td>${message.sender}</td>
+                            <td>${message.text.substring(0, 50)}${message.text.length > 50 ? '...' : ''}</td>
+                            <td>${new Date(message.timestamp).toLocaleString()}</td>
+                            <td>
+                                <button class="admin-action delete" data-message-id="${message.id}">Eliminar</button>
+                                <button class="admin-action unban" data-message-id="${message.id}">Descartar</button>
+                            </td>
+                        `;
+                        adminMessageList.appendChild(row);
+                    });
+                    
+                    // Cargar IPs baneadas
+                    const bannedIpList = document.getElementById('banned-ip-list');
+                    bannedIpList.innerHTML = '';
+                    data.bannedIps.forEach(ip => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${ip.ip}</td>
+                            <td>${ip.reason}</td>
+                            <td>${new Date(ip.timestamp).toLocaleString()}</td>
+                            <td>
+                                <button class="admin-action unban" data-ip="${ip.ip}">Desbanear</button>
+                            </td>
+                        `;
+                        bannedIpList.appendChild(row);
+                    });
+                    
+                    // Cargar tokens SSO
+                    const ssoTokenList = document.getElementById('sso-token-list');
+                    ssoTokenList.innerHTML = '';
+                    data.ssoTokens.forEach(token => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${token.token.substring(0, 10)}...</td>
+                            <td>${new Date(token.created_at).toLocaleString()}</td>
+                        `;
+                        ssoTokenList.appendChild(row);
+                    });
+                    
+                    // Cargar log de moderación
+                    const moderationLog = document.getElementById('moderation-log');
+                    moderationLog.innerHTML = '';
+                    data.moderationLog.forEach(log => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${log.moderator}</td>
+                            <td>${log.action_type}</td>
+                            <td>${log.target}</td>
+                            <td>${new Date(log.timestamp).toLocaleString()}</td>
+                        `;
+                        moderationLog.appendChild(row);
+                    });
+                    
+                    // Agregar event listeners para acciones de administración
+                    document.querySelectorAll('.admin-action.ban').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const userId = button.getAttribute('data-user-id');
+                            const reason = prompt('Razón del baneo:');
+                            if (reason) {
+                                socket.emit('admin:banUser', { userId, reason }, (response) => {
+                                    if (response.success) {
+                                        showNotification('Usuario baneado correctamente', 'success');
+                                        toggleAdminPanel();
+                                    } else {
+                                        showNotification(response.error || 'Error al banear usuario', 'error');
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    document.querySelectorAll('.admin-action.unban').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const userId = button.getAttribute('data-user-id');
+                            const ip = button.getAttribute('data-ip');
+                            
+                            if (userId) {
+                                socket.emit('admin:unbanUser', { userId }, (response) => {
+                                    if (response.success) {
+                                        showNotification('Usuario desbaneado correctamente', 'success');
+                                        toggleAdminPanel();
+                                    } else {
+                                        showNotification(response.error || 'Error al desbanear usuario', 'error');
+                                    }
+                                });
+                            } else if (ip) {
+                                socket.emit('admin:unbanIp', { ip }, (response) => {
+                                    if (response.success) {
+                                        showNotification('IP desbaneada correctamente', 'success');
+                                        toggleAdminPanel();
+                                    } else {
+                                        showNotification(response.error || 'Error al desbanear IP', 'error');
+                                    }
+                                });
+                            }
+                        });
+                    });
+                    
+                    document.querySelectorAll('.admin-action.delete').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const messageId = button.getAttribute('data-message-id');
+                            socket.emit('admin:deleteMessage', { messageId }, (response) => {
+                                if (response.success) {
+                                    showNotification('Mensaje eliminado correctamente', 'success');
+                                    toggleAdminPanel();
+                                } else {
+                                    showNotification(response.error || 'Error al eliminar mensaje', 'error');
+                                }
+                            });
+                        });
+                    });
+                });
+            }
+        }
+        
+        // Simular participantes en el canal de voz
+        function simulateVoiceParticipants() {
+            voiceParticipants.innerHTML = `
+                <div class="voice-participant">
+                    <div class="voice-participant-avatar">${currentUser.nickname.charAt(0)}</div>
+                    <div class="voice-participant-info">
+                        <div class="voice-participant-name">Tú</div>
+                        <div class="voice-participant-status">
+                            <div class="voice-status-indicator ${isMuted ? 'muted' : ''}"></div>
+                            <span>${isMuted ? 'Silenciado' : 'Hablando'}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Agregar algunos participantes simulados
+            const sampleUsers = ['Ana', 'Carlos', 'María', 'Luis'];
+            sampleUsers.forEach(user => {
+                const participant = document.createElement('div');
+                participant.className = 'voice-participant';
+                const isSpeaking = Math.random() > 0.5;
+                participant.innerHTML = `
+                    <div class="voice-participant-avatar">${user.charAt(0)}</div>
+                    <div class="voice-participant-info">
+                        <div class="voice-participant-name">${user}</div>
+                        <div class="voice-participant-status">
+                            <div class="voice-status-indicator ${!isSpeaking ? 'muted' : ''}"></div>
+                            <span>${isSpeaking ? 'Hablando' : 'Silenciado'}</span>
+                        </div>
+                    </div>
+                `;
+                voiceParticipants.appendChild(participant);
+            });
+        }
+        
+        // Event Listeners
+        
+        // Cambiar a pantalla de registro
+        showRegister.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.add('hidden');
+            registerForm.classList.remove('hidden');
+        });
+        
+        // Cambiar a pantalla de login
+        showLogin.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.classList.add('hidden');
+            loginForm.classList.remove('hidden');
+        });
+        
+        // Mostrar/ocultar campo SSO
+        adminLoginCheckbox.addEventListener('change', function() {
+            adminTokenGroup.classList.toggle('hidden', !this.checked);
+        });
+        
+        // Login
+        loginForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            const remember = document.getElementById('remember-me').checked;
+            const isAdminLogin = document.getElementById('admin-login').checked;
+            const adminToken = isAdminLogin ? document.getElementById('admin-token').value : '';
+            
+            // Validación básica
+            if (!username || !password) {
+                showNotification('Por favor completa todos los campos', 'error');
+                return;
+            }
+            
+            // Validación específica para admin token
+            if (isAdminLogin) {
+                if (!adminToken || adminToken.trim() === '') {
+                    showNotification('El token de administrador es obligatorio cuando se selecciona acceso admin', 'error');
+                    return;
+                }
+                
+                if (adminToken.trim().length < 10) {
+                    showNotification('El token de administrador debe tener al menos 10 caracteres', 'error');
+                    return;
+                }
+            }
+            
+            // Mostrar indicador de carga
+            const loginButton = loginForm.querySelector('button[type="submit"]');
+            const originalButtonText = loginButton.textContent;
+            loginButton.textContent = 'Verificando...';
+            loginButton.disabled = true;
+            
+            // Autenticación con el servidor
+            socket.emit('login', { 
+                username, 
+                password,
+                adminToken: adminToken.trim()
+            }, (response) => {
+                // Restaurar botón
+                loginButton.textContent = originalButtonText;
+                loginButton.disabled = false;
+                
+                if (response.success) {
+                    currentUser = response.user;
+                    
+                    // Mostrar elementos de admin si corresponde
+                    if (currentUser.role === 'admin') {
+                        adminButton.classList.remove('hidden');
+                        showNotification('Acceso de administrador concedido', 'success');
+                    }
+                    
+                    // Guardar sesión en cookie
+                    if (remember) {
+                        setCookie('sessionToken', response.token, 30);
+                        setCookie('rememberMe', 'true', 30);
+                    } else {
+                        setCookie('sessionToken', response.token, 1); // Sesión de 1 día
+                    }
+                    
+                    // Actualizar UI
+                    currentUserElement.textContent = currentUser.nickname;
+                    userAvatar.textContent = currentUser.nickname.charAt(0).toUpperCase();
+                    
+                    // Cambiar a pantalla de chat
+                    authContainer.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    
+                    // Unirse al chat
+                    socket.emit('join', {
+                        user: currentUser,
+                        room: currentRoom
+                    });
+                    
+                    // Mensaje de bienvenida
+                    addMessage({
+                        id: 'system-' + Date.now(),
+                        text: `¡Bienvenido ${currentUser.nickname}! Has entrado al chat.`,
+                        sender: 'Sistema',
+                        senderId: 'system',
+                        timestamp: Date.now()
+                    });
+                } else {
+                    // Manejo específico de errores de admin token
+                    if (isAdminLogin && response.message.includes('admin')) {
+                        showNotification(response.message, 'error');
+                        // Limpiar campo de admin token en caso de error
+                        document.getElementById('admin-token').value = '';
+                    } else {
+                        showNotification(response.message || 'Error en el inicio de sesión', 'error');
+                    }
+                }
+            });
+        });
+        
+        // Registro
+        registerForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nickname = document.getElementById('register-nickname').value;
+            const username = document.getElementById('register-username').value;
+            const password = document.getElementById('register-password').value;
+            const confirm = document.getElementById('register-confirm').value;
+            
+            // Validaciones
+            if (!nickname || !username || !password || !confirm) {
+                showNotification('Por favor completa todos los campos', 'error');
+                return;
+            }
+            
+            if (password !== confirm) {
+                showNotification('Las contraseñas no coinciden', 'error');
+                return;
+            }
+            
+            if (password.length < 6) {
+                showNotification('La contraseña debe tener al menos 6 caracteres', 'error');
+                return;
+            }
+            
+            // Registro con el servidor
+            socket.emit('register', { nickname, username, password }, (response) => {
+                if (response.success) {
+                    currentUser = response.user;
+                    
+                    // Guardar sesión en cookie
+                    setCookie('sessionToken', response.token, 30);
+                    
+                    // Actualizar UI
+                    currentUserElement.textContent = currentUser.nickname;
+                    userAvatar.textContent = currentUser.nickname.charAt(0).toUpperCase();
+                    
+                    // Cambiar a pantalla de chat
+                    authContainer.classList.add('hidden');
+                    appContainer.classList.remove('hidden');
+                    
+                    // Unirse al chat
+                    socket.emit('join', {
+                        user: currentUser,
+                        room: currentRoom
+                    });
+                    
+                    // Mensaje de bienvenida
+                    addMessage({
+                        id: 'system-' + Date.now(),
+                        text: `¡Bienvenido ${currentUser.nickname}! Has entrado al chat.`,
+                        sender: 'Sistema',
+                        senderId: 'system',
+                        timestamp: Date.now()
+                    });
+                } else {
+                    showNotification(response.message || 'Error en el registro', 'error');
+                }
+            });
+        });
+        
+        // Cambiar sala de chat
+        document.querySelectorAll('.room-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const roomName = this.getAttribute('data-room');
+                
+                // Actualizar sala activa
+                document.querySelectorAll('.room-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+                
+                currentRoom = roomName;
+                
+                const roomDisplayName = roomName === 'general' ? 'General' : 
+                                      roomName === 'develop' ? 'Desarrollo' :
+                                      roomName === 'business' ? 'Negocios' :
+                                      roomName === 'gaming' ? 'Gaming' : 
+                                      roomName === 'music' ? 'Música' : 
+                                      roomName === 'multimedia' ? 'Multimedia' : 'Voz';
+                
+                currentRoomElement.textContent = roomDisplayName;
+                
+                // Manejar sala de voz
+                if (roomName === 'voice') {
+                    voiceCall.classList.add('active');
+                    inVoiceCall = true;
+                    showNotification('Te has unido al canal de voz', 'success');
+                    
+                    // Enviar mensaje al chat sobre la entrada al canal de voz
+                    const voiceMessage = {
+                        id: 'system-' + Date.now(),
+                        text: `${currentUser.nickname} ha entrado al canal de voz`,
+                        sender: 'Sistema',
+                        senderId: 'system',
+                        timestamp: Date.now(),
+                        room: 'voice'
+                    };
+                    socket.emit('message', voiceMessage);
+                    
+                    // Simular participantes en el canal de voz
+                    simulateVoiceParticipants();
+                } else {
+                    voiceCall.classList.remove('active');
+                    
+                    // Si estaba en canal de voz, enviar mensaje de salida
+                    if (inVoiceCall) {
+                        const leaveMessage = {
+                            id: 'system-' + Date.now(),
+                            text: `${currentUser.nickname} ha salido del canal de voz`,
+                            sender: 'Sistema',
+                            senderId: 'system',
+                            timestamp: Date.now(),
+                            room: 'voice'
+                        };
+                        socket.emit('message', leaveMessage);
+                        inVoiceCall = false;
+                    }
+                }
+                
+                // Notificar cambio de sala
+                socket.emit('changeRoom', {
+                    user: currentUser,
+                    newRoom: roomName
+                });
+                
+                // Limpiar mensajes actuales
+                chatMessages.innerHTML = '';
+                
+                // Mensaje de sistema
+                addMessage({
+                    id: 'system-' + Date.now(),
+                    text: `Te has unido a la sala ${roomDisplayName}.`,
+                    sender: 'Sistema',
+                    senderId: 'system',
+                    timestamp: Date.now()
+                });
+                
+                // En móviles, cerrar el sidebar después de seleccionar sala
+                if (window.innerWidth <= 768) {
+                    toggleSidebar();
+                }
+            });
+        });
+        
+        // Enviar mensaje
+        function sendMessage() {
+            const text = messageInput.value.trim();
+            if (text && currentUser) {
+                const message = {
+                    text: text,
+                    sender: currentUser.nickname,
+                    senderId: currentUser.id,
+                    room: currentRoom,
+                    timestamp: Date.now()
+                };
+                
+                // Añadir mensaje localmente
+                socket.emit('message', message);
+                
+                // Limpiar input
+                messageInput.value = '';
+                messageInput.style.height = 'auto';
+            }
+        }
+        
+        sendButton.addEventListener('click', sendMessage);
+        
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+        
+        // Botones de administración
+        adminButton.addEventListener('click', toggleAdminPanel);
+        adminClose.addEventListener('click', toggleAdminPanel);
+        
+        // Botón de cerrar sesión
+        logoutButton.addEventListener('click', logout);
+        
+        // Toggle sidebar
+        menuToggle.addEventListener('click', toggleSidebar);
+        
+        // Event listeners para archivos
+        fileButton.addEventListener('click', toggleFileUpload);
+        selectFilesButton.addEventListener('click', () => fileInput.click());
+        cancelUploadButton.addEventListener('click', toggleFileUpload);
+        
+        // Manejar selección de archivos
+        fileInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files);
+        });
+        
+        // Drag and drop para archivos
+        fileUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.add('dragover');
+        });
+        
+        fileUploadArea.addEventListener('dragleave', () => {
+            fileUploadArea.classList.remove('dragover');
+        });
+        
+        fileUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            fileUploadArea.classList.remove('dragover');
+            handleFileSelect(e.dataTransfer.files);
+        });
+        
+        // Event listeners para el canal de voz
+        voiceCallButton.addEventListener('click', () => {
+            // Cambiar a la sala de voz
+            document.querySelectorAll('.room-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-room') === 'voice') {
+                    item.classList.add('active');
+                    item.click();
+                }
+            });
+        });
+        
+        voiceClose.addEventListener('click', () => {
+            voiceCall.classList.remove('active');
+            inVoiceCall = false;
+            
+            // Enviar mensaje al chat sobre la salida del canal de voz
+            const leaveMessage = {
+                id: 'system-' + Date.now(),
+                text: `${currentUser.nickname} ha salido del canal de voz`,
+                sender: 'Sistema',
+                senderId: 'system',
+                timestamp: Date.now(),
+                room: 'voice'
+            };
+            socket.emit('message', leaveMessage);
+            
+            // Cambiar a la sala general
+            document.querySelectorAll('.room-item').forEach(item => {
+                item.classList.remove('active');
+                if (item.getAttribute('data-room') === 'general') {
+                    item.classList.add('active');
+                    item.click();
+                }
+            });
+        });
+        
+        voiceMute.addEventListener('click', () => {
+            isMuted = !isMuted;
+            voiceMute.classList.toggle('active', isMuted);
+            simulateVoiceParticipants();
+            showNotification(isMuted ? 'Micrófono silenciado' : 'Micrófono activado', 'info');
+        });
+        
+        voiceLeave.addEventListener('click', () => {
+            voiceClose.click();
+        });
+        
+        // Event listeners para menú contextual
+        document.getElementById('copy-user-id').addEventListener('click', () => {
+            if (contextMenuTarget) {
+                const userId = contextMenuTarget.getAttribute('data-user-id');
+                copyToClipboard(userId);
+            }
+            hideContextMenu();
+        });
+        
+        document.getElementById('copy-message-id').addEventListener('click', () => {
+            if (contextMenuTarget) {
+                const messageId = contextMenuTarget.getAttribute('data-message-id');
+                copyToClipboard(messageId);
+            }
+            hideContextMenu();
+        });
+        
+        document.getElementById('report-message').addEventListener('click', () => {
+            if (contextMenuTarget) {
+                const messageId = contextMenuTarget.getAttribute('data-message-id');
+                const reason = prompt('Razón del reporte:');
+                if (reason) {
+                    // Enviar reporte al servidor
+                    socket.emit('reportMessage', { messageId, reason }, (response) => {
+                        if (response.success) {
+                            showNotification('Mensaje reportado correctamente', 'success');
+                        } else {
+                            showNotification(response.error || 'Error al reportar mensaje', 'error');
+                        }
+                    });
+                }
+            }
+            hideContextMenu();
+        });
+        
+        document.getElementById('delete-message').addEventListener('click', () => {
+            if (contextMenuTarget && currentUser?.role === 'admin') {
+                const messageId = contextMenuTarget.getAttribute('data-message-id');
+                socket.emit('admin:deleteMessage', { messageId }, (response) => {
+                    if (response.success) {
+                        showNotification('Mensaje eliminado correctamente', 'success');
+                    } else {
+                        showNotification(response.error || 'Error al eliminar mensaje', 'error');
+                    }
+                });
+            }
+            hideContextMenu();
+        });
+        
+        document.getElementById('ban-user').addEventListener('click', () => {
+            if (contextMenuTarget && currentUser?.role === 'admin') {
+                const userId = contextMenuTarget.getAttribute('data-user-id');
+                const reason = prompt('Razón del baneo:');
+                if (reason) {
+                    socket.emit('admin:banUser', { userId, reason }, (response) => {
+                        if (response.success) {
+                            showNotification('Usuario baneado correctamente', 'success');
+                        } else {
+                            showNotification(response.error || 'Error al banear usuario', 'error');
+                        }
+                    });
+                }
+            }
+            hideContextMenu();
+        });
+        
+        document.getElementById('open-admin-panel').addEventListener('click', () => {
+            if (currentUser?.role === 'admin') {
+                toggleAdminPanel();
+            }
+            hideContextMenu();
+        });
+        
+        // Cerrar menú contextual al hacer clic fuera
+        document.addEventListener('click', (e) => {
+            if (!contextMenu.contains(e.target)) {
+                hideContextMenu();
+            }
+        });
+        
+        // Event listeners para modal de imagen
+        imageModalClose.addEventListener('click', hideImageModal);
+        imageModal.addEventListener('click', (e) => {
+            if (e.target === imageModal) {
+                hideImageModal();
+            }
+        });
+        
+        // Event listeners para generar token SSO
+        document.getElementById('generate-token-button').addEventListener('click', () => {
+            socket.emit('admin:generateToken', {}, (response) => {
+                if (response.success) {
+                    document.getElementById('generated-token').textContent = response.token;
+                    document.getElementById('token-result').classList.remove('hidden');
+                    showNotification('Token generado correctamente', 'success');
+                } else {
+                    showNotification(response.error || 'Error al generar token', 'error');
+                }
+            });
+        });
+        
+        // Event listeners para banear IP
+        document.getElementById('ban-ip-button').addEventListener('click', () => {
+            const ip = document.getElementById('ban-ip-input').value;
+            const reason = document.getElementById('ban-reason-input').value;
+            
+            if (ip && reason) {
+                socket.emit('admin:banIp', { ip, reason }, (response) => {
+                    if (response.success) {
+                        showNotification('IP baneada correctamente', 'success');
+                        document.getElementById('ban-ip-input').value = '';
+                        document.getElementById('ban-reason-input').value = '';
+                    } else {
+                        showNotification(response.error || 'Error al banear IP', 'error');
+                    }
+                });
+            } else {
+                showNotification('Por favor completa todos los campos', 'error');
+            }
+        });
+        
+        // ===== Eventos de Socket.io =====
+        
+        // Escuchar mensajes del servidor
+        socket.on('message', (message) => {
+            if (message.room === currentRoom) {
+                const isCurrentUser = currentUser && message.senderId === currentUser.id;
+                addMessage(message, isCurrentUser);
+            }
+        });
+        
+        // Escuchar actualizaciones de usuarios
+        socket.on('updateUsers', (users) => {
+            updateOnlineUsers(users);
+        });
+        
+        // Escuchar mensajes del sistema
+        socket.on('systemMessage', (message) => {
+            if (message.room === currentRoom) {
+                addMessage(message);
+            }
+        });
+        
+        // Escuchar errores de autenticación
+        socket.on('authError', (message) => {
+            showNotification(message, 'error');
+        });
+        
+        // Escuchar cuando un usuario se une
+        socket.on('userJoined', (user) => {
+            if (user.room === currentRoom) {
+                addMessage({
+                    id: 'system-' + Date.now(),
+                    text: `${user.nickname} se ha unido al chat`,
+                    sender: 'Sistema',
+                    senderId: 'system',
+                    timestamp: Date.now()
+                });
+            }
+        });
+        
+        // Escuchar cuando un usuario abandona
+        socket.on('userLeft', (user) => {
+            if (user.room === currentRoom) {
+                addMessage({
+                    id: 'system-' + Date.now(),
+                    text: `${user.nickname} ha abandonado el chat`,
+                    sender: 'Sistema',
+                    senderId: 'system',
+                    timestamp: Date.now()
+                });
+            }
+        });
+        
+        // Manejar reconexión
+        socket.on('reconnect', () => {
+            showNotification('Reconectado al servidor', 'success');
+            if (currentUser) {
+                socket.emit('rejoin', {
+                    user: currentUser,
+                    room: currentRoom
+                });
+            }
+        });
+        
+        // Handle connection errors
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            showNotification('Error de conexión al servidor', 'error');
+        });
+        
+        socket.on('disconnect', (reason) => {
+            console.log('Disconnected:', reason);
+            if (reason === 'io server disconnect') {
+                // Server disconnected us, try to reconnect
+                socket.connect();
+            }
+            showNotification('Desconectado del servidor', 'warning');
+        });
+        
+        // Handle reconnection attempts
+        socket.on('reconnect_attempt', (attemptNumber) => {
+            console.log('Reconnection attempt:', attemptNumber);
+            showNotification(`Intentando reconectar... (${attemptNumber})`, 'info');
+        });
+        
+        socket.on('reconnect_failed', () => {
+            showNotification('No se pudo reconectar al servidor', 'error');
+        });
+        
+        // Cargar mensajes iniciales
+        socket.on('initialData', (data) => {
+            if (data.room === currentRoom) {
+                data.messages.forEach(message => {
+                    const isCurrentUser = currentUser && message.sender_id === currentUser.id;
+                    addMessage({
+                        id: message.id,
+                        text: message.text,
+                        sender: message.sender,
+                        senderId: message.sender_id,
+                        timestamp: new Date(message.timestamp).getTime(),
+                        banned: message.banned
+                    }, isCurrentUser);
+                });
+            }
+        });
+        
+        // Validar sesión al cargar la página
+        window.addEventListener('DOMContentLoaded', () => {
+            const sessionToken = getCookie('sessionToken');
+            const remember = getCookie('rememberMe') === 'true';
+            
+            if (sessionToken) {
+                // Mostrar recordarme si está activo
+                if (remember) {
+                    document.getElementById('remember-me').checked = true;
+                }
+                
+                // Conectar al servidor
+                socket.connect();
+                
+                // Validar sesión
+                socket.emit('validateSession', sessionToken, (response) => {
+                    if (response.valid) {
+                        currentUser = response.user;
+                        
+                        // Mostrar elementos de admin si corresponde
+                        if (currentUser.role === 'admin') {
+                            adminButton.classList.remove('hidden');
+                        }
+                        
+                        // Actualizar UI
+                        currentUserElement.textContent = currentUser.nickname;
+                        userAvatar.textContent = currentUser.nickname.charAt(0).toUpperCase();
+                        
+                        // Cambiar a pantalla de chat
+                        authContainer.classList.add('hidden');
+                        appContainer.classList.remove('hidden');
+                        
+                        // Unirse al chat
+                        socket.emit('join', {
+                            user: currentUser,
+                            room: currentRoom
+                        });
+                    } else {
+                        // Eliminar cookies inválidas
+                        deleteCookie('sessionToken');
+                        deleteCookie('rememberMe');
+                    }
+                });
+            }
+        });
+        
+        // Hacer funciones globales para uso en atributos HTML
+        window.showImageModal = showImageModal;
+    </script>
+</body>
+</html>
