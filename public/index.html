@@ -1276,112 +1276,298 @@
         }
         /* Estilos para archivos e imágenes */
         .file-upload-area {
-            position: absolute;
-            bottom: 100%;
-            left: 0;
-            right: 0;
-            background: var(--dark-gray);
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            padding: 30px;
+            background: rgba(44, 47, 51, 0.98);
             border: 2px dashed var(--primary-color);
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 10px;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             text-align: center;
-            z-index: 100;
+            z-index: 1000;
             display: none;
-            transform: translateY(10px);
             opacity: 0;
-            transition: all 0.3s ease;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            backdrop-filter: blur(10px);
         }
+        
         .file-upload-area.active {
             display: block;
-            transform: translateY(0);
             opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
         }
+        
         .file-upload-area.dragover {
-            background: rgba(88, 101, 242, 0.1);
+            background: rgba(88, 101, 242, 0.15);
             border-color: var(--success-color);
+            transform: translate(-50%, -50%) scale(1.02);
         }
+        
         .file-upload-text {
             color: var(--gray-color);
-            margin-bottom: 15px;
+            margin-bottom: 25px;
+            font-size: 18px;
         }
-        .file-input {
-            display: none;
+        
+        .file-upload-text i {
+            font-size: 48px;
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            display: block;
+            transition: transform 0.3s ease;
         }
+        
+        .file-upload-area.dragover .file-upload-text i {
+            transform: scale(1.2);
+            color: var(--success-color);
+        }
+        
+        .file-upload-text p {
+            margin: 8px 0;
+            font-size: 16px;
+        }
+        
+        .file-upload-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        
         .file-upload-button {
             background: var(--primary-color);
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
+            padding: 12px 24px;
+            border-radius: 30px;
             cursor: pointer;
-            font-size: 14px;
-            margin: 5px;
-            transition: background 0.3s;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 10px rgba(88, 101, 242, 0.3);
         }
+        
         .file-upload-button:hover {
             background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(88, 101, 242, 0.4);
         }
+        
+        .file-upload-button:active {
+            transform: translateY(0);
+        }
+        
         .file-preview {
-            margin-top: 15px;
-            max-height: 200px;
+            max-height: 250px;
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 12px;
             overflow-y: auto;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
         .file-item {
             display: flex;
             align-items: center;
             background: rgba(255, 255, 255, 0.05);
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
+            border-radius: 10px;
+            padding: 12px;
+            margin-bottom: 12px;
+            transition: all 0.3s ease;
         }
+        
+        .file-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(5px);
+        }
+        
         .file-icon {
-            font-size: 24px;
-            margin-right: 10px;
+            font-size: 28px;
+            margin-right: 15px;
             color: var(--primary-color);
+            min-width: 28px;
         }
+        
         .file-info {
             flex-grow: 1;
+            text-align: left;
         }
+        
         .file-name {
-            font-weight: 500;
+            font-weight: 600;
             color: white;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
+            font-size: 16px;
+            word-break: break-word;
         }
+        
         .file-size {
-            font-size: 12px;
+            font-size: 14px;
             color: var(--gray-color);
         }
+        
         .file-remove {
             background: var(--danger-color);
             color: white;
             border: none;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
+            width: 32px;
+            height: 32px;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s ease;
+            margin-left: 10px;
         }
+        
         .file-remove:hover {
             background: #c0392b;
+            transform: scale(1.1);
         }
+        
         .upload-progress {
             width: 100%;
-            height: 4px;
+            height: 6px;
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            margin-top: 5px;
+            border-radius: 3px;
+            margin-top: 8px;
             overflow: hidden;
         }
+        
         .upload-progress-bar {
             height: 100%;
             background: var(--success-color);
             width: 0%;
-            transition: width 0.3s;
+            transition: width 0.5s ease;
+            border-radius: 3px;
         }
+        
+        /* Mejoras para dispositivos móviles */
+        @media (max-width: 768px) {
+            .file-upload-area {
+                width: 95%;
+                padding: 25px 20px;
+                border-radius: 12px;
+            }
+            
+            .file-upload-text {
+                font-size: 16px;
+                margin-bottom: 20px;
+            }
+            
+            .file-upload-text i {
+                font-size: 36px;
+                margin-bottom: 15px;
+            }
+            
+            .file-upload-text p {
+                font-size: 14px;
+            }
+            
+            .file-upload-button {
+                padding: 10px 18px;
+                font-size: 14px;
+            }
+            
+            .file-preview {
+                margin-top: 20px;
+                padding: 12px;
+            }
+            
+            .file-item {
+                padding: 10px;
+            }
+            
+            .file-icon {
+                font-size: 24px;
+                margin-right: 12px;
+            }
+            
+            .file-name {
+                font-size: 14px;
+            }
+            
+            .file-size {
+                font-size: 12px;
+            }
+            
+            .file-remove {
+                width: 28px;
+                height: 28px;
+                font-size: 12px;
+            }
+        }
+        
+        /* Animación de entrada mejorada */
+        @keyframes slideUpScale {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -40%) scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .file-upload-area.active {
+            animation: slideUpScale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        
+        /* Overlay de fondo para el modal de subida */
+        .file-upload-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 999;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .file-upload-overlay.active {
+            display: block;
+            opacity: 1;
+        }
+        
+        /* Botón de cerrar para el modal de subida */
+        .file-upload-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+        
+        .file-upload-close:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: rotate(90deg);
+        }
+        
         /* Estilos para mensajes con archivos */
         .message-file {
             margin-top: 10px;
@@ -1390,6 +1576,7 @@
             padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+        
         .message-image {
             max-width: 100%;
             max-height: 300px;
@@ -1397,24 +1584,29 @@
             cursor: pointer;
             transition: transform 0.3s;
         }
+        
         .message-image:hover {
             transform: scale(1.02);
         }
+        
         /* Estilos para controles de audio y video */
         .message-file audio,
         .message-file video {
             border-radius: 8px;
             background: rgba(0, 0, 0, 0.1);
         }
+        
         .message-file audio::-webkit-media-controls-panel,
         .message-file video::-webkit-media-controls-panel {
             background: rgba(0, 0, 0, 0.2);
         }
+        
         .message-file audio::-webkit-media-controls-play-button,
         .message-file video::-webkit-media-controls-play-button {
             background: var(--primary-color);
             border-radius: 50%;
         }
+        
         .message-file-link {
             display: flex;
             align-items: center;
@@ -1424,13 +1616,16 @@
             border-radius: 6px;
             transition: background 0.3s;
         }
+        
         .message-file-link:hover {
             background: rgba(88, 101, 242, 0.1);
         }
+        
         .file-download-icon {
             margin-right: 8px;
             font-size: 16px;
         }
+        
         /* Modal para vista previa de imágenes */
         .image-modal {
             position: fixed;
@@ -1444,19 +1639,23 @@
             align-items: center;
             justify-content: center;
         }
+        
         .image-modal.active {
             display: flex;
         }
+        
         .image-modal-content {
             max-width: 90%;
             max-height: 90%;
             position: relative;
         }
+        
         .image-modal-img {
             max-width: 100%;
             max-height: 100%;
             border-radius: 8px;
         }
+        
         .image-modal-close {
             position: absolute;
             top: -40px;
@@ -1470,26 +1669,32 @@
             cursor: pointer;
             font-size: 16px;
         }
+        
         /* Botón de archivo solo visible en sala multimedia */
         .file-button {
             display: none;
         }
+        
         .file-button.show {
             display: flex;
         }
+        
         /* Botones de administración */
         .admin-action-button {
             background: var(--danger-color);
             color: white;
             transition: all 0.3s ease;
         }
+        
         .admin-action-button:hover {
             background: #c0392b;
             transform: scale(1.05);
         }
+        
         .admin-action-button.show {
             display: flex;
         }
+        
         /* Tooltip para botones de admin */
         .admin-action-button[title]:hover::after {
             content: attr(title);
@@ -1507,6 +1712,7 @@
             pointer-events: none;
             white-space: nowrap;
         }
+        
         /* Fallback responsivo si JS falla */
         @media (max-width: 600px) {
           .container, .form-container, .chat-container {
@@ -1517,20 +1723,24 @@
             max-height: 50vh !important;
           }
         }
+        
         /* Mejorar contraste de textos secundarios */
         .form-header p, .file-upload-text {
           color: #d1d5db;
         }
+        
         /* Asegurar área de mensajes visible */
         .chat-messages {
           max-height: 60vh;
           min-height: 200px;
         }
+        
         /* Accesibilidad: foco visible */
         button:focus, input:focus, .message-input:focus {
           outline: 2px solid var(--primary-color);
           outline-offset: 2px;
         }
+        
         /* Reduce motion para usuarios que lo prefieran */
         @media (prefers-reduced-motion: reduce) {
           * {
@@ -1619,69 +1829,6 @@
         
         .mic-indicator.active {
             background: var(--success-color);
-        }
-        
-        /* Mejora del área de subida multimedia */
-        .file-upload-area {
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 90%;
-            max-width: 500px;
-            padding: 25px;
-            background: rgba(54, 57, 63, 0.95);
-            border: 2px dashed var(--primary-color);
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            text-align: center;
-            z-index: 100;
-            display: none;
-            opacity: 0;
-            transition: all 0.4s ease;
-        }
-        
-        .file-upload-area.active {
-            display: block;
-            opacity: 1;
-            transform: translateX(-50%) translateY(-10px);
-        }
-        
-        .file-upload-area.dragover {
-            background: rgba(88, 101, 242, 0.15);
-            border-color: var(--success-color);
-        }
-        
-        .file-upload-text {
-            color: var(--gray-color);
-            margin-bottom: 20px;
-            font-size: 16px;
-        }
-        
-        .file-upload-text i {
-            font-size: 32px;
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            display: block;
-        }
-        
-        .file-upload-text p {
-            margin: 5px 0;
-        }
-        
-        .file-upload-buttons {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        
-        .file-preview {
-            max-height: 250px;
-            margin-top: 20px;
-            padding: 10px;
-            background: rgba(0,0,0,0.1);
-            border-radius: 8px;
         }
     </style>
 </head>
@@ -1953,7 +2100,11 @@
             
             <div class="chat-input-area">
                 <!-- Área de subida de archivos -->
+                <div class="file-upload-overlay" id="file-upload-overlay"></div>
                 <div class="file-upload-area" id="file-upload-area">
+                    <button class="file-upload-close" id="file-upload-close">
+                        <i class="fas fa-times"></i>
+                    </button>
                     <div class="file-upload-text">
                         <i class="fas fa-cloud-upload-alt"></i>
                         <p>Arrastra archivos aquí o haz clic para seleccionar</p>
@@ -2120,6 +2271,8 @@
         const closeContextMenuBtn = document.getElementById('close-context-menu');
         const copiedIndicator = document.getElementById('copied-indicator');
         const fileUploadArea = document.getElementById('file-upload-area');
+        const fileUploadOverlay = document.getElementById('file-upload-overlay');
+        const fileUploadClose = document.getElementById('file-upload-close');
         const fileInput = document.getElementById('file-input');
         const selectFilesBtn = document.getElementById('select-files-btn');
         const uploadFilesBtn = document.getElementById('upload-files-btn');
@@ -2437,6 +2590,7 @@
             if (currentRoom === 'multimedia') {
                 isFileUploadActive = !isFileUploadActive;
                 fileUploadArea.classList.toggle('active', isFileUploadActive);
+                fileUploadOverlay.classList.toggle('active', isFileUploadActive);
                 
                 if (!isFileUploadActive) {
                     // Limpiar archivos seleccionados
@@ -3363,6 +3517,156 @@
             // Simular participantes en el canal de voz
             simulateVoiceParticipants();
         });
+        
+        // Event listeners para cerrar el área de subida
+        fileUploadClose.addEventListener('click', toggleFileUpload);
+        fileUploadOverlay.addEventListener('click', toggleFileUpload);
+        
+        // Evitar que el clic dentro del área de subida la cierre
+        fileUploadArea.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Event listeners para menú contextual
+        document.addEventListener('click', (e) => {
+            // Ocultar menú contextual si se hace clic fuera
+            if (!contextMenu.contains(e.target)) {
+                hideContextMenu();
+            }
+        });
+        
+        // Event listeners para mensajes
+        document.addEventListener('contextmenu', (e) => {
+            const messageElement = e.target.closest('.message');
+            if (messageElement) {
+                e.preventDefault();
+                const messageId = messageElement.getAttribute('data-message-id');
+                const userId = messageElement.getAttribute('data-user-id');
+                showContextMenu(e, { messageId, userId }, 'message');
+            }
+        });
+        
+        // Event listeners para usuarios
+        document.addEventListener('contextmenu', (e) => {
+            const userElement = e.target.closest('.user-item');
+            if (userElement) {
+                e.preventDefault();
+                const userId = userElement.getAttribute('data-user-id');
+                showContextMenu(e, { userId }, 'user');
+            }
+        });
+        
+        // Event listeners para opciones del menú contextual
+        copyUserIdBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.userId) {
+                copyToClipboard(contextMenuTarget.userId);
+                hideContextMenu();
+            }
+        });
+        
+        copyMessageIdBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.messageId) {
+                copyToClipboard(contextMenuTarget.messageId);
+                hideContextMenu();
+            }
+        });
+        
+        reportMessageBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.messageId) {
+                // Aquí iría la lógica para reportar el mensaje
+                showNotification('Mensaje reportado', 'success');
+                hideContextMenu();
+            }
+        });
+        
+        deleteMessageBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.messageId) {
+                // Aquí iría la lógica para eliminar el mensaje
+                showNotification('Mensaje eliminado', 'success');
+                hideContextMenu();
+            }
+        });
+        
+        banUserBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.userId) {
+                // Aquí iría la lógica para banear al usuario
+                showNotification('Usuario baneado', 'success');
+                hideContextMenu();
+            }
+        });
+        
+        openAdminPanelBtn.addEventListener('click', () => {
+            toggleAdminPanel();
+            hideContextMenu();
+        });
+        
+        closeContextMenuBtn.addEventListener('click', hideContextMenu);
+        
+        // Event listeners para botones de administración
+        deleteMessageActionBtn.addEventListener('click', () => {
+            // Aquí iría la lógica para eliminar el último mensaje
+            showNotification('Último mensaje eliminado', 'success');
+        });
+        
+        banUserActionBtn.addEventListener('click', () => {
+            // Aquí iría la lógica para banear al usuario seleccionado
+            showNotification('Usuario baneado', 'success');
+        });
+        
+        adminPanelActionBtn.addEventListener('click', toggleAdminPanel);
+        
+        // Event listeners para el panel de administración
+        generateTokenButton.addEventListener('click', () => {
+            // Aquí iría la lógica para generar un nuevo token
+            const newToken = 'TOKEN_GENERADO_' + Math.random().toString(36).substring(2, 15);
+            generatedToken.textContent = newToken;
+            tokenResult.style.display = 'block';
+            showNotification('Token generado exitosamente', 'success');
+        });
+        
+        // Event listeners para banear IPs
+        document.getElementById('ban-ip-button').addEventListener('click', () => {
+            const ip = document.getElementById('ban-ip-input').value;
+            const reason = document.getElementById('ban-reason-input').value;
+            
+            if (ip && reason) {
+                // Aquí iría la lógica para banear la IP
+                showNotification(`IP ${ip} baneada por: ${reason}`, 'success');
+                document.getElementById('ban-ip-input').value = '';
+                document.getElementById('ban-reason-input').value = '';
+            } else {
+                showNotification('Por favor completa todos los campos', 'error');
+            }
+        });
+        
+        // Event listeners para dispositivos táctiles
+        if ('ontouchstart' in window) {
+            // Manejar toques largos para menú contextual
+            let touchTimer;
+            
+            document.addEventListener('touchstart', (e) => {
+                const messageElement = e.target.closest('.message');
+                const userElement = e.target.closest('.user-item');
+                
+                if (messageElement || userElement) {
+                    touchTimer = setTimeout(() => {
+                        const messageId = messageElement ? messageElement.getAttribute('data-message-id') : null;
+                        const userId = userElement ? userElement.getAttribute('data-user-id') : null;
+                        const type = messageElement ? 'message' : 'user';
+                        
+                        showContextMenu(e, { messageId, userId }, type);
+                    }, 500); // 500ms para toque largo
+                }
+            });
+            
+            document.addEventListener('touchend', () => {
+                clearTimeout(touchTimer);
+            });
+            
+            document.addEventListener('touchmove', () => {
+                clearTimeout(touchTimer);
+            });
+        }
     </script>
 </body>
 </html>
