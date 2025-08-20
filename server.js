@@ -26,7 +26,7 @@ const cors = require('cors');
 
 // Cache y optimización
 const NodeCache = require('node-cache');
-const LRU = require('lru-cache');
+const { LRUCache } = require('lru-cache'); // CORREGIDO: Importación correcta de LRUCache
 
 // Monitoreo y logging
 const winston = require('winston');
@@ -70,7 +70,7 @@ if (!fs.existsSync('logs')) {
 }
 
 // ===== CONFIGURACIÓN DE CACHE AVANZADO =====
-const messageCache = new LRU({
+const messageCache = new LRUCache({ // CORREGIDO: Uso correcto de LRUCache
   max: 1000, // Máximo 1000 mensajes en cache
   ttl: 1000 * 60 * 5, // 5 minutos
   updateAgeOnGet: true
