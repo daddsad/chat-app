@@ -1,4 +1,5 @@
-                                                                                                   <!DOCTYPE html><html lang="es">
+<!DOCTYPE html>
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -9,6 +10,7 @@
     <title>YChat v2.0 - Multi-Platform Chat</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
+        /* Variables y configuración global */
         :root {
             --primary-color: #5865F2;
             --secondary-color: #4752C4;
@@ -22,6 +24,8 @@
             --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
             --border-radius: 8px;
         }
+
+        /* Reset y estilos base */
         * {
             margin: 0;
             padding: 0;
@@ -33,15 +37,18 @@
             -ms-user-select: none;
             user-select: none;
         }
+
         *:focus {
             outline: none;
         }
+
         input, textarea {
             -webkit-user-select: text;
             -moz-user-select: text;
             -ms-user-select: text;
             user-select: text;
         }
+
         body {
             background: linear-gradient(135deg, #1d2b64, #f8cdda);
             color: #fff;
@@ -55,41 +62,49 @@
             -moz-osx-font-smoothing: grayscale;
             overflow-x: hidden;
         }
-        /* Prevent zoom on input focus on iOS */
+
+        /* Prevenir zoom en input focus en iOS */
         @media screen and (-webkit-min-device-pixel-ratio: 0) {
-            select,
-            textarea,
-            input {
+            select, textarea, input {
                 font-size: 16px;
             }
         }
+
+        /* Contenedor principal */
         .container {
             width: 100%;
             max-width: 400px;
             padding: 20px;
         }
+
+        /* Estilos de formularios */
         .form-container {
             background: rgba(35, 39, 42, 0.9);
             border-radius: var(--border-radius);
             box-shadow: var(--shadow);
             padding: 30px;
         }
+
         .form-header {
             text-align: center;
             margin-bottom: 20px;
         }
+
         .form-header h2 {
             color: #fff;
             margin-bottom: 10px;
             font-size: 1.8rem;
         }
+
         .form-header p {
             color: var(--gray-color);
             font-size: 0.95rem;
         }
+
         .form-group {
             margin-bottom: 15px;
         }
+
         .form-group label {
             display: block;
             margin-bottom: 5px;
@@ -97,6 +112,7 @@
             color: #fff;
             font-size: 0.95rem;
         }
+
         .form-group input {
             width: 100%;
             padding: 12px;
@@ -106,6 +122,7 @@
             background: #36393F;
             color: #fff;
         }
+
         .btn {
             width: 100%;
             padding: 12px;
@@ -117,22 +134,28 @@
             cursor: pointer;
             transition: background 0.3s;
         }
+
         .btn:hover {
             background: var(--secondary-color);
         }
+
         .form-footer {
             text-align: center;
             margin-top: 15px;
             color: var(--gray-color);
             font-size: 0.9rem;
         }
+
         .form-footer a {
             color: var(--success-color);
             text-decoration: none;
         }
+
         .form-footer a:hover {
             text-decoration: underline;
         }
+
+        /* Contenedor del chat */
         .chat-container {
             width: 100%;
             max-width: 1200px;
@@ -144,6 +167,7 @@
             overflow: hidden;
             position: relative;
         }
+
         /* Sidebar Styles */
         .sidebar {
             width: 300px;
@@ -155,6 +179,7 @@
             transition: transform 0.3s ease;
             z-index: 10;
         }
+
         .user-info {
             padding: 20px;
             display: flex;
@@ -162,6 +187,7 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             position: relative;
         }
+
         .admin-badge {
             position: absolute;
             top: 15px;
@@ -173,6 +199,7 @@
             font-size: 12px;
             font-weight: bold;
         }
+
         .user-avatar {
             width: 50px;
             height: 50px;
@@ -186,16 +213,19 @@
             color: #000;
             font-weight: bold;
         }
+
         .user-details h3 {
             font-size: 18px;
             margin-bottom: 5px;
         }
+
         .user-details p {
             font-size: 14px;
             color: var(--success-color);
             display: flex;
             align-items: center;
         }
+
         .status-dot {
             width: 10px;
             height: 10px;
@@ -204,11 +234,13 @@
             margin-right: 8px;
             display: inline-block;
         }
+
         .chat-rooms {
             padding: 15px;
             flex-grow: 1;
             overflow-y: auto;
         }
+
         .chat-rooms h3 {
             margin-bottom: 15px;
             display: flex;
@@ -216,9 +248,11 @@
             font-size: 16px;
             color: var(--gray-color);
         }
+
         .room-list {
             list-style: none;
         }
+
         .room-item {
             padding: 12px 15px;
             margin-bottom: 8px;
@@ -228,20 +262,25 @@
             display: flex;
             align-items: center;
         }
+
         .room-item:hover {
             background: rgba(255, 255, 255, 0.05);
         }
+
         .room-item.active {
             background: var(--primary-color);
         }
+
         .room-icon {
             margin-right: 10px;
             font-size: 16px;
         }
+
         .online-users {
             padding: 15px;
             border-top: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .online-users h3 {
             margin-bottom: 15px;
             display: flex;
@@ -249,9 +288,11 @@
             font-size: 16px;
             color: var(--gray-color);
         }
+
         .user-list {
             list-style: none;
         }
+
         .user-item {
             padding: 10px 15px;
             display: flex;
@@ -260,9 +301,11 @@
             transition: all 0.3s ease;
             position: relative;
         }
+
         .user-item:hover {
             background: rgba(255, 255, 255, 0.05);
         }
+
         .user-avatar-sm {
             width: 35px;
             height: 35px;
@@ -276,6 +319,7 @@
             color: #000;
             font-weight: bold;
         }
+
         .admin-indicator {
             position: absolute;
             top: 10px;
@@ -290,6 +334,7 @@
             justify-content: center;
             font-size: 12px;
         }
+
         /* Main Chat Area */
         .chat-area {
             flex-grow: 1;
@@ -297,6 +342,7 @@
             flex-direction: column;
             position: relative;
         }
+
         .chat-header {
             padding: 15px 20px;
             background: #2C2F33;
@@ -305,14 +351,17 @@
             align-items: center;
             justify-content: space-between;
         }
+
         .chat-title {
             font-size: 18px;
             font-weight: 600;
         }
+
         .chat-actions {
             display: flex;
             gap: 10px;
         }
+
         .admin-button {
             background: var(--admin-color);
             color: white;
@@ -325,6 +374,7 @@
             align-items: center;
             gap: 5px;
         }
+
         .chat-messages {
             flex-grow: 1;
             padding: 20px;
@@ -333,6 +383,7 @@
             display: flex;
             flex-direction: column;
         }
+
         .message {
             max-width: 80%;
             padding: 12px 15px;
@@ -343,25 +394,30 @@
             background: #40444B;
             word-wrap: break-word;
         }
+
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
+
         .received {
             align-self: flex-start;
             border-bottom-left-radius: 5px;
         }
+
         .sent {
             align-self: flex-end;
             background: var(--primary-color);
             color: white;
             border-bottom-right-radius: 5px;
         }
+
         .banned-message {
             background: rgba(237, 66, 69, 0.2);
             border: 1px solid var(--danger-color);
             opacity: 0.7;
         }
+
         .message-info {
             display: flex;
             justify-content: space-between;
@@ -369,10 +425,12 @@
             font-size: 12px;
             opacity: 0.8;
         }
+
         .message-id {
             font-size: 10px;
             opacity: 0.6;
         }
+
         .chat-input-area {
             padding: 15px;
             background: #2C2F33;
@@ -380,6 +438,7 @@
             display: flex;
             align-items: center;
         }
+
         .message-input {
             flex-grow: 1;
             padding: 12px 15px;
@@ -391,10 +450,12 @@
             background: #40444B;
             color: #fff;
         }
+
         .message-input:focus {
             border-color: var(--primary-color);
             box-shadow: 0 0 0 3px rgba(88, 101, 242, 0.2);
         }
+
         .send-button {
             width: 45px;
             height: 45px;
@@ -410,15 +471,18 @@
             font-size: 18px;
             transition: all 0.3s ease;
         }
+
         .send-button:hover {
             background: var(--secondary-color);
             transform: scale(1.05);
         }
+
         .action-buttons {
             display: flex;
             align-items: center;
             margin-left: 10px;
         }
+
         .action-button {
             width: 40px;
             height: 40px;
@@ -434,18 +498,22 @@
             font-size: 16px;
             transition: all 0.3s ease;
         }
+
         .action-button:hover {
             background: #4F535C;
         }
+
         .message-time {
             font-size: 11px;
         }
+
         /* Responsive Design */
         @media (max-width: 1200px) {
             .chat-container {
                 max-width: 1000px;
             }
         }
+
         @media (max-width: 992px) {
             .chat-container {
                 max-width: 800px;
@@ -465,6 +533,7 @@
                 font-size: 16px;
             }
         }
+
         @media (max-width: 768px) {
             body {
                 padding: 5px;
@@ -582,6 +651,7 @@
                 visibility: visible;
             }
         }
+
         @media (max-width: 576px) {
             .form-container {
                 padding: 15px;
@@ -656,6 +726,7 @@
                 font-size: 12px;
             }
         }
+
         @media (max-width: 400px) {
             .form-container {
                 padding: 12px;
@@ -679,9 +750,12 @@
                 font-size: 12px;
             }
         }
+
         .hidden {
             display: none;
         }
+
+        /* Notificaciones */
         .notification {
             position: fixed;
             top: 20px;
@@ -730,23 +804,28 @@
         .notification.info {
             background: var(--primary-color);
         }
+
         @keyframes slideIn {
             from { transform: translateX(100%); opacity: 0; }
             to { transform: translateX(0); opacity: 1; }
         }
+
         @keyframes fadeOut {
             from { opacity: 1; }
             to { opacity: 0; }
         }
+
         .message-header {
             display: flex;
             align-items: center;
             margin-bottom: 5px;
         }
+
         .message-sender {
             font-weight: 600;
             margin-right: 8px;
         }
+
         .user-id {
             font-size: 10px;
             opacity: 0.7;
@@ -755,6 +834,7 @@
             border-radius: 4px;
             margin-right: 8px;
         }
+
         .logout-button {
             margin-left: auto;
             padding: 5px 10px;
@@ -765,6 +845,7 @@
             cursor: pointer;
             font-size: 12px;
         }
+
         /* Admin Panel Styles */
         .admin-panel {
             position: absolute;
@@ -778,9 +859,11 @@
             overflow-y: auto;
             display: none;
         }
+
         .admin-panel.active {
             display: block;
         }
+
         .admin-header {
             display: flex;
             justify-content: space-between;
@@ -789,6 +872,7 @@
             padding-bottom: 10px;
             border-bottom: 1px solid var(--gray-color);
         }
+
         .admin-close {
             background: var(--danger-color);
             color: white;
@@ -797,32 +881,39 @@
             border-radius: 4px;
             cursor: pointer;
         }
+
         .admin-section {
             background: var(--dark-gray);
             border-radius: var(--border-radius);
             padding: 15px;
             margin-bottom: 20px;
         }
+
         .admin-section h3 {
             margin-bottom: 15px;
             color: var(--primary-color);
         }
+
         .admin-table {
             width: 100%;
             border-collapse: collapse;
             font-size: 0.9rem;
         }
+
         .admin-table th, .admin-table td {
             padding: 10px;
             text-align: left;
             border-bottom: 1px solid #36393F;
         }
+
         .admin-table th {
             background: var(--dark-color);
         }
+
         .admin-table tr:hover {
             background: rgba(255, 255, 255, 0.05);
         }
+
         .admin-action {
             padding: 5px 10px;
             border: none;
@@ -832,34 +923,34 @@
             margin-right: 5px;
             display: none; /* Ocultar por defecto */
         }
+
         /* Solo mostrar botones admin en el panel de administración */
         .admin-panel .admin-action {
             display: inline-block;
         }
-        /* Nota: Los botones de administración (eliminar, banear) solo están disponibles 
-           a través del menú contextual (clic derecho/largo) para mantener la interfaz limpia */
-        
-        /* Nota: Los IDs de usuario y mensaje están completamente ocultos por defecto.
-           Solo son accesibles a través del menú contextual (clic derecho) para mantener 
-           la interfaz limpia y profesional */
+
         .ban-button {
             background: var(--danger-color);
             color: white;
         }
+
         .delete-button {
             background: var(--admin-color);
             color: white;
         }
+
         .ip-ban-button {
             background: #f1c40f;
             color: #000;
         }
+
         .admin-input-group {
             display: flex;
             gap: 10px;
             margin-bottom: 15px;
             flex-wrap: wrap;
         }
+
         .admin-input {
             flex: 1;
             padding: 10px;
@@ -869,6 +960,7 @@
             color: white;
             min-width: 150px;
         }
+
         .admin-submit {
             background: var(--success-color);
             color: #000;
@@ -877,6 +969,7 @@
             border-radius: 4px;
             cursor: pointer;
         }
+
         /* Botón de menú para móviles */
         .menu-toggle {
             display: none;
@@ -887,6 +980,7 @@
             cursor: pointer;
             margin-right: 15px;
         }
+
         @media (max-width: 768px) {
             .menu-toggle {
                 display: flex;
@@ -894,6 +988,7 @@
                 justify-content: center;
             }
         }
+
         /* Overlay para móviles */
         .sidebar-overlay {
             position: absolute;
@@ -905,20 +1000,24 @@
             z-index: 5;
             display: none;
         }
+
         .sidebar-overlay.active {
             display: block;
         }
+
         /* Nuevos estilos para el campo SSO */
         .admin-token-group {
             margin-top: 10px;
             display: none;
         }
+
         .form-help {
             font-size: 12px;
             color: var(--text-muted);
             margin-top: 5px;
             display: block;
         }
+
         #token-result {
             margin-top: 15px;
             padding: 15px;
@@ -926,12 +1025,14 @@
             border-radius: var(--border-radius);
             display: none;
         }
+
         /* Nuevos estilos para copiar IDs */
         .copyable {
             cursor: pointer;
             position: relative;
             display: inline-block;
         }
+
         .copyable::after {
             content: "Copiar";
             position: absolute;
@@ -948,23 +1049,28 @@
             pointer-events: none;
             white-space: nowrap;
         }
+
         .copyable:hover::after {
             opacity: 1;
         }
+
         /* Indicador de que los mensajes son clickeables */
         .message {
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
+
         .message:hover {
             background-color: rgba(255, 255, 255, 0.05);
         }
+
         /* Ocultar TODOS los IDs por defecto */
         .user-id,
         .user-id.copyable,
         .message-id.copyable {
             display: none !important;
         }
+
         /* Mostrar IDs solo cuando se solicite explícitamente */
         .show-ids .user-id,
         .show-ids .user-id.copyable,
@@ -1197,13 +1303,16 @@
         .tablet .mobile-only {
             display: inline;
         }
+
         .user-item {
             cursor: pointer;
             transition: background-color 0.2s ease;
         }
+
         .user-item:hover {
             background-color: rgba(255, 255, 255, 0.05);
         }
+
         /* Menú contextual */
         .context-menu {
             position: fixed;
@@ -1215,6 +1324,7 @@
             display: none;
             border: 1px solid rgba(255,255,255,0.1);
         }
+
         .context-menu-item {
             padding: 12px 16px;
             font-size: 14px;
@@ -1225,25 +1335,31 @@
             gap: 10px;
             transition: background 0.2s;
         }
+
         .context-menu-item:hover {
             background: rgba(255,255,255,0.1);
         }
+
         .context-menu-item.admin-only {
             display: none;
         }
+
         .context-menu-item.admin-only.show {
             display: flex;
         }
+
         .context-menu-divider {
             height: 1px;
             background: rgba(255,255,255,0.1);
             margin: 4px 0;
         }
+
         /* Animación para el menú contextual */
         .context-menu.show {
             display: block;
             animation: fadeInScale 0.2s ease forwards;
         }
+
         @keyframes fadeInScale {
             0% {
                 opacity: 0;
@@ -1254,6 +1370,7 @@
                 transform: scale(1) translateY(0);
             }
         }
+
         /* Indicador de copia */
         .copied-indicator {
             position: fixed;
@@ -1269,10 +1386,12 @@
             display: none;
             animation: fadeInOut 1.5s ease;
         }
+
         @keyframes fadeInOut {
             0%, 100% { opacity: 0; }
             20%, 80% { opacity: 1; }
         }
+
         /* Estilos para archivos e imágenes */
         .file-upload-area {
             position: absolute;
@@ -1291,22 +1410,27 @@
             opacity: 0;
             transition: all 0.3s ease;
         }
+
         .file-upload-area.active {
             display: block;
             transform: translateY(0);
             opacity: 1;
         }
+
         .file-upload-area.dragover {
             background: rgba(88, 101, 242, 0.1);
             border-color: var(--success-color);
         }
+
         .file-upload-text {
             color: var(--gray-color);
             margin-bottom: 15px;
         }
+
         .file-input {
             display: none;
         }
+
         .file-upload-button {
             background: var(--primary-color);
             color: white;
@@ -1318,14 +1442,17 @@
             margin: 5px;
             transition: background 0.3s;
         }
+
         .file-upload-button:hover {
             background: var(--secondary-color);
         }
+
         .file-preview {
             margin-top: 15px;
             max-height: 200px;
             overflow-y: auto;
         }
+
         .file-item {
             display: flex;
             align-items: center;
@@ -1334,23 +1461,28 @@
             padding: 10px;
             margin-bottom: 8px;
         }
+
         .file-icon {
             font-size: 24px;
             margin-right: 10px;
             color: var(--primary-color);
         }
+
         .file-info {
             flex-grow: 1;
         }
+
         .file-name {
             font-weight: 500;
             color: white;
             margin-bottom: 2px;
         }
+
         .file-size {
             font-size: 12px;
             color: var(--gray-color);
         }
+
         .file-remove {
             background: var(--danger-color);
             color: white;
@@ -1364,9 +1496,11 @@
             align-items: center;
             justify-content: center;
         }
+
         .file-remove:hover {
             background: #c0392b;
         }
+
         .upload-progress {
             width: 100%;
             height: 4px;
@@ -1375,12 +1509,14 @@
             margin-top: 5px;
             overflow: hidden;
         }
+
         .upload-progress-bar {
             height: 100%;
             background: var(--success-color);
             width: 0%;
             transition: width 0.3s;
         }
+
         /* Estilos para mensajes con archivos */
         .message-file {
             margin-top: 10px;
@@ -1389,6 +1525,7 @@
             padding: 12px;
             border: 1px solid rgba(255, 255, 255, 0.1);
         }
+
         .message-image {
             max-width: 100%;
             max-height: 300px;
@@ -1396,24 +1533,29 @@
             cursor: pointer;
             transition: transform 0.3s;
         }
+
         .message-image:hover {
             transform: scale(1.02);
         }
+
         /* Estilos para controles de audio y video */
         .message-file audio,
         .message-file video {
             border-radius: 8px;
             background: rgba(0, 0, 0, 0.1);
         }
+
         .message-file audio::-webkit-media-controls-panel,
         .message-file video::-webkit-media-controls-panel {
             background: rgba(0, 0, 0, 0.2);
         }
+
         .message-file audio::-webkit-media-controls-play-button,
         .message-file video::-webkit-media-controls-play-button {
             background: var(--primary-color);
             border-radius: 50%;
         }
+
         .message-file-link {
             display: flex;
             align-items: center;
@@ -1423,13 +1565,16 @@
             border-radius: 6px;
             transition: background 0.3s;
         }
+
         .message-file-link:hover {
             background: rgba(88, 101, 242, 0.1);
         }
+
         .file-download-icon {
             margin-right: 8px;
             font-size: 16px;
         }
+
         /* Modal para vista previa de imágenes */
         .image-modal {
             position: fixed;
@@ -1443,19 +1588,23 @@
             align-items: center;
             justify-content: center;
         }
+
         .image-modal.active {
             display: flex;
         }
+
         .image-modal-content {
             max-width: 90%;
             max-height: 90%;
             position: relative;
         }
+
         .image-modal-img {
             max-width: 100%;
             max-height: 100%;
             border-radius: 8px;
         }
+
         .image-modal-close {
             position: absolute;
             top: -40px;
@@ -1469,26 +1618,32 @@
             cursor: pointer;
             font-size: 16px;
         }
+
         /* Botón de archivo solo visible en sala multimedia */
         .file-button {
             display: none;
         }
+
         .file-button.show {
             display: flex;
         }
+
         /* Botones de administración */
         .admin-action-button {
             background: var(--danger-color);
             color: white;
             transition: all 0.3s ease;
         }
+
         .admin-action-button:hover {
             background: #c0392b;
             transform: scale(1.05);
         }
+
         .admin-action-button.show {
             display: flex;
         }
+
         /* Tooltip para botones de admin */
         .admin-action-button[title]:hover::after {
             content: attr(title);
@@ -1506,6 +1661,7 @@
             pointer-events: none;
             white-space: nowrap;
         }
+
         /* Fallback responsivo si JS falla */
         @media (max-width: 600px) {
           .container, .form-container, .chat-container {
@@ -1516,20 +1672,24 @@
             max-height: 50vh !important;
           }
         }
+
         /* Mejorar contraste de textos secundarios */
         .form-header p, .file-upload-text {
           color: #d1d5db;
         }
+
         /* Asegurar área de mensajes visible */
         .chat-messages {
           max-height: 60vh;
           min-height: 200px;
         }
+
         /* Accesibilidad: foco visible */
         button:focus, input:focus, .message-input:focus {
           outline: 2px solid var(--primary-color);
           outline-offset: 2px;
         }
+
         /* Reduce motion para usuarios que lo prefieran */
         @media (prefers-reduced-motion: reduce) {
           * {
@@ -1999,6 +2159,7 @@
             </div>
         </div>
     </div>
+    
     <!-- Menú contextual -->
     <div class="context-menu" id="context-menu">
         <div class="context-menu-item" id="copy-user-id">
@@ -2026,8 +2187,10 @@
             <i class="fas fa-times"></i> Cerrar
         </div>
     </div>
+    
     <!-- Indicador de copia -->
     <div class="copied-indicator" id="copied-indicator">¡Copiado al portapapeles!</div>
+    
     <!-- Modal para vista previa de imágenes -->
     <div class="image-modal" id="image-modal">
         <div class="image-modal-content">
@@ -2037,6 +2200,7 @@
             <img class="image-modal-img" id="image-modal-img" src="" alt="Vista previa">
         </div>
     </div>
+    
     <!-- Canal de Voz -->
     <div class="voice-call-container" id="voice-call-container">
         <div class="voice-controls">
@@ -2059,10 +2223,12 @@
             </div>
         </div>
     </div>
+
     <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
     <script>
         // URL del servidor WebSocket
         const socket = io('https://chat-app-bymp.onrender.com/');
+        
         // Variables globales
         let currentUser = null;
         let currentRoom = 'general';
@@ -2119,7 +2285,11 @@
         const closeContextMenuBtn = document.getElementById('close-context-menu');
         const copiedIndicator = document.getElementById('copied-indicator');
         const fileUploadArea = document.getElementById('file-upload-area');
-        const fileInput = document.getElementById('file-input');
+        const fileInput = document.createElement('input'); // Crear elemento input para archivos
+        fileInput.type = 'file';
+        fileInput.multiple = true;
+        fileInput.style.display = 'none';
+        document.body.appendChild(fileInput);
         const selectFilesBtn = document.getElementById('select-files-btn');
         const uploadFilesBtn = document.getElementById('upload-files-btn');
         const filePreview = document.getElementById('file-preview');
@@ -2194,6 +2364,7 @@
             const expires = "expires=" + date.toUTCString();
             document.cookie = name + "=" + value + ";" + expires + ";path=/";
         }
+        
         function getCookie(name) {
             const nameEQ = name + "=";
             const ca = document.cookie.split(';');
@@ -2204,9 +2375,11 @@
             }
             return null;
         }
+        
         function deleteCookie(name) {
             document.cookie = name + '=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
         }
+        
         // Función para mostrar notificaciones
         function showNotification(message, type = 'error') {
             const notification = document.createElement('div');
@@ -2254,10 +2427,12 @@
                 }, 300);
             });
         }
+        
         // Formatear fecha/hora
         function formatDateTime(date) {
             return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
         }
+        
         // Copiar texto al portapapeles
         function copyToClipboard(text) {
             navigator.clipboard.writeText(text)
@@ -2273,13 +2448,16 @@
                     showNotification('Error al copiar al portapapeles', 'error');
                 });
         }
+        
         // Toggle sidebar en dispositivos móviles
         function toggleSidebar() {
             sidebar.classList.toggle('active');
             sidebarOverlay.classList.toggle('active');
         }
+        
         // Cerrar sidebar al hacer clic en overlay
         sidebarOverlay.addEventListener('click', toggleSidebar);
+        
         // Mostrar menú contextual
         function showContextMenu(event, target, type) {
             event.preventDefault();
@@ -2351,6 +2529,7 @@
                 openAdminPanelBtn.style.display = 'none';
             }
         }
+        
         // Ocultar menú contextual
         function hideContextMenu() {
             contextMenu.classList.remove('show');
@@ -2358,6 +2537,7 @@
                 contextMenu.style.display = 'none';
             }, 200);
         }
+        
         // Funciones para manejar archivos
         function formatFileSize(bytes) {
             if (bytes === 0) return '0 Bytes';
@@ -2366,6 +2546,7 @@
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
         }
+        
         function getFileIcon(fileType) {
             if (fileType.startsWith('image/')) {
                 return 'fas fa-image';
@@ -2385,6 +2566,7 @@
                 return 'fas fa-file';
             }
         }
+        
         function validateFile(file) {
             const maxSize = 10 * 1024 * 1024; // 10MB
             const allowedTypes = [
@@ -2400,14 +2582,17 @@
                 // Video
                 'video/mp4', 'video/webm', 'video/ogg', 'video/avi'
             ];
+            
             if (file.size > maxSize) {
                 showNotification(`El archivo ${file.name} es demasiado grande. Máximo 10MB.`, 'error');
                 return false;
             }
+            
             if (!allowedTypes.includes(file.type)) {
                 showNotification(`El tipo de archivo ${file.name} no está permitido.`, 'error');
                 return false;
             }
+            
             // Additional mobile-specific validations
             if (document.body.classList.contains('mobile-device')) {
                 // Check for mobile-specific file size limits
@@ -2430,8 +2615,10 @@
                     return false;
                 }
             }
+            
             return true;
         }
+        
         function toggleFileUpload() {
             if (currentRoom === 'multimedia') {
                 isFileUploadActive = !isFileUploadActive;
@@ -2447,6 +2634,7 @@
                 showNotification('La subida de archivos solo está disponible en la sala Multimedia', 'error');
             }
         }
+        
         function handleFileSelect(files) {
             if (!files || files.length === 0) return;
             
@@ -2470,6 +2658,7 @@
                 uploadFilesBtn.style.display = 'inline-block';
             }
         }
+        
         function addFilePreview(file) {
             const fileItem = document.createElement('div');
             fileItem.className = 'file-item';
@@ -2493,6 +2682,7 @@
             
             filePreview.appendChild(fileItem);
         }
+        
         function removeFile(fileName) {
             selectedFiles = selectedFiles.filter(file => file.name !== fileName);
             const fileItem = filePreview.querySelector(`[data-file="${fileName}"]`).closest('.file-item');
@@ -2502,6 +2692,7 @@
                 uploadFilesBtn.style.display = 'none';
             }
         }
+        
         function uploadFiles() {
             if (selectedFiles.length === 0) return;
             
@@ -2509,6 +2700,7 @@
                 uploadFile(file);
             });
         }
+        
         function uploadFile(file) {
             const formData = new FormData();
             formData.append('file', file);
@@ -2577,16 +2769,20 @@
             xhr.open('POST', '/upload');
             xhr.send(formData);
         }
+        
         function showImageModal(imageSrc) {
             imageModalImg.src = imageSrc;
             imageModal.classList.add('active');
         }
+        
         function hideImageModal() {
             imageModal.classList.remove('active');
         }
+        
         // Hacer removeFile global para que funcione con onclick
         window.removeFile = removeFile;
         window.showImageModal = showImageModal;
+        
         // Añadir mensaje al chat con ID único
         function addMessage(message, isCurrentUser = false) {
             // Verificar si el mensaje ya existe
@@ -2652,6 +2848,7 @@
                     `;
                 }
             }
+            
             messageElement.innerHTML = `
                 <div class="message-header">
                     <span class="message-sender">${isCurrentUser ? 'Tú' : message.sender}</span>
@@ -2671,6 +2868,7 @@
             messageElement.setAttribute('data-message-id', message.id);
             messageElement.setAttribute('data-user-id', message.senderId);
         }
+        
         // Actualizar lista de usuarios en línea con IDs únicos
         function updateOnlineUsers(users) {
             onlineUsers = users;
@@ -2699,6 +2897,7 @@
                 userItem.classList.add('user-item');
             });
         }
+        
         // Cerrar sesión
         function logout() {
             // Eliminar cookies de sesión
@@ -2706,7 +2905,9 @@
             deleteCookie('rememberMe');
             
             // Notificar al servidor
-            socket.emit('logout', { userId: currentUser.id });
+            if (currentUser && socket.connected) {
+                socket.emit('logout', { userId: currentUser.id });
+            }
             
             // Resetear estado
             currentUser = null;
@@ -2718,6 +2919,7 @@
             // Desconectar el socket
             socket.disconnect();
         }
+        
         // Toggle panel de administración
         function toggleAdminPanel() {
             isAdminPanelOpen = !isAdminPanelOpen;
@@ -2730,24 +2932,29 @@
                 }
             }
         }
+        
         // Toggle menú sidebar
         menuToggle.addEventListener('click', toggleSidebar);
+        
         // Cambiar a pantalla de registro
         showRegister.addEventListener('click', (e) => {
             e.preventDefault();
             loginContainer.classList.add('hidden');
             registerContainer.classList.remove('hidden');
         });
+        
         // Cambiar a pantalla de login
         showLogin.addEventListener('click', (e) => {
             e.preventDefault();
             registerContainer.classList.add('hidden');
             loginContainer.classList.remove('hidden');
         });
+        
         // Mostrar/ocultar campo SSO
         adminLoginCheckbox.addEventListener('change', function() {
             adminTokenGroup.style.display = this.checked ? 'block' : 'none';
         });
+        
         // Login
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -2845,6 +3052,7 @@
                 }
             });
         });
+        
         // Registro
         registerForm.addEventListener('submit', (e) => {
             e.preventDefault();
@@ -2905,6 +3113,7 @@
                 }
             });
         });
+        
         // Cambiar sala de chat
         document.querySelectorAll('.room-item').forEach(item => {
             item.addEventListener('click', function() {
@@ -2991,6 +3200,7 @@
                 }
             });
         });
+        
         // Enviar mensaje
         function sendMessage() {
             const text = messageInput.value.trim();
@@ -3010,17 +3220,21 @@
                 messageInput.value = '';
             }
         }
+        
         sendButton.addEventListener('click', sendMessage);
         messageInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') {
                 sendMessage();
             }
         });
+        
         // Botón de cerrar sesión
         logoutButton.addEventListener('click', logout);
+        
         // Botones de administración
         adminButton.addEventListener('click', toggleAdminPanel);
         adminClose.addEventListener('click', toggleAdminPanel);
+        
         // Event listeners para archivos
         fileButton.addEventListener('click', toggleFileUpload);
         selectFilesBtn.addEventListener('click', () => fileInput.click());
@@ -3047,6 +3261,7 @@
             fileUploadArea.classList.remove('dragover');
             handleFileSelect(e.dataTransfer.files);
         });
+        
         // Botón para mostrar/ocultar IDs
         toggleIdsBtn.addEventListener('click', () => {
             const chatContainer = document.getElementById('chat-container');
@@ -3064,6 +3279,7 @@
                 showNotification('IDs visibles', 'success');
             }
         });
+        
         // Controladores para el canal de voz
         toggleMicBtn.addEventListener('click', () => {
             isMuted = !isMuted;
@@ -3071,6 +3287,7 @@
             userMicIndicator.classList.toggle('active', !isMuted);
             showNotification(isMuted ? 'Micrófono silenciado' : 'Micrófono activado', 'success');
         });
+        
         leaveVoiceCallBtn.addEventListener('click', () => {
             voiceCallContainer.style.display = 'none';
             showNotification('Has salido del canal de voz', 'success');
@@ -3098,6 +3315,7 @@
                 newRoom: 'general'
             });
         });
+        
         // Simulación de participantes en el canal de voz
         function simulateVoiceParticipants() {
             participantsList.innerHTML = '';
@@ -3125,6 +3343,7 @@
                 participantsList.appendChild(participant);
             });
         }
+        
         // ===== Multi-Platform Support =====
         
         // Detect device type
@@ -3219,20 +3438,24 @@
                 addMessage(message, isCurrentUser);
             }
         });
+        
         // Escuchar actualizaciones de usuarios
         socket.on('updateUsers', (users) => {
             updateOnlineUsers(users);
         });
+        
         // Escuchar mensajes del sistema
         socket.on('systemMessage', (message) => {
             if (message.room === currentRoom) {
                 addMessage(message);
             }
         });
+        
         // Escuchar errores de autenticación
         socket.on('authError', (message) => {
             showNotification(message);
         });
+        
         // Escuchar cuando un usuario se une
         socket.on('userJoined', (user) => {
             if (user.room === currentRoom) {
@@ -3245,6 +3468,7 @@
                 });
             }
         });
+        
         // Escuchar cuando un usuario abandona
         socket.on('userLeft', (user) => {
             if (user.room === currentRoom) {
@@ -3257,6 +3481,7 @@
                 });
             }
         });
+        
         // Manejar reconexión
         socket.on('reconnect', () => {
             showNotification('Reconectado al servidor', 'success');
@@ -3292,6 +3517,7 @@
         socket.on('reconnect_failed', () => {
             showNotification('No se pudo reconectar al servidor', 'error');
         });
+        
         // Cargar mensajes iniciales
         socket.on('initialData', (data) => {
             if (data.room === currentRoom) {
@@ -3308,6 +3534,7 @@
                 });
             }
         });
+        
         // Validar sesión al cargar la página
         window.addEventListener('DOMContentLoaded', () => {
             const sessionToken = getCookie('sessionToken');
@@ -3361,6 +3588,200 @@
             
             // Simular participantes en el canal de voz
             simulateVoiceParticipants();
+        });
+        
+        // Eventos para menú contextual
+        document.addEventListener('click', (e) => {
+            // Cerrar menú contextual si se hace clic fuera
+            if (contextMenu.classList.contains('show') && !contextMenu.contains(e.target)) {
+                hideContextMenu();
+            }
+            
+            // Manejar clic en mensajes
+            if (e.target.closest('.message')) {
+                const messageElement = e.target.closest('.message');
+                const messageId = messageElement.getAttribute('data-message-id');
+                const userId = messageElement.getAttribute('data-user-id');
+                
+                // Si es un clic derecho, mostrar menú contextual
+                if (e.button === 2 || e.ctrlKey) {
+                    e.preventDefault();
+                    showContextMenu(e, { messageId, userId }, 'message');
+                }
+            }
+            
+            // Manejar clic en usuarios
+            if (e.target.closest('.user-item')) {
+                const userItem = e.target.closest('.user-item');
+                const userId = userItem.getAttribute('data-user-id');
+                
+                // Si es un clic derecho, mostrar menú contextual
+                if (e.button === 2 || e.ctrlKey) {
+                    e.preventDefault();
+                    showContextMenu(e, { userId }, 'user');
+                }
+            }
+        });
+        
+        // Eventos para menú contextual táctil (mantener pulsado)
+        let touchTimer;
+        document.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.message') || e.target.closest('.user-item')) {
+                touchTimer = setTimeout(() => {
+                    const target = e.target.closest('.message') || e.target.closest('.user-item');
+                    const type = e.target.closest('.message') ? 'message' : 'user';
+                    const messageId = target.getAttribute('data-message-id');
+                    const userId = target.getAttribute('data-user-id');
+                    
+                    showContextMenu(e, { messageId, userId }, type);
+                }, 500); // 500ms para mantener pulsado
+            }
+        });
+        
+        document.addEventListener('touchend', () => {
+            clearTimeout(touchTimer);
+        });
+        
+        document.addEventListener('touchmove', () => {
+            clearTimeout(touchTimer);
+        });
+        
+        // Eventos para opciones del menú contextual
+        copyUserIdBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.userId) {
+                copyToClipboard(contextMenuTarget.userId);
+                hideContextMenu();
+            }
+        });
+        
+        copyMessageIdBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.messageId) {
+                copyToClipboard(contextMenuTarget.messageId);
+                hideContextMenu();
+            }
+        });
+        
+        reportMessageBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.messageId) {
+                // Enviar reporte al servidor
+                socket.emit('reportMessage', {
+                    messageId: contextMenuTarget.messageId,
+                    reporterId: currentUser.id
+                });
+                
+                showNotification('Mensaje reportado', 'success');
+                hideContextMenu();
+            }
+        });
+        
+        deleteMessageBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.messageId && currentUser?.role === 'admin') {
+                // Enviar solicitud de eliminación al servidor
+                socket.emit('deleteMessage', {
+                    messageId: contextMenuTarget.messageId,
+                    adminId: currentUser.id
+                });
+                
+                showNotification('Mensaje eliminado', 'success');
+                hideContextMenu();
+            }
+        });
+        
+        banUserBtn.addEventListener('click', () => {
+            if (contextMenuTarget && contextMenuTarget.userId && currentUser?.role === 'admin') {
+                // Enviar solicitud de baneo al servidor
+                socket.emit('banUser', {
+                    userId: contextMenuTarget.userId,
+                    adminId: currentUser.id
+                });
+                
+                showNotification('Usuario baneado', 'success');
+                hideContextMenu();
+            }
+        });
+        
+        openAdminPanelBtn.addEventListener('click', () => {
+            toggleAdminPanel();
+            hideContextMenu();
+        });
+        
+        closeContextMenuBtn.addEventListener('click', hideContextMenu);
+        
+        // Eventos para botones de acción rápida
+        deleteMessageActionBtn.addEventListener('click', () => {
+            if (currentUser?.role === 'admin') {
+                // Obtener el último mensaje en la sala actual
+                const messages = document.querySelectorAll(`.message[data-room="${currentRoom}"]`);
+                if (messages.length > 0) {
+                    const lastMessage = messages[messages.length - 1];
+                    const messageId = lastMessage.getAttribute('data-message-id');
+                    
+                    // Enviar solicitud de eliminación al servidor
+                    socket.emit('deleteMessage', {
+                        messageId: messageId,
+                        adminId: currentUser.id
+                    });
+                    
+                    showNotification('Mensaje eliminado', 'success');
+                }
+            }
+        });
+        
+        banUserActionBtn.addEventListener('click', () => {
+            if (currentUser?.role === 'admin') {
+                // Mostrar notificación para seleccionar un usuario
+                showNotification('Selecciona un usuario para banear (clic derecho)', 'info');
+            }
+        });
+        
+        adminPanelActionBtn.addEventListener('click', toggleAdminPanel);
+        
+        // Eventos para panel de administración
+        generateTokenButton.addEventListener('click', () => {
+            if (currentUser?.role === 'admin') {
+                // Solicitar nuevo token al servidor
+                socket.emit('generateAdminToken', { adminId: currentUser.id }, (response) => {
+                    if (response.success) {
+                        generatedToken.textContent = response.token;
+                        tokenResult.style.display = 'block';
+                        showNotification('Token generado exitosamente', 'success');
+                    } else {
+                        showNotification('Error al generar token', 'error');
+                    }
+                });
+            }
+        });
+        
+        document.getElementById('ban-ip-button').addEventListener('click', () => {
+            if (currentUser?.role === 'admin') {
+                const ip = document.getElementById('ban-ip-input').value.trim();
+                const reason = document.getElementById('ban-reason-input').value.trim();
+                
+                if (ip && reason) {
+                    socket.emit('banIP', {
+                        ip: ip,
+                        reason: reason,
+                        adminId: currentUser.id
+                    }, (response) => {
+                        if (response.success) {
+                            showNotification('IP baneada exitosamente', 'success');
+                            document.getElementById('ban-ip-input').value = '';
+                            document.getElementById('ban-reason-input').value = '';
+                        } else {
+                            showNotification('Error al banear IP', 'error');
+                        }
+                    });
+                } else {
+                    showNotification('Completa todos los campos', 'error');
+                }
+            }
+        });
+        
+        // Prevenir menú contextual predeterminado en elementos específicos
+        document.addEventListener('contextmenu', (e) => {
+            if (e.target.closest('.message') || e.target.closest('.user-item')) {
+                e.preventDefault();
+            }
         });
     </script>
 </body>
